@@ -12,18 +12,18 @@ using std::string;
 TEST(StringDataTest, readFile) {
     StringData sd;
     ASSERT_EQ(sd._data.size(), 0);
-    sd.readFile(string("data.test.txt"));
+    sd.readFile(string("data.test"));
     ASSERT_EQ(sd._data.size(), 5);
-    sd.readFile(string("data.test.txt"));
+    sd.readFile(string("data.test"));
     ASSERT_EQ(sd._data.size(), 5);
-    sd.readFile(string("data.test.txt"), false);
+    sd.readFile(string("data.test"), false);
     ASSERT_EQ(sd._data.size(), 10);
 }
 
 // ____________________________________________________________________________
 TEST(StringDataTest, findExpression) {
     StringData sd;
-    sd.readFile(string("data.test.txt"));
+    sd.readFile(string("data.test"));
     {
         vector<string> result = sd.find("NotInFile", true);
         ASSERT_EQ(result.size(), 0);

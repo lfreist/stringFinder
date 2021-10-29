@@ -49,6 +49,16 @@ long double Timer::elapsedNanoseconds() {
 }
 
 // ____________________________________________________________________________
-long double Timer::elapsedMilliseconds() {
+long double Timer::elapsedMicroseconds() {
     return elapsedNanoseconds() / 1000;
+}
+
+// ____________________________________________________________________________
+long double Timer::elapsedMilliseconds() {
+    return elapsedMicroseconds() / 1000;
+}
+
+// ____________________________________________________________________________
+long double Timer::elapsedSeconds() {
+    return elapsedMilliseconds() / 1000;
 }

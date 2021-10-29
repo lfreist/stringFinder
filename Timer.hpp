@@ -19,7 +19,9 @@ class Timer {
     void start(bool restart = false);
     void stop();
     long double elapsedNanoseconds();
+    long double elapsedMicroseconds();
     long double elapsedMilliseconds();
+    long double elapsedSeconds();
  private:
     std::chrono::time_point<std::chrono::system_clock> _start;
     std::chrono::time_point<std::chrono::system_clock> _stop;

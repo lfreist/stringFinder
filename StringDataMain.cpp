@@ -37,21 +37,10 @@ int main(int argc, char** argv) {
     sd.find("EUREKA", false);
     searchTimer.stop();
 
-    cout << "Elapsed time reading file: " << readfileTimer.elapsedNanoseconds() << "ns" << endl;
-    cout << "Elapsed time searching: " << searchTimer.elapsedNanoseconds() << "ns" << endl;
-
-    Timer timer;
-    timer.start();
-    int counter = 0;
-    double test, test2;
-    while(timer.elapsedMilliseconds() < 5000000.0)
-    {
-        counter++;
-        test = std::cos(counter / M_PI);
-        test2 = std::sin(counter / M_PI);
-    }
-    timer.stop();
-    std::cout << "Milliseconds: " << timer.elapsedMilliseconds() << std::endl;
+    cout << "Elapsed time reading file: "
+    << readfileTimer.elapsedMicroseconds() << "µs" << endl;
+    cout << "Elapsed time searching: "
+    << searchTimer.elapsedMicroseconds() << "µs" << endl;
 
     return 0;
 }
