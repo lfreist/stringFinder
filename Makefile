@@ -18,7 +18,7 @@ test: $(TEST_BINS)
 	for T in $(TEST_BINS); do ./$$T || exit; done
 
 checkstyle:
-	$(PYTHON) cpplint.py  --repository=. *.hpp *.cpp
+	$(PYTHON) cpplint.py  --repository=. *.hpp *.cpp --filter=-build/c++11
 
 valgrind: $(TEST_BINARIES)
 	for T in $(TEST_BINS); do valgrind -s --leak-check=full ./$$T; done
