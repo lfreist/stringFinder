@@ -4,13 +4,13 @@ MAIN_BINS = $(basename $(wildcard *Main.cpp))
 TEST_BINS = $(basename $(wildcard *Test.cpp))
 HEADERS = $(wildcard *.hpp)
 OBJECTS = $(addsuffix .o, $(basename $(filter-out %Main.cpp %Test.cpp, $(wildcard *.cpp))))
-LIBRARIES =
+LIBRARIES = -lgtest -lgtest_main -lpthread
 
 .PRECIOUS: %.o
 .SUFFIXES:
-.PHONY: all compile test checkstyle clean
+.PHONY: all compile valgrind test checkstyle clean
 
-all: compile checkstyle
+all: compile valgrind test checkstyle
 
 compile: $(MAIN_BINS) $(TEST_BINS)
 
@@ -19,6 +19,9 @@ test: $(TEST_BINS)
 
 checkstyle:
 	$(PYTHON) cpplint.py  --repository=. *.hpp *.cpp
+
+valgrind: $(TEST_BINARIES)
+	for T in $(TEST_BINS); do valgrind -s --leak-check=full ./$$T; done
 
 clean:
 	rm -f *.o
@@ -29,8 +32,7 @@ clean:
 	$(COMPILER) -o $@ $^ $(LIBRARIES)
 
 %Test: %Test.o $(OBJECTS)
-	$(COMPILER) -o $@ $^ $(LIBRARIES) -lgtest -lgtest_main -lpthread
+	$(COMPILER) -o $@ $^ $(LIBRARIES)
 
 %.o: %.cpp $(HEADERS)
 	$(COMPILER) -c $<
-

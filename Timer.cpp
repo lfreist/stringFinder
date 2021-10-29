@@ -1,4 +1,5 @@
-//
-// Created by lfreist on 29.10.21.
-//
+// Copyright Leon Freist
+// Author Leon Freist <freist@informatik.uni-freiburg.de>
+
+#include "Timer.hpp"
 

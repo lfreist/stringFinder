@@ -1,25 +1,27 @@
-//
-// Created by lfreist on 29.10.21.
-//
+// Copyright Leon Freist
+// Author Leon Freist <freist@informatik.uni-freiburg.de>
 
 #include <getopt.h>
 #include <fstream>
 #include <vector>
 #include <string>
-#include <algorithm>
 
 #include "./StringData.hpp"
 
-using namespace std;
+using std::vector;
+using std::string;
+using std::cerr;
+using std::endl;
+using std::ifstream;
 
 // ____________________________________________________________________________
 StringData::StringData() {}
 
 // ____________________________________________________________________________
 StringData::~StringData() {
-    //for (string& str : _data) {
-    //    delete str;
-    //}
+    // for (string& str : _data) {
+    //     delete str;
+    // }
 }
 
 // ____________________________________________________________________________
@@ -52,9 +54,9 @@ void StringData::readFile(string path, bool deleteOld) {
         exit(1);
     }
     if (deleteOld) {
-        //for (string& str : _data) {
-        //    delete str;
-        //}
+        // for (string& str : _data) {
+        //     delete str;
+        // }
         _data.clear();
     }
     while (!file.eof()) {
@@ -67,10 +69,6 @@ void StringData::readFile(string path, bool deleteOld) {
 vector<string> StringData::find(string expression, bool matchCase) {
     vector<string> results;
     string newStr = "";
-    cout << endl << "Search for: " << expression;
-    if (matchCase) {
-        cout << " match case!" << endl;
-    }
     if (!matchCase) {
         expression = toLower(expression);
     }
@@ -81,7 +79,6 @@ vector<string> StringData::find(string expression, bool matchCase) {
         }
         if (newStr.find(expression) != string::npos) {
             results.push_back(str);
-            cout << "added " << str << endl;
         }
     }
     return results;

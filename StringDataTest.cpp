@@ -1,13 +1,12 @@
-//
-// Created by lfreist on 29.10.21.
-//
+// Copyright Leon Freist
+// Author Leon Freist <freist@informatik.uni-freiburg.de>
 
 #include <gtest/gtest.h>
 #include <string>
 
 #include "StringData.hpp"
 
-using namespace std;
+using std::string;
 
 // ____________________________________________________________________________
 TEST(StringDataTest, readFile) {
@@ -32,61 +31,107 @@ TEST(StringDataTest, findExpression) {
     {
         vector<string> result = sd.find("l", false);
         ASSERT_EQ(result.size(), 5);
-        ASSERT_STREQ(result[0].c_str(), "LinE with upper casE E");
-        ASSERT_STREQ(result[1].c_str(), "Line without upper case e");
-        ASSERT_STREQ(result[2].c_str(), "Lin3 without that charact3r");
-        ASSERT_STREQ(result[3].c_str(), "Line with word eureka in lower case");
-        ASSERT_STREQ(result[4].c_str(), "LinE with word EurEka with upper casE E");
+        ASSERT_STREQ(
+                result[0].c_str(),
+                "LinE with uppEr casE E");
+        ASSERT_STREQ(
+                result[1].c_str(),
+                "Line without upper case e");
+        ASSERT_STREQ(
+                result[2].c_str(),
+                "Lin3 without that charact3r");
+        ASSERT_STREQ(
+                result[3].c_str(),
+                "Line with word eureka in lower case");
+        ASSERT_STREQ(
+                result[4].c_str(),
+                "LinE with word EurEka with uppEr casE E");
     }
     {
         vector<string> result = sd.find("E", false);
         ASSERT_EQ(result.size(), 4);
-        ASSERT_STREQ(result[0].c_str(), "LinE with upper casE E");
-        ASSERT_STREQ(result[1].c_str(), "Line without upper case e");
-        ASSERT_STREQ(result[2].c_str(), "Line with word eureka in lower case");
-        ASSERT_STREQ(result[3].c_str(), "LinE with word EurEka with upper casE E");
+        ASSERT_STREQ(
+                result[0].c_str(),
+                "LinE with uppEr casE E");
+        ASSERT_STREQ(
+                result[1].c_str(),
+                "Line without upper case e");
+        ASSERT_STREQ(
+                result[2].c_str(),
+                "Line with word eureka in lower case");
+        ASSERT_STREQ(
+                result[3].c_str(),
+                "LinE with word EurEka with uppEr casE E");
     }
     {
         vector<string> result = sd.find("e", false);
         ASSERT_EQ(result.size(), 4);
-        ASSERT_STREQ(result[0].c_str(), "LinE with upper casE E");
-        ASSERT_STREQ(result[1].c_str(), "Line without upper case e");
-        ASSERT_STREQ(result[2].c_str(), "Line with word eureka in lower case");
-        ASSERT_STREQ(result[3].c_str(), "LinE with word EurEka with upper casE E");
+        ASSERT_STREQ(
+                result[0].c_str(),
+                "LinE with uppEr casE E");
+        ASSERT_STREQ(
+                result[1].c_str(),
+                "Line without upper case e");
+        ASSERT_STREQ(
+                result[2].c_str(),
+                "Line with word eureka in lower case");
+        ASSERT_STREQ(
+                result[3].c_str(),
+                "LinE with word EurEka with uppEr casE E");
     }
     {
         vector<string> result = sd.find("E", true);
         ASSERT_EQ(result.size(), 2);
-        ASSERT_STREQ(result[0].c_str(), "LinE with upper casE E");
-        ASSERT_STREQ(result[1].c_str(), "LinE with word EurEka with upper casE E");
+        ASSERT_STREQ(
+                result[0].c_str(),
+                "LinE with uppEr casE E");
+        ASSERT_STREQ(
+                result[1].c_str(),
+                "LinE with word EurEka with uppEr casE E");
     }
     {
         vector<string> result = sd.find("e", true);
         ASSERT_EQ(result.size(), 2);
-        ASSERT_STREQ(result[0].c_str(), "Line without upper case e");
-        ASSERT_STREQ(result[1].c_str(), "Line with word eureka in lower case");
+        ASSERT_STREQ(
+                result[0].c_str(),
+                "Line without upper case e");
+        ASSERT_STREQ(
+                result[1].c_str(),
+                "Line with word eureka in lower case");
     }
     {
         vector<string> result = sd.find("EurEka", true);
         ASSERT_EQ(result.size(), 1);
-        ASSERT_STREQ(result[0].c_str(), "LinE with word EurEka with upper casE E");
+        ASSERT_STREQ(
+                result[0].c_str(),
+                "LinE with word EurEka with uppEr casE E");
     }
     {
         vector<string> result = sd.find("EurEka", false);
         ASSERT_EQ(result.size(), 2);
-        ASSERT_STREQ(result[0].c_str(), "Line with word eureka in lower case");
-        ASSERT_STREQ(result[1].c_str(), "LinE with word EurEka with upper casE E");
+        ASSERT_STREQ(
+                result[0].c_str(),
+                "Line with word eureka in lower case");
+        ASSERT_STREQ(
+                result[1].c_str(),
+                "LinE with word EurEka with uppEr casE E");
     }
     {
         vector<string> result = sd.find("eureka", true);
         ASSERT_EQ(result.size(), 1);
-        ASSERT_STREQ(result[0].c_str(), "Line with word eureka in lower case");
+        ASSERT_STREQ(
+                result[0].c_str(),
+                "Line with word eureka in lower case");
     }
     {
         vector<string> result = sd.find("eureka", false);
         ASSERT_EQ(result.size(), 2);
-        ASSERT_STREQ(result[0].c_str(), "Line with word eureka in lower case");
-        ASSERT_STREQ(result[1].c_str(), "LinE with word EurEka with upper casE E");
+        ASSERT_STREQ(
+                result[0].c_str(),
+                "Line with word eureka in lower case");
+        ASSERT_STREQ(
+                result[1].c_str(),
+                "LinE with word EurEka with uppEr casE E");
     }
 }
 

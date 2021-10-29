@@ -1,26 +1,26 @@
-//
-// Created by lfreist on 29.10.21.
-//
+// Copyright Leon Freist
+// Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef BACHELORPROJEKT_STRINGDATA_H
-#define BACHELORPROJEKT_STRINGDATA_H
+#ifndef STRINGDATA_HPP_
+#define STRINGDATA_HPP_
 
 #include <gtest/gtest.h>
 
 #include <vector>
 #include <string>
 
-using namespace std;
+using std::vector;
+using std::string;
 
 // Class StringData
 class StringData {
-public:
+ public:
     StringData();
     ~StringData();
     void parseCommandLineArguments(int argc, char** argv);
     void readFile(string path, bool deleteOld = true);
     vector<string> find(string expression, bool matchCase = false);
-private:
+ private:
     vector<string> _data;
 
     FRIEND_TEST(StringDataTest, readFile);
@@ -29,4 +29,4 @@ private:
 // Converts string to lower case (not in place as in algorithm::transform)
 string toLower(string str);
 
-#endif //BACHELORPROJEKT_STRINGDATA_H
+#endif  // STRINGDATA_HPP_
