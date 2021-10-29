@@ -1,0 +1,10 @@
+//
+// Created by lfreist on 29.10.21.
+//
+
+#ifndef BACHELORPROJEKT_TIMER_HPP
+#define BACHELORPROJEKT_TIMER_HPP
+
+
+
+#endif //BACHELORPROJEKT_TIMER_HPP
