@@ -63,5 +63,5 @@ double CpuTimer::cpuTicks() {
     if (_running) {
         _stop = clock();
     }
-    return static_cast<double>(_stop, _start);
+    return static_cast<double>(_stop - _start);
 }

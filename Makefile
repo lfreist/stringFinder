@@ -2,10 +2,9 @@ COMPILER = g++ -pedantic
 PYTHON = python3
 MAIN_BINS = $(basename $(wildcard *Main.cpp))
 TEST_BINS = $(basename $(wildcard tests/*Test.cpp))
-BENCHMARK_BINS = $(basename $(wildcard *Benchmark.cpp))
 LIB_PATH = src
 HEADERS = $(wildcard src/*.hpp)
-OBJECTS = $(addsuffix .o, $(basename $(filter-out %Main.cpp %Benchmark.cpp tests/%Test.cpp, $(wildcard src/*.cpp))))
+OBJECTS = $(addsuffix .o, $(basename $(filter-out %Main.cpp tests/%Test.cpp, $(wildcard src/*.cpp))))
 LIBRARIES = -lgtest -lgtest_main -lpthread
 
 .PRECIOUS: %.o
@@ -14,7 +13,7 @@ LIBRARIES = -lgtest -lgtest_main -lpthread
 
 all: compile valgrind test checkstyle
 
-compile: $(MAIN_BINS) $(TEST_BINS) $(BENCHMARK_BINS)
+compile: $(MAIN_BINS) $(TEST_BINS)
 
 test: $(TEST_BINS)
 	for T in $(TEST_BINS); do ./$$T || exit; done
@@ -37,9 +36,6 @@ clean:
 	$(COMPILER) -o $@ $^ $(LIBRARIES)
 
 %Test: %Test.o $(OBJECTS)
-	$(COMPILER) -o $@ $^ $(LIBRARIES)
-
-%Benchmark: %Benchmark.o $(OBJECTS)
 	$(COMPILER) -o $@ $^ $(LIBRARIES)
 
 %.o: %.cpp $(HEADERS)

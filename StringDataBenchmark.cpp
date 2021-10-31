@@ -32,12 +32,13 @@ double mean(vector<double> data) {
 }
 
 
-double stdev(vector<double> data, double mean) {
+double stddev(vector<double> data) {
     std::vector<double> diff(data.size());
+    double calcMean = mean(data);
     std::transform(data.begin(),
                    data.end(),
                    diff.begin(),
-                   [mean](double x) { return x - mean; });
+                   [calcMean](double x) { return x - calcMean; });
     double sq_sum = std::inner_product(diff.begin(),
                                        diff.end(),
                                        diff.begin(),
