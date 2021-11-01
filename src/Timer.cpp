@@ -3,60 +3,50 @@
 
 #include <chrono>  // NOLINT(build/c++11)
 
-#include "WallTimer.hpp"
+#include "Timer.hpp"
 
 
 // ____________________________________________________________________________
-WallTimer::WallTimer() {
+Timer::Timer() {
     _running = false;
     _started = false;
 }
 
 // ____________________________________________________________________________
-WallTimer::~WallTimer() = default;
+Timer::~Timer() = default;
 
 // ____________________________________________________________________________
-void WallTimer::start(bool restart) {
+void Timer::start(bool restart) {
     if (_running && !restart) {
         return;
     }
     _running = true;
     _started = true;
-    _start = std::chrono::system_clock::now();
+    _start = std::chrono::steady_clock::now();
 }
 
 // ____________________________________________________________________________
-void WallTimer::stop() {
+void Timer::stop() {
     if (!_running) {
         return;
     }
-    _stop = std::chrono::system_clock::now();
+    _stop = std::chrono::steady_clock::now();
     _running = false;
 }
 
 // ____________________________________________________________________________
-long double WallTimer::elapsedNanoseconds() {
+double Timer::elapsedSeconds() {
     if (!_started) {
         return -1;
     }
     if (_running) {
-        _stop = std::chrono::system_clock::now();
+        _stop = std::chrono::steady_clock::now();
     }
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+    return std::chrono::duration_cast<std::chrono::duration<double>>(
             _stop - _start).count();
 }
 
 // ____________________________________________________________________________
-long double WallTimer::elapsedMicroseconds() {
-    return elapsedNanoseconds() / 1000;
-}
-
-// ____________________________________________________________________________
-long double WallTimer::elapsedMilliseconds() {
-    return elapsedMicroseconds() / 1000;
-}
-
-// ____________________________________________________________________________
-long double WallTimer::elapsedSeconds() {
-    return elapsedMilliseconds() / 1000;
+double Timer::elapsedMicroseconds() {
+    return elapsedSeconds() * 1000 * 1000;
 }

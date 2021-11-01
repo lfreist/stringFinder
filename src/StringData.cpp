@@ -8,10 +8,12 @@
 #include <algorithm>
 
 #include "StringData.hpp"
+#include "Timer.hpp"
 
 using std::vector;
 using std::string;
 using std::cerr;
+using std::cout;
 using std::endl;
 using std::ifstream;
 
@@ -19,31 +21,36 @@ using std::ifstream;
 StringData::StringData() = default;
 
 // ____________________________________________________________________________
-StringData::~StringData() {
-    // for (string& str : _data) {
-    //     delete str;
-    // }
-}
+StringData::~StringData() = default;
 
 // ____________________________________________________________________________
 void StringData::parseCommandLineArguments(int argc, char **argv) {
     struct option options[] = {
-            {nullptr, 0, nullptr, 0 }
+            {"performance", 1, nullptr, 'p'},
+            {nullptr, 0, nullptr, 0}
     };
     optind = 1;
+    string performanceExpression;
     while (true) {
-        int c = getopt_long(argc, argv, "", options, nullptr);
+        int c = getopt_long(argc, argv, "p", options, nullptr);
         if (c == -1) {
             break;
         }
         switch (c) {
+            case 'p':
+                performanceExpression = string(optarg);
+                break;
             default: break;
         }
     }
     if (optind >= argc) {
+        cout << "Missing input file" << endl;
         exit(1);
     }
     readFile(argv[optind]);
+    if (!performanceExpression.empty()) {
+        performance(performanceExpression);
+    }
 }
 
 // ____________________________________________________________________________
@@ -55,9 +62,6 @@ void StringData::readFile(const string& path, bool deleteOld) {
         exit(1);
     }
     if (deleteOld) {
-        // for (string& str : _data) {
-        //     delete str;
-        // }
         _data.clear();
     }
     while (!file.eof()) {
@@ -67,21 +71,19 @@ void StringData::readFile(const string& path, bool deleteOld) {
 }
 
 // ____________________________________________________________________________
-vector<string> StringData::find(string expression, bool matchCase) {
+vector<string> StringData::find(string expression, bool matchCase) const {
     vector<string> results;
-    string newStr = "";
+    string newStr;
     if (!matchCase) {
         transform(expression.begin(),
                   expression.end(),
                   expression.begin(),
                   ::tolower);
-        // expression = toLower(expression);
     }
-    for (string& str : _data) {
+    for (const string& str : _data) {
         newStr = str;
         if (!matchCase) {
             transform(newStr.begin(), newStr.end(), newStr.begin(), ::tolower);
-            // newStr = toLower(newStr);
         }
         if (newStr.find(expression) != string::npos) {
             results.push_back(str);
@@ -91,15 +93,16 @@ vector<string> StringData::find(string expression, bool matchCase) {
 }
 
 // ____________________________________________________________________________
-// ____________________________________________________________________________
-string toLower(string str) {
-    string strLower = "";
-    for (char& c : str) {
-        if (c >= 65 && c <= 90) {
-            strLower += c + 32;
-        } else {
-            strLower += c;
-        }
-    }
-    return strLower;
+void StringData::performance(const string& expression) const {
+    Timer timer;
+    timer.start();
+    vector<string> results = find(expression, true);
+    timer.stop();
+    cout << "Performance Report (expression: " << expression
+        << "):" << endl;
+    cout << " total lines:\t" << _data.size() << endl;
+    cout << " total matches:\t" << results.size() << endl;
+    cout << " query time:\t" << timer.elapsedSeconds() << " s" << endl;
+    cout << " time / match:\t" << timer.elapsedSeconds()/results.size()
+        << " s" << endl;
 }

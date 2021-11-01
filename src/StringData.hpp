@@ -19,7 +19,8 @@ class StringData {
     ~StringData();
     void parseCommandLineArguments(int argc, char** argv);
     void readFile(const string& path, bool deleteOld = true);
-    vector<string> find(string expression, bool matchCase = false);
+    vector<string> find(string expression, bool matchCase = true) const;
+    void performance(const string& expression) const;
  private:
     vector<string> _data;
 

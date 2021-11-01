@@ -3,11 +3,11 @@
 
 #include <gtest/gtest.h>
 
-#include "../src/WallTimer.hpp"
+#include "../src/Timer.hpp"
 
 // ____________________________________________________________________________
 TEST(WallTimerTest, wallTimerStartStop) {
-    WallTimer timer;
+    Timer timer;
     {
         timer.start();
         ASSERT_TRUE(timer._running);

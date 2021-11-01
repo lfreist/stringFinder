@@ -6,17 +6,25 @@
 #include <vector>
 
 #include "src/StringData.hpp"
-#include "src/WallTimer.hpp"
+#include "src/Timer.hpp"
 
 using std::string;
 using std::vector;
 using std::cout;
 using std::endl;
 
+
+void printResults(const vector<string>& results) {
+    for (const string& result : results) {
+        cout << result << endl;
+    }
+}
+
+
 int main(int argc, char** argv) {
     StringData sd;
+
     sd.parseCommandLineArguments(argc, argv);
-    vector<string> results = sd.find("EUREKA", false);
 
     return 0;
 }

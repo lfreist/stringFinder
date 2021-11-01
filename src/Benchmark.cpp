@@ -2,15 +2,17 @@
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
 #include <getopt.h>
+#include <unistd.h>
 
 #include <numeric>
 #include <iostream>
 #include <cmath>
+#include <utility>
+#include <algorithm>
 
 #include "Benchmark.hpp"
 #include "StringData.hpp"
-#include "CpuTimer.hpp"
-#include "WallTimer.hpp"
+#include "Timer.hpp"
 
 
 using std::cout;
@@ -18,31 +20,36 @@ using std::endl;
 
 // ____________________________________________________________________________
 Benchmark::Benchmark() {
-    _sd = nullptr;
     _iterations = 100;
     _result << "No benchmark performed yet.";
+    _expression = "badminton";
 }
 
 // ____________________________________________________________________________
-Benchmark::~Benchmark() {
-    delete _sd;
-}
+Benchmark::~Benchmark() = default;
 
 // ____________________________________________________________________________
 void Benchmark::parseCommandLineArguments(int argc, char **argv) {
     struct option options[] = {
             {"iterations", 1, nullptr, 'i'},
+            {"expression", 1, nullptr, 'e'},
             {nullptr, 0, nullptr, 0}
     };
     optind = 1;
     while (true) {
-        char c = getopt_long(argc, argv, "i", options, nullptr);
+        int c = getopt_long(argc, argv, "i:e", options, nullptr);
         if (c == -1) {
             break;
         }
         switch (c) {
-            case 'i': _iterations = atoi(optarg); break;
-            default: break;
+            case 'i':
+                _iterations = atoi(optarg);
+                break;
+            case 'e':
+                _expression = string(optarg);
+                break;
+            default:
+                break;
         }
     }
     if (optind >= argc) {
@@ -54,54 +61,35 @@ void Benchmark::parseCommandLineArguments(int argc, char **argv) {
 // ____________________________________________________________________________
 void Benchmark::run() {
     _result.str(string());
-    _result << "Benchmark using " << _iterations << ":" << endl;
-    benchmarkCpuTime();
+    _result << "Benchmark 'find(\"" << _expression << "\")':" << endl;
+    _result << " Iterations: " << _iterations << endl;
     benchmarkWallTime();
-    cout << "RESULT:" << endl << _result.str() << endl;
+    cout << _result.str();
 }
 
 // ____________________________________________________________________________
 void Benchmark::reset() {
     _result << "No benchmark performed yet.";
-    _sd = nullptr;
-}
-
-
-// TODO(lfreist): am I using clock() and CLOCKS_PER_SEC correctly? stddev is
-//                 huge...
-//                 Why is CPU Time > Wall Time?
-// ____________________________________________________________________________
-void Benchmark::benchmarkCpuTime() {
-    _result << "CPU Time find(\"Eureka\"):" << endl;
-    vector<double> measurements;
-    CpuTimer cpuTimer;
-    _sd = new StringData();
-    for (int i = 0; i < _iterations; i++) {
-        cpuTimer.start();
-        _sd->find("Eureka");
-        cpuTimer.stop();
-        measurements.push_back(cpuTimer.elapsedMicroseconds());
-    }
-    double vMean = mean(measurements);
-    double vStddev = stddev(measurements);
-    _result << "per call:\t(" << vMean << " +/- " << vStddev << ") µs" << endl;
 }
 
 // ____________________________________________________________________________
 void Benchmark::benchmarkWallTime() {
-    _result << "Wall Time find(\"Eureka\"):" << endl;
     vector<double> measurements;
-    WallTimer wallTimer;
-    _sd = new StringData();
+    Timer timer;
+    StringData sd;
+    sd.readFile(_file);
     for (int i = 0; i < _iterations; i++) {
-        wallTimer.start(true);
-        _sd->find("Eureka");
-        wallTimer.stop();
-        measurements.push_back(wallTimer.elapsedMicroseconds());
+        timer.start(true);
+        sd.find(_expression, true);
+        timer.stop();
+        measurements.push_back(timer.elapsedSeconds());
     }
-    double vMean = mean(measurements);
-    double vStddev = stddev(measurements);
-    _result << "per call:\t(" << vMean << " +/- " << vStddev << ") µs" << endl;
+    _result << " Walltime\t[/s]:" << endl;
+    _result << "  Mean:\t\t" << mean(measurements) << endl;
+    _result << "  Variance:\t" << variance(measurements) << endl;
+    _result << "  Stddev:\t" << stddev(measurements) << endl;
+    _result << "  Max:\t\t" << max(measurements) << endl;
+    _result << "  Min:\t\t" << min(measurements) << endl;
 }
 
 // ____________________________________________________________________________
@@ -112,7 +100,7 @@ double mean(vector<double> data) {
 }
 
 
-double stddev(vector<double> data) {
+double variance(vector<double> data) {
     vector<double> diff(data.size());
     double calculatedMean = mean(data);
     std::transform(
@@ -125,5 +113,20 @@ double stddev(vector<double> data) {
             diff.end(),
             diff.begin(),
             0.0);
-    return std::sqrt(sq_sum / data.size());
+    return sq_sum / data.size();
+}
+
+
+double stddev(vector<double> data) {
+    return sqrt(variance(std::move(data)));
+}
+
+
+double max(vector<double> data) {
+    return *std::max_element(data.begin(), data.end());
+}
+
+
+double min(vector<double> data) {
+    return *std::min_element(data.begin(), data.end());
 }
