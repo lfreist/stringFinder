@@ -27,7 +27,4 @@ class StringData {
     FRIEND_TEST(StringDataTest, readFile);
 };
 
-// Converts string to lower case (not in place as in algorithm::transform)
-string toLower(string str);
-
 #endif  // SRC_STRINGDATA_HPP_
