@@ -1,3 +1,4 @@
 *.o
 wikidata-people.tsv
 wikidata-publications.tsv
+.idea
