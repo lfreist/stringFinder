@@ -2,7 +2,7 @@
 
 #### Get performance on a specific expression (substring search):
 ```bash
-./StringDataMain tests/wikidata-people.tsv --performance "badminton"
+./StringDataMain wikidata-people.tsv --performance "badminton"
 Performance Report (expression: badminton):
  total lines:   6131837
  total matches: 21218
@@ -18,7 +18,7 @@ Performance Report (expression: badminton):
 > iterations: 100
 > ```
 ```bash
-./BenchmarkMain tests/wikidata-people.tsv --iterations 100 --expression "badminton"
+./BenchmarkMain wikidata-people.tsv --iterations 100 --expression "badminton"
 Benchmark 'find("badminton")':
  Iterations: 100
  Walltime       [/s]:
@@ -30,7 +30,7 @@ Benchmark 'find("badminton")':
 ```
 
 ## Files
-| file                      | size      | lines   | usage                 | source                                                                    |
-|---------------------------|-----------|---------|-----------------------|---------------------------------------------------------------------------|
-| tests/data.test           | 152 bytes | 5       | simple test cases     | -                                                                         |
-| tests/wikidata-people.tsv | 547.1 MB  | 6131837 | performance/benchmark | [qlever example query](https://qlever.cs.uni-freiburg.de/wikidata/P1IH3H) |
+| file                      | size      | lines   | usage                 | source                                                                    | Download                                                          |
+|---------------------------|-----------|---------|-----------------------|---------------------------------------------------------------------------|-------------------------------------------------------------------|
+| tests/data.test           | 152 bytes | 5       | simple test cases     | -                                                                         | -                                                                 |
+| wikidata-people.tsv       | 547.1 MB  | 6131837 | performance/benchmark | [qlever example query](https://qlever.cs.uni-freiburg.de/wikidata/P1IH3H) | [download](https://qlever.cs.uni-freiburg.de/wikidata/P1IH3H#tsv) |

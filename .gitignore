@@ -1,3 +1,2 @@
 *.o
-*.lib
-*.a
+wikidata-people.tsv
