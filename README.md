@@ -37,4 +37,7 @@ Benchmark 'find("badminton", true)':
 | wikidata-people.tsv       | 547.1 MB  | 6131837 | performance/benchmark | [qlever example query](https://qlever.cs.uni-freiburg.de/wikidata/P1IH3H) | [download](https://qlever.cs.uni-freiburg.de/wikidata/P1IH3H#tsv) |
 
 ## commits that changed performance
+
 02.11.21 22:10 - [c8f8ce78716e00ba2b108a8fe8bdba8fd9894471](https://github.com/lfreist/bachelorprojekt/commit/c8f8ce78716e00ba2b108a8fe8bdba8fd9894471)
+
+02.11.21 22:30 - [431333bd8bd4e4784e869fce929ac6db5329bd3f](https://github.com/lfreist/bachelorprojekt/commit/431333bd8bd4e4784e869fce929ac6db5329bd3f)
