@@ -14,12 +14,13 @@ Performance Report (expression: badminton):
 #### Benchmark substring search on expression
 > **defaults:**
 > ```
-> expression: "badminton",
-> iterations: 100
+> expression:  "badminton",
+> iterations:  100,
+> matchCase:   false
 > ```
 ```bash
-./BenchmarkMain wikidata-people.tsv --iterations 100 --expression "badminton"
-Benchmark 'find("badminton")':
+./BenchmarkMain wikidata-people.tsv --iterations 100 --expression "badminton" --matchCase
+Benchmark 'find("badminton", true)':
  Iterations: 100
  Walltime       [/s]:
   Mean:         0.148864
@@ -34,3 +35,6 @@ Benchmark 'find("badminton")':
 |---------------------------|-----------|---------|-----------------------|---------------------------------------------------------------------------|-------------------------------------------------------------------|
 | tests/data.test           | 152 bytes | 5       | simple test cases     | -                                                                         | -                                                                 |
 | wikidata-people.tsv       | 547.1 MB  | 6131837 | performance/benchmark | [qlever example query](https://qlever.cs.uni-freiburg.de/wikidata/P1IH3H) | [download](https://qlever.cs.uni-freiburg.de/wikidata/P1IH3H#tsv) |
+
+## commits that changed performance
+02.11.21 21:00 - [dc5806c0de8f10888aac96066bdae363c945b542](https://github.com/lfreist/bachelorprojekt/commit/dc5806c0de8f10888aac96066bdae363c945b542)

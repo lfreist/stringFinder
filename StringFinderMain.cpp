@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "src/StringFinder.hpp"
-#include "src/Timer.hpp"
 
 using std::string;
 using std::vector;

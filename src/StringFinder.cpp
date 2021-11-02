@@ -49,7 +49,8 @@ void StringFinder::parseCommandLineArguments(int argc, char **argv) {
     }
     readFile(argv[optind]);
     if (!performanceExpression.empty()) {
-        measurePerformance(performanceExpression);
+        measurePerformance(performanceExpression, false);
+        measurePerformance(performanceExpression, true);
     }
 }
 
@@ -93,13 +94,15 @@ vector<string> StringFinder::find(string expression, bool matchCase) const {
 }
 
 // ____________________________________________________________________________
-void StringFinder::measurePerformance(const string& expression) const {
+void StringFinder::measurePerformance(const string& expression,
+                                      bool matchCase) const {
     Timer timer;
     timer.start();
-    vector<string> results = find(expression, true);
+    vector<string> results = find(expression, matchCase);
     timer.stop();
-    cout << "Performance Report (expression: " << expression
-        << "):" << endl;
+    cout << "Performance Report:" << endl;
+    cout << "StringFinder.measurePerformance(" << expression  << ", "
+        << matchCase << "):" << endl;
     cout << " total lines:\t" << _data.size() << endl;
     cout << " total matches:\t" << results.size() << endl;
     cout << " query time:\t" << timer.elapsedSeconds() << " s" << endl;

@@ -30,6 +30,7 @@ class Benchmark {
     string _file;
     stringstream _result;
     string _expression;
+    bool _matchCase;
     void benchmarkWallTime();
 };
 
