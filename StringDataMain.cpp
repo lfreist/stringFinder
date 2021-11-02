@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "src/StringData.hpp"
+#include "src/StringFinder.hpp"
 #include "src/Timer.hpp"
 
 using std::string;
@@ -22,9 +22,9 @@ void printResults(const vector<string>& results) {
 
 
 int main(int argc, char** argv) {
-    StringData sd;
+    StringFinder sf;
 
-    sd.parseCommandLineArguments(argc, argv);
+    sf.parseCommandLineArguments(argc, argv);
 
     return 0;
 }

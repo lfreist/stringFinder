@@ -7,7 +7,7 @@
 #include <string>
 #include <algorithm>
 
-#include "StringData.hpp"
+#include "StringFinder.hpp"
 #include "Timer.hpp"
 
 using std::vector;
@@ -18,13 +18,13 @@ using std::endl;
 using std::ifstream;
 
 // ____________________________________________________________________________
-StringData::StringData() = default;
+StringFinder::StringFinder() = default;
 
 // ____________________________________________________________________________
-StringData::~StringData() = default;
+StringFinder::~StringFinder() = default;
 
 // ____________________________________________________________________________
-void StringData::parseCommandLineArguments(int argc, char **argv) {
+void StringFinder::parseCommandLineArguments(int argc, char **argv) {
     struct option options[] = {
             {"performance", 1, nullptr, 'p'},
             {nullptr, 0, nullptr, 0}
@@ -49,12 +49,12 @@ void StringData::parseCommandLineArguments(int argc, char **argv) {
     }
     readFile(argv[optind]);
     if (!performanceExpression.empty()) {
-        performance(performanceExpression);
+        measurePerformance(performanceExpression);
     }
 }
 
 // ____________________________________________________________________________
-void StringData::readFile(const string& path, bool deleteOld) {
+void StringFinder::readFile(const string& path, bool deleteOld) {
     string line;
     ifstream file(path.c_str());
     if (!file.is_open()) {
@@ -71,7 +71,7 @@ void StringData::readFile(const string& path, bool deleteOld) {
 }
 
 // ____________________________________________________________________________
-vector<string> StringData::find(string expression, bool matchCase) const {
+vector<string> StringFinder::find(string expression, bool matchCase) const {
     vector<string> results;
     string newStr;
     if (!matchCase) {
@@ -93,7 +93,7 @@ vector<string> StringData::find(string expression, bool matchCase) const {
 }
 
 // ____________________________________________________________________________
-void StringData::performance(const string& expression) const {
+void StringFinder::measurePerformance(const string& expression) const {
     Timer timer;
     timer.start();
     vector<string> results = find(expression, true);

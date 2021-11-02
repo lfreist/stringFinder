@@ -11,7 +11,7 @@
 #include <algorithm>
 
 #include "Benchmark.hpp"
-#include "StringData.hpp"
+#include "StringFinder.hpp"
 #include "Timer.hpp"
 
 
@@ -76,11 +76,11 @@ void Benchmark::reset() {
 void Benchmark::benchmarkWallTime() {
     vector<double> measurements;
     Timer timer;
-    StringData sd;
-    sd.readFile(_file);
+    StringFinder sf;
+    sf.readFile(_file);
     for (int i = 0; i < _iterations; i++) {
         timer.start(true);
-        sd.find(_expression, true);
+        sf.find(_expression, true);
         timer.stop();
         measurements.push_back(timer.elapsedSeconds());
     }

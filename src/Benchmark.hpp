@@ -9,7 +9,7 @@
 #include <sstream>
 #include <algorithm>
 
-#include "StringData.hpp"
+#include "StringFinder.hpp"
 
 
 using std::vector;

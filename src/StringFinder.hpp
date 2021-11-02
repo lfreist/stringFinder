@@ -1,8 +1,8 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef SRC_STRINGDATA_HPP_
-#define SRC_STRINGDATA_HPP_
+#ifndef SRC_STRINGFINDER_HPP_
+#define SRC_STRINGFINDER_HPP_
 
 #include <gtest/gtest.h>
 
@@ -13,18 +13,18 @@ using std::vector;
 using std::string;
 
 // Class StringData
-class StringData {
+class StringFinder {
  public:
-    StringData();
-    ~StringData();
+    StringFinder();
+    ~StringFinder();
     void parseCommandLineArguments(int argc, char** argv);
     void readFile(const string& path, bool deleteOld = true);
     vector<string> find(string expression, bool matchCase = true) const;
-    void performance(const string& expression) const;
+    void measurePerformance(const string& expression) const;
  private:
     vector<string> _data;
 
-    FRIEND_TEST(StringDataTest, readFile);
+    FRIEND_TEST(StringFinderTest, readFile);
 };
 
-#endif  // SRC_STRINGDATA_HPP_
+#endif  // SRC_STRINGFINDER_HPP_

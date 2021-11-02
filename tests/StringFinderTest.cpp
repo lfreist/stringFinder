@@ -4,32 +4,32 @@
 #include <gtest/gtest.h>
 #include <string>
 
-#include "../src/StringData.hpp"
+#include "../src/StringFinder.hpp"
 
 using std::string;
 
 // ____________________________________________________________________________
-TEST(StringDataTest, readFile) {
-    StringData sd;
-    ASSERT_EQ(sd._data.size(), 0);
-    sd.readFile(string("tests/data.test"));
-    ASSERT_EQ(sd._data.size(), 5);
-    sd.readFile(string("tests/data.test"));
-    ASSERT_EQ(sd._data.size(), 5);
-    sd.readFile(string("tests/data.test"), false);
-    ASSERT_EQ(sd._data.size(), 10);
+TEST(StringFinderTest, readFile) {
+    StringFinder sf;
+    ASSERT_EQ(sf._data.size(), 0);
+    sf.readFile(string("tests/data.test"));
+    ASSERT_EQ(sf._data.size(), 5);
+    sf.readFile(string("tests/data.test"));
+    ASSERT_EQ(sf._data.size(), 5);
+    sf.readFile(string("tests/data.test"), false);
+    ASSERT_EQ(sf._data.size(), 10);
 }
 
 // ____________________________________________________________________________
 TEST(StringDataTest, findExpression) {
-    StringData sd;
-    sd.readFile(string("tests/data.test"));
+    StringFinder sf;
+    sf.readFile(string("tests/data.test"));
     {
-        vector<string> result = sd.find("NotInFile", true);
+        vector<string> result = sf.find("NotInFile", true);
         ASSERT_EQ(result.size(), 0);
     }
     {
-        vector<string> result = sd.find("l", false);
+        vector<string> result = sf.find("l", false);
         ASSERT_EQ(result.size(), 5);
         ASSERT_STREQ(
                 result[0].c_str(),
@@ -48,7 +48,7 @@ TEST(StringDataTest, findExpression) {
                 "LinE with word EurEka with uppEr casE E");
     }
     {
-        vector<string> result = sd.find("E", false);
+        vector<string> result = sf.find("E", false);
         ASSERT_EQ(result.size(), 4);
         ASSERT_STREQ(
                 result[0].c_str(),
@@ -64,7 +64,7 @@ TEST(StringDataTest, findExpression) {
                 "LinE with word EurEka with uppEr casE E");
     }
     {
-        vector<string> result = sd.find("e", false);
+        vector<string> result = sf.find("e", false);
         ASSERT_EQ(result.size(), 4);
         ASSERT_STREQ(
                 result[0].c_str(),
@@ -80,7 +80,7 @@ TEST(StringDataTest, findExpression) {
                 "LinE with word EurEka with uppEr casE E");
     }
     {
-        vector<string> result = sd.find("E", true);
+        vector<string> result = sf.find("E", true);
         ASSERT_EQ(result.size(), 2);
         ASSERT_STREQ(
                 result[0].c_str(),
@@ -90,7 +90,7 @@ TEST(StringDataTest, findExpression) {
                 "LinE with word EurEka with uppEr casE E");
     }
     {
-        vector<string> result = sd.find("e", true);
+        vector<string> result = sf.find("e", true);
         ASSERT_EQ(result.size(), 2);
         ASSERT_STREQ(
                 result[0].c_str(),
@@ -100,14 +100,14 @@ TEST(StringDataTest, findExpression) {
                 "Line with word eureka in lower case");
     }
     {
-        vector<string> result = sd.find("EurEka", true);
+        vector<string> result = sf.find("EurEka", true);
         ASSERT_EQ(result.size(), 1);
         ASSERT_STREQ(
                 result[0].c_str(),
                 "LinE with word EurEka with uppEr casE E");
     }
     {
-        vector<string> result = sd.find("EurEka", false);
+        vector<string> result = sf.find("EurEka", false);
         ASSERT_EQ(result.size(), 2);
         ASSERT_STREQ(
                 result[0].c_str(),
@@ -117,14 +117,14 @@ TEST(StringDataTest, findExpression) {
                 "LinE with word EurEka with uppEr casE E");
     }
     {
-        vector<string> result = sd.find("eureka", true);
+        vector<string> result = sf.find("eureka", true);
         ASSERT_EQ(result.size(), 1);
         ASSERT_STREQ(
                 result[0].c_str(),
                 "Line with word eureka in lower case");
     }
     {
-        vector<string> result = sd.find("eureka", false);
+        vector<string> result = sf.find("eureka", false);
         ASSERT_EQ(result.size(), 2);
         ASSERT_STREQ(
                 result[0].c_str(),
