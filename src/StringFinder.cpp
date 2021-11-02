@@ -82,12 +82,16 @@ vector<string> StringFinder::find(string expression, bool matchCase) const {
                   ::tolower);
     }
     for (const string& str : _data) {
-        newStr = str;
         if (!matchCase) {
+            newStr = str;
             transform(newStr.begin(), newStr.end(), newStr.begin(), ::tolower);
-        }
-        if (newStr.find(expression) != string::npos) {
-            results.push_back(str);
+            if (newStr.find(expression) != string::npos) {
+                results.push_back(str);
+            }
+        } else {
+            if (str.find(expression) != string::npos) {
+                results.push_back(str);
+            }
         }
     }
     return results;
