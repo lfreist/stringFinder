@@ -1,5 +1,5 @@
 *.o
-wikidata-people.tsv
-wikidata-publications.tsv
+files/wikidata-people.tsv
+files/wikidata-publications.tsv
 .idea
 reminders
