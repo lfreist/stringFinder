@@ -72,8 +72,9 @@ void StringFinder::readFile(const string& path, bool deleteOld) {
 }
 
 // ____________________________________________________________________________
-vector<string> StringFinder::find(string expression, bool matchCase) const {
-    vector<string> results;
+vector<const string*> StringFinder::find(string expression,
+                                         bool matchCase) const {
+    vector<const string*> results;
     string newStr;
     if (!matchCase) {
         transform(expression.begin(),
@@ -86,11 +87,11 @@ vector<string> StringFinder::find(string expression, bool matchCase) const {
             newStr = str;
             transform(newStr.begin(), newStr.end(), newStr.begin(), ::tolower);
             if (newStr.find(expression) != string::npos) {
-                results.push_back(str);
+                results.push_back(&(str));
             }
         } else {
             if (str.find(expression) != string::npos) {
-                results.push_back(str);
+                results.push_back(&(str));
             }
         }
     }
@@ -102,7 +103,7 @@ void StringFinder::measurePerformance(const string& expression,
                                       bool matchCase) const {
     Timer timer;
     timer.start();
-    vector<string> results = find(expression, matchCase);
+    vector<const string*> results = find(expression, matchCase);
     timer.stop();
     cout << "Performance Report:" << endl;
     cout << "StringFinder.measurePerformance(" << expression  << ", "

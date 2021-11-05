@@ -34,12 +34,12 @@ void Benchmark::parseCommandLineArguments(int argc, char **argv) {
     struct option options[] = {
             {"iterations", 1, nullptr, 'i'},
             {"expression", 1, nullptr, 'e'},
-            {"matchCase", 1, nullptr, 'm'},
+            {"matchCase", 0, nullptr, 'c'},
             {nullptr, 0, nullptr, 0}
     };
     optind = 1;
     while (true) {
-        int c = getopt_long(argc, argv, "i:e", options, nullptr);
+        int c = getopt_long(argc, argv, "i:e:c", options, nullptr);
         if (c == -1) {
             break;
         }

@@ -13,8 +13,8 @@ using std::cout;
 using std::endl;
 
 
-void printResults(const vector<string>& results) {
-    for (const string& result : results) {
+void printResults(const vector<const string*>& results) {
+    for (auto result : results) {
         cout << result << endl;
     }
 }
