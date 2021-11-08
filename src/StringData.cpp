@@ -27,12 +27,13 @@ StringData::~StringData() = default;
 void StringData::parseCommandLineArguments(int argc, char **argv) {
     struct option options[] = {
             {"performance", 1, nullptr, 'p'},
+            {"output", 1, nullptr, 'o'},
             {nullptr, 0, nullptr, 0}
     };
     optind = 1;
     string performanceExpression;
     while (true) {
-        int c = getopt_long(argc, argv, "p", options, nullptr);
+        int c = getopt_long(argc, argv, "p:o", options, nullptr);
         if (c == -1) {
             break;
         }
@@ -40,6 +41,8 @@ void StringData::parseCommandLineArguments(int argc, char **argv) {
             case 'p':
                 performanceExpression = string(optarg);
                 break;
+            case 'o':
+                _output = string(optarg);
             default: break;
         }
     }

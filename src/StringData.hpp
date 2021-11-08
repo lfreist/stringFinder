@@ -23,6 +23,7 @@ class StringData {
     void performance(const string& expression) const;
  private:
     vector<string> _data;
+    string _output;
 
     FRIEND_TEST(StringDataTest, readFile);
 };
