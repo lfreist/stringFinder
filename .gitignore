@@ -1,4 +1,6 @@
 *.o
-wikidata-people.tsv
-wikidata-publications.tsv
+files/wikidata-people.tsv
+files/wikidata-publications.tsv
+files/benchmarks.md
 .idea
+reminders

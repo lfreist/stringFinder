@@ -5,8 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "src/StringData.hpp"
-#include "src/Timer.hpp"
+#include "src/StringFinder.hpp"
 
 using std::string;
 using std::vector;
@@ -14,17 +13,17 @@ using std::cout;
 using std::endl;
 
 
-void printResults(const vector<string>& results) {
-    for (const string& result : results) {
+void printResults(const vector<const string*>& results) {
+    for (auto result : results) {
         cout << result << endl;
     }
 }
 
 
 int main(int argc, char** argv) {
-    StringData sd;
+    StringFinder sf;
 
-    sd.parseCommandLineArguments(argc, argv);
+    sf.parseCommandLineArguments(argc, argv);
 
     return 0;
 }

@@ -7,7 +7,7 @@
 #include <string>
 #include <algorithm>
 
-#include "StringData.hpp"
+#include "StringFinder.hpp"
 #include "Timer.hpp"
 
 using std::vector;
@@ -18,13 +18,13 @@ using std::endl;
 using std::ifstream;
 
 // ____________________________________________________________________________
-StringData::StringData() = default;
+StringFinder::StringFinder() = default;
 
 // ____________________________________________________________________________
-StringData::~StringData() = default;
+StringFinder::~StringFinder() = default;
 
 // ____________________________________________________________________________
-void StringData::parseCommandLineArguments(int argc, char **argv) {
+void StringFinder::parseCommandLineArguments(int argc, char **argv) {
     struct option options[] = {
             {"performance", 1, nullptr, 'p'},
             {"output", 1, nullptr, 'o'},
@@ -52,12 +52,13 @@ void StringData::parseCommandLineArguments(int argc, char **argv) {
     }
     readFile(argv[optind]);
     if (!performanceExpression.empty()) {
-        performance(performanceExpression);
+        measurePerformance(performanceExpression, false);
+        measurePerformance(performanceExpression, true);
     }
 }
 
 // ____________________________________________________________________________
-void StringData::readFile(const string& path, bool deleteOld) {
+void StringFinder::readFile(const string& path, bool deleteOld) {
     string line;
     ifstream file(path.c_str());
     if (!file.is_open()) {
@@ -74,8 +75,9 @@ void StringData::readFile(const string& path, bool deleteOld) {
 }
 
 // ____________________________________________________________________________
-vector<string> StringData::find(string expression, bool matchCase) const {
-    vector<string> results;
+vector<const string*> StringFinder::find(string expression,
+                                         bool matchCase) const {
+    vector<const string*> results;
     string newStr;
     if (!matchCase) {
         transform(expression.begin(),
@@ -84,25 +86,31 @@ vector<string> StringData::find(string expression, bool matchCase) const {
                   ::tolower);
     }
     for (const string& str : _data) {
-        newStr = str;
         if (!matchCase) {
+            newStr = str;
             transform(newStr.begin(), newStr.end(), newStr.begin(), ::tolower);
-        }
-        if (newStr.find(expression) != string::npos) {
-            results.push_back(str);
+            if (newStr.find(expression) != string::npos) {
+                results.push_back(&(str));
+            }
+        } else {
+            if (str.find(expression) != string::npos) {
+                results.push_back(&(str));
+            }
         }
     }
     return results;
 }
 
 // ____________________________________________________________________________
-void StringData::performance(const string& expression) const {
+void StringFinder::measurePerformance(const string& expression,
+                                      bool matchCase) const {
     Timer timer;
     timer.start();
-    vector<string> results = find(expression, true);
+    vector<const string*> results = find(expression, matchCase);
     timer.stop();
-    cout << "Performance Report (expression: " << expression
-        << "):" << endl;
+    cout << "Performance Report:" << endl;
+    cout << "StringFinder.measurePerformance(" << expression  << ", "
+        << matchCase << "):" << endl;
     cout << " total lines:\t" << _data.size() << endl;
     cout << " total matches:\t" << results.size() << endl;
     cout << " query time:\t" << timer.elapsedSeconds() << " s" << endl;

@@ -11,7 +11,7 @@
 #include <algorithm>
 
 #include "Benchmark.hpp"
-#include "StringData.hpp"
+#include "StringFinder.hpp"
 #include "Timer.hpp"
 
 
@@ -23,6 +23,7 @@ Benchmark::Benchmark() {
     _iterations = 100;
     _result << "No benchmark performed yet.";
     _expression = "badminton";
+    _matchCase = false;
 }
 
 // ____________________________________________________________________________
@@ -33,11 +34,12 @@ void Benchmark::parseCommandLineArguments(int argc, char **argv) {
     struct option options[] = {
             {"iterations", 1, nullptr, 'i'},
             {"expression", 1, nullptr, 'e'},
+            {"matchCase", 0, nullptr, 'c'},
             {nullptr, 0, nullptr, 0}
     };
     optind = 1;
     while (true) {
-        int c = getopt_long(argc, argv, "i:e", options, nullptr);
+        int c = getopt_long(argc, argv, "i:e:c", options, nullptr);
         if (c == -1) {
             break;
         }
@@ -47,6 +49,9 @@ void Benchmark::parseCommandLineArguments(int argc, char **argv) {
                 break;
             case 'e':
                 _expression = string(optarg);
+                break;
+            case 'c':
+                _matchCase = true;
                 break;
             default:
                 break;
@@ -61,7 +66,8 @@ void Benchmark::parseCommandLineArguments(int argc, char **argv) {
 // ____________________________________________________________________________
 void Benchmark::run() {
     _result.str(string());
-    _result << "Benchmark 'find(\"" << _expression << "\")':" << endl;
+    _result << "Benchmark 'find(\"" << _expression << ", " << _matchCase
+        << "\")':" << endl;
     _result << " Iterations: " << _iterations << endl;
     benchmarkWallTime();
     cout << _result.str();
@@ -76,11 +82,11 @@ void Benchmark::reset() {
 void Benchmark::benchmarkWallTime() {
     vector<double> measurements;
     Timer timer;
-    StringData sd;
-    sd.readFile(_file);
+    StringFinder sf;
+    sf.readFile(_file);
     for (int i = 0; i < _iterations; i++) {
         timer.start(true);
-        sd.find(_expression, true);
+        sf.find(_expression, _matchCase);
         timer.stop();
         measurements.push_back(timer.elapsedSeconds());
     }
