@@ -40,4 +40,6 @@ double stddev(vector<double> data);
 double max(vector<double> data);
 double min(vector<double> data);
 
+void printProcess(int state, int total);
+
 #endif  // SRC_BENCHMARK_HPP_

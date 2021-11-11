@@ -59,6 +59,7 @@ void StringFinder::parseCommandLineArguments(int argc, char **argv) {
 
 // ____________________________________________________________________________
 void StringFinder::readFile(const string& path, bool deleteOld) {
+    cout << "Reading file " << path << endl;
     string line;
     ifstream file(path.c_str());
     if (!file.is_open()) {
@@ -72,6 +73,7 @@ void StringFinder::readFile(const string& path, bool deleteOld) {
         getline(file, line);
         _data.push_back(line);
     }
+    cout << "done" << endl;
 }
 
 // ____________________________________________________________________________
