@@ -1,9 +1,7 @@
 FROM ubuntu:20.04
 LABEL maintainer="Leon Freist <freist@informatik.uni-freiburg.de>"
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y apt-utils make vim build-essential libgtest-dev valgrind
-RUN apt-get install -y --no-install-recommends tzdata
-RUN apt-get -y install cmake
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && apt-get install -y apt-utils make vim build-essential libgtest-dev valgrind cmake
 RUN rm -rf /var/lib/apt/lists/*
 RUN cmake /usr/src/gtest/CMakeLists.txt && make -C /usr/src/gtest
 COPY . leon-freist-bachelorprojekt
