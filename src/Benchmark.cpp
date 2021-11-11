@@ -66,7 +66,7 @@ void Benchmark::parseCommandLineArguments(int argc, char **argv) {
 // ____________________________________________________________________________
 void Benchmark::run() {
     _result.str(string());
-    _result << "Benchmark 'find(\"" << _expression << ", " << _matchCase
+    _result << endl << "Benchmark 'find(\"" << _expression << ", " << _matchCase
         << "\")':" << endl;
     _result << " Iterations: " << _iterations << endl;
     benchmarkWallTime();
@@ -85,6 +85,7 @@ void Benchmark::benchmarkWallTime() {
     StringFinder sf;
     sf.readFile(_file);
     for (int i = 0; i < _iterations; i++) {
+        printProcess(i, _iterations);
         timer.start(true);
         sf.find(_expression, _matchCase);
         timer.stop();
@@ -135,4 +136,20 @@ double max(vector<double> data) {
 
 double min(vector<double> data) {
     return *std::min_element(data.begin(), data.end());
+}
+
+void printProcess(int state, int total) {
+    double pointsTotal = 50.0;
+    const double pointsPerState = pointsTotal / total;
+    int points = ceil(pointsTotal / total * state);
+    cout << "\r[";
+    for (int i = 0; i != pointsTotal; i++) {
+        if (points >= 0) {
+            cout << ".";
+            points--;
+        } else {
+            cout << " ";
+        }
+    }
+    cout << "]" << std::flush;
 }
