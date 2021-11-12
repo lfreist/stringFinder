@@ -15,7 +15,7 @@ using std::endl;
 
 void printResults(const vector<const string*>& results) {
     for (auto result : results) {
-        cout << result << endl;
+        cout << *result << endl;
     }
 }
 

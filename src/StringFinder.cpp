@@ -76,6 +76,7 @@ void StringFinder::readFile(const string& path, bool deleteOld) {
 // ____________________________________________________________________________
 vector<const string*> StringFinder::find(string expression,
                                          bool matchCase) const {
+    #pragma omp declare reduction (merge: vector<const string*> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
     vector<const string*> results;
     string newStr;
     if (!matchCase) {
@@ -84,16 +85,22 @@ vector<const string*> StringFinder::find(string expression,
                   expression.begin(),
                   ::tolower);
     }
-    for (const string& str : _data) {
+    #pragma omp parallel for reduction(merge: results)
+    for (vector<string>::const_iterator it = _data.begin();
+         it != _data.end();
+         it++) {
         if (!matchCase) {
-            newStr = str;
-            transform(newStr.begin(), newStr.end(), newStr.begin(), ::tolower);
+            newStr = *it;
+            transform(newStr.begin(),
+                      newStr.end(),
+                      newStr.begin(),
+                      ::tolower);
             if (newStr.find(expression) != string::npos) {
-                results.push_back(&(str));
+                results.push_back(&(*it));
             }
         } else {
-            if (str.find(expression) != string::npos) {
-                results.push_back(&(str));
+            if (it->find(expression) != string::npos) {
+                results.push_back(&(*it));
             }
         }
     }

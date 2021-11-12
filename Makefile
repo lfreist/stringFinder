@@ -5,7 +5,7 @@ TEST_BINS = $(basename $(wildcard tests/*Test.cpp))
 LIB_PATH = src
 HEADERS = $(wildcard src/*.hpp)
 OBJECTS = $(addsuffix .o, $(basename $(filter-out %Main.cpp tests/%Test.cpp, $(wildcard src/*.cpp))))
-LIBRARIES = -lgtest -lgtest_main -lpthread
+LIBRARIES = -lgtest -lgtest_main -lpthread -fopenmp
 
 .PRECIOUS: %.o
 .SUFFIXES:
@@ -39,4 +39,4 @@ clean:
 	$(COMPILER) -o $@ $^ $(LIBRARIES)
 
 %.o: %.cpp $(HEADERS)
-	$(COMPILER) -c $< -o $@
+	$(COMPILER) -c $< -o $@ $(LIBRARIES)
