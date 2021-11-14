@@ -89,6 +89,7 @@ void Benchmark::benchmarkWallTime() {
         timer.start(true);
         sf.find(_expression, _matchCase);
         timer.stop();
+        printProcess(i+1, _iterations);
         measurements.push_back(timer.elapsedSeconds());
     }
     _result << " Walltime\t[/s]:" << endl;
@@ -140,7 +141,6 @@ double min(vector<double> data) {
 
 void printProcess(int state, int total) {
     double pointsTotal = 50.0;
-    const double pointsPerState = pointsTotal / total;
     int points = ceil(pointsTotal / total * state);
     cout << "\r[";
     for (int i = 0; i != pointsTotal; i++) {

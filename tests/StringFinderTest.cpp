@@ -3,11 +3,12 @@
 
 #include <gtest/gtest.h>
 #include <string>
-#include <iostream>
+#include <algorithm>
 
 #include "../src/StringFinder.hpp"
 
 using std::string;
+using std::sort;
 
 // ____________________________________________________________________________
 TEST(StringFinderTest, readFile) {
@@ -31,8 +32,8 @@ TEST(StringDataTest, findExpression) {
     }
     {
         vector<const string*> result = sf.find("l", false);
+        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 5);
-        /*
         ASSERT_STREQ(
                 result[0]->c_str(),
                 "LinE with uppEr casE E");
@@ -48,12 +49,11 @@ TEST(StringDataTest, findExpression) {
         ASSERT_STREQ(
                 result[4]->c_str(),
                 "LinE with word EurEka with uppEr casE E");
-        */
     }
     {
         vector<const string*> result = sf.find("E", false);
+        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 4);
-        /*
         ASSERT_STREQ(
                 result[0]->c_str(),
                 "LinE with uppEr casE E");
@@ -66,12 +66,11 @@ TEST(StringDataTest, findExpression) {
         ASSERT_STREQ(
                 result[3]->c_str(),
                 "LinE with word EurEka with uppEr casE E");
-        */
     }
     {
         vector<const string*> result = sf.find("e", false);
+        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 4);
-        /*
         ASSERT_STREQ(
                 result[0]->c_str(),
                 "LinE with uppEr casE E");
@@ -84,73 +83,66 @@ TEST(StringDataTest, findExpression) {
         ASSERT_STREQ(
                 result[3]->c_str(),
                 "LinE with word EurEka with uppEr casE E");
-        */
     }
     {
         vector<const string*> result = sf.find("E", true);
+        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 2);
-        /*
         ASSERT_STREQ(
                 result[0]->c_str(),
                 "LinE with uppEr casE E");
         ASSERT_STREQ(
                 result[1]->c_str(),
                 "LinE with word EurEka with uppEr casE E");
-        */
     }
     {
         vector<const string*> result = sf.find("e", true);
+        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 2);
-        /*
         ASSERT_STREQ(
                 result[0]->c_str(),
                 "Line without upper case e");
         ASSERT_STREQ(
                 result[1]->c_str(),
                 "Line with word eureka in lower case");
-        */
     }
     {
         vector<const string*> result = sf.find("EurEka", true);
+        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 1);
-        /*
         ASSERT_STREQ(
                 result[0]->c_str(),
                 "LinE with word EurEka with uppEr casE E");
-        */
     }
     {
         vector<const string*> result = sf.find("EurEka", false);
+        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 2);
-        /*
         ASSERT_STREQ(
                 result[0]->c_str(),
                 "Line with word eureka in lower case");
         ASSERT_STREQ(
                 result[1]->c_str(),
                 "LinE with word EurEka with uppEr casE E");
-        */
     }
     {
         vector<const string*> result = sf.find("eureka", true);
+        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 1);
-        /*
         ASSERT_STREQ(
                 result[0]->c_str(),
                 "Line with word eureka in lower case");
-        */
     }
     {
         vector<const string*> result = sf.find("eureka", false);
+        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 2);
-        /*
         ASSERT_STREQ(
                 result[0]->c_str(),
                 "Line with word eureka in lower case");
         ASSERT_STREQ(
                 result[1]->c_str(),
                 "LinE with word EurEka with uppEr casE E");
-        */
     }
 }
 

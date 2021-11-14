@@ -12,8 +12,8 @@
 
 using std::vector;
 using std::string;
-using std::cerr;
 using std::cout;
+using std::cerr;
 using std::endl;
 using std::ifstream;
 
@@ -76,30 +76,34 @@ void StringFinder::readFile(const string& path, bool deleteOld) {
 // ____________________________________________________________________________
 vector<const string*> StringFinder::find(string expression,
                                          bool matchCase) const {
-    #pragma omp declare reduction (merge: vector<const string*> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+    // #pragma omp declare reduction
+    // (merge: vector<const string*> : omp_out.insert(omp_out.end(),
+    // omp_in.begin(), omp_in.end()))
     vector<const string*> results;
-    string newStr;
     if (!matchCase) {
         transform(expression.begin(),
                   expression.end(),
                   expression.begin(),
                   ::tolower);
     }
-    #pragma omp parallel for reduction(merge: results)
+    // #pragma omp parallel for reduction(merge: results)
+    #pragma omp parallel for
     for (vector<string>::const_iterator it = _data.begin();
          it != _data.end();
          it++) {
         if (!matchCase) {
-            newStr = *it;
+            string newStr = *it;
             transform(newStr.begin(),
                       newStr.end(),
                       newStr.begin(),
                       ::tolower);
             if (newStr.find(expression) != string::npos) {
+                #pragma omp critical
                 results.push_back(&(*it));
             }
         } else {
             if (it->find(expression) != string::npos) {
+                #pragma omp critical
                 results.push_back(&(*it));
             }
         }
