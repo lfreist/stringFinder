@@ -59,4 +59,4 @@ StringFinder.measurePerformance(expression, 0):
 
 05.11.21 09:40 - [53f4113e4d668c241f2e76c21e0ea90b28cbf3c3](https://github.com/lfreist/bachelorprojekt/commit/53f4113e4d668c241f2e76c21e0ea90b28cbf3c3) - only return pointers to matched strings from find()
 
-16.11.21 12:54 - 
+16.11.21 12:54 - [4f9f57f0470e34827afe36d92051ff66a5898d18](https://github.com/lfreist/bachelorprojekt/commit/4f9f57f0470e34827afe36d92051ff66a5898d18) - added multithread search
