@@ -29,7 +29,6 @@ InteractiveFinder::~InteractiveFinder() = default;
 
 // ____________________________________________________________________________
 void InteractiveFinder::parseCommandLineArguments(int argc, char **argv) {
-    cout << "args: " << argc << endl;
     if (argc == 2) {
         _sf.readFile(argv[optind]);
     } else if (argc > 2) {
@@ -46,6 +45,28 @@ void InteractiveFinder::usage() const {
 }
 
 // ____________________________________________________________________________
+void InteractiveFinder::interactiveUsage() const {
+    cout << "Usage: [COMMAND] {OBJECT} {--ARGUMENT {INT}}S" << endl;
+    cout << " Commands:" << endl;
+    cout << "  exit    no object    no arguments          exit the interactive"
+            " mode" << endl;
+    cout << "  find    expression   performance, lines n  search 'expression'"
+            " in current loaded file" << endl;
+    cout << "  laod    file         no arguments          load 'file'"
+            " (overwrite current loaded file)" << endl;
+    cout << "  help    no object    no arguments          print this usage"
+            " guide" << endl;
+    cout << endl;
+    cout << " Examples:" << endl;
+    cout << "  find expression" << endl;
+    cout << "  find \"expre ssion\"" << endl;
+    cout << "  find expre-ssion" << endl;
+    cout << "  find expression --lines --performance" << endl;
+    cout << "  load /path/to/file" << endl;
+    cout << endl;
+}
+
+// ____________________________________________________________________________
 void InteractiveFinder::printUsageAndExit() const {
     usage();
     exit(1);
@@ -57,7 +78,6 @@ void InteractiveFinder::run() {
     bool exit = false;
 
     string input;
-
 
     bool matchCase;
     int numberLines;
@@ -90,17 +110,24 @@ void InteractiveFinder::run() {
                 for (auto arg : *(ip.getCommand()->getArguments())) {
                     if (*(arg->getName()) == "performance") {
                         performance = true;
+                        numberLines = 0;
                     } else if (*(arg->getName()) == "matchCase") {
                         matchCase = true;
                     } else if (*(arg->getName()) == "lines") {
                         numberLines = arg->getValue();
                     }
                 }
-                cout << "Searching for '" << *(ip.getCommand()->getObject()) << "'..." << endl;
+                cout << "Searching for '" << *(ip.getCommand()->getObject())
+                  << "'..." << endl;
                 if (performance) {
-                    _sf.measurePerformance(*(ip.getCommand()->getObject()), matchCase);
+                    _sf.measurePerformance(*(ip.getCommand()->getObject()),
+                                           matchCase);
                 }
-                results = _sf.find(*(ip.getCommand()->getObject()), matchCase);
+                if (numberLines == 0) {
+                    break;
+                }
+                results = _sf.find(*(ip.getCommand()->getObject()),
+                                   matchCase);
                 sort(results.begin(), results.end());
                 counter = 0;
                 for (auto result : results) {
@@ -118,7 +145,7 @@ void InteractiveFinder::run() {
                 break;
             // help
             case 4:
-                usage();
+                interactiveUsage();
                 break;
             default:
                 break;
@@ -134,86 +161,22 @@ InputParser::InputParser() = default;
 // ____________________________________________________________________________
 InputParser::~InputParser() = default;
 
-/*
 // ____________________________________________________________________________
 void InputParser::parse(const string &input) {
-    if (_lastInput == input && !input.empty()) {
-        return;
-    }
-
-    _command = 0;
-    _object = "";
-    _arguments.clear();
-
     if (input.empty()) {
-        return;
+        _command = Command(0);
     }
-
-    string tmpStr = "";
-    bool commandParsed = false;
-    bool objectParsed = false;
-    bool isArgument = false;
-    bool isParameter = false;
-
-    for (int i = 0; i <= input.size(); i++) {
-        if (input[i] == ' ' || input[i] == '\t' || i == input.size()) {
-            if (!commandParsed) {
-                if (tmpStr == "") {
-                    continue;
-                } else {
-                    if (tmpStr == "exit") {
-                        _command = 1;
-                        break;
-                    } else if (tmpStr == "find") {
-                        _command = 2;
-                    } else if (tmpStr == "load") {
-                        _command = 3;
-                    } else if (tmpStr == "help") {
-                        _command = 4;
-                        break;
-                    } else {
-                        cout << "Unknown command '" << tmpStr << "'." << endl;
-                        break;
-                    }
-                }
-                commandParsed = true;
-            // command already parsed:
-            } else {
-                if (isArgument) {
-                    _arguments.push_back(tmpStr);
-                    isArgument = false;
-                } else {
-                    if (!objectParsed) {
-                        _object = tmpStr;
-                        objectParsed = true;
-                    } else {
-                        cout << "arguments must start with '--'" << endl;
-                    }
-                }
-            }
-            tmpStr = "";
-        } else if (input[i] == '-' &&
-                  (input[i-1] == ' ' || input[i-2] == ' ')) {
-            isArgument = true;
-            continue;
-        } else {
-            tmpStr += input[i];
-        }
-    }
-}
-*/
-
-// ____________________________________________________________________________
-void InputParser::parse(const string &input) {
     bool commandParsed = false;
     bool isArgument = false;
     bool objectParsed = false;
+    bool useSpace = false;
     string tmpStr = "";
 
     Argument* arg = nullptr;
 
     for (int i = 0; i <= input.size(); i++) {
-        if (input[i] == ' ' || input[i] == '\t' || i == input.size()) {
+        if (((input[i] == ' ' || input[i] == '\t') && !useSpace)
+            || i == input.size()) {
             if (!commandParsed) {
                 if (tmpStr.empty()) {
                     continue;
@@ -251,8 +214,10 @@ void InputParser::parse(const string &input) {
         } else if (input[i] == '-' &&
                    (input[i-1] == ' ' || input[i-2] == ' ')) {
             isArgument = true;
+        } else if (input[i] == '"') {
+            useSpace = !useSpace;
         } else {
-            tmpStr += input[i];
+                tmpStr += input[i];
         }
     }
 }
@@ -304,6 +269,10 @@ char Command::getName() {
 
 // ____________________________________________________________________________
 void Command::addArgument(Argument* arg) {
+    // exit and help do not take args
+    if (_name == 1 || _name == 4) {
+        return;
+    }
     _arguments.push_back(arg);
 }
 
@@ -314,6 +283,10 @@ void Command::addValueToLastArg(int value) {
 
 // ____________________________________________________________________________
 void Command::setObject(const string obj) {
+    // exit and help do not take an object
+    if (_name == 1 || _name == 4) {
+        return;
+    }
     _object = obj;
 }
 
@@ -373,8 +346,7 @@ void Argument::setValue(int value) {
 
 // ____________________________________________________________________________
 // ____________________________________________________________________________
-inline bool isInteger(const string& str)
-{
+inline bool isInteger(const string& str) {
     if (str.empty() ||
        ((!isdigit(str[0])) && (str[0] != '-') && (str[0] != '+'))) {
         return false;

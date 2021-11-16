@@ -29,20 +29,21 @@ class InteractiveFinder {
     uint8_t parseInput();
 
     void usage() const;
+    void interactiveUsage() const;
     void printUsageAndExit() const;
 };
 
 
 class Argument {
-public:
-    Argument(string name);
+ public:
+    explicit Argument(string name);
     Argument(string name, int value);
     ~Argument();
 
     int getValue();
     string* getName();
     void setValue(int value);
-private:
+ private:
     string _name;
     int _value;
     bool _hasValue;
@@ -52,7 +53,7 @@ private:
 class Command {
  public:
     Command();
-    Command(char name);
+    explicit Command(char name);
     ~Command();
 
     char getName();
@@ -74,14 +75,14 @@ class Command {
 //   command --arg0 obj --arg1 ...
 //   ...
 class InputParser {
-public:
+ public:
     InputParser();
     ~InputParser();
 
     Command* getCommand();
     void parse(const string &input);
     bool validInput();
-private:
+ private:
     Command _command;
 
     FRIEND_TEST(InteractiveFinderTest, parseInput);

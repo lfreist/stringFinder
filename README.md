@@ -1,33 +1,48 @@
 # bachelorprojekt
-
-#### Get performance on a specific expression (substring search):
+Search file for substrings.
+## Usage:
 ```bash
-./StringDataMain wikidata-people.tsv --performance "badminton"
-Performance Report (expression: badminton):
+# only build binaries:
+make compile
+
+# run compile, checkstyle, valgrind, tests:
+make all
+```
+### StringFinderInteractiveMain
+This will start an interactive console reading the provided `file` (where `file` is optional and either a relative or an absolute path to a file).
+
+```
+./StringFinderInteractiveMain file
+Reading file file
+done
+>
+```
+> You can now enter commands with arguments:
+> ```
+> Usage: [COMMAND] {OBJECT} {--ARGUMENT {INT}}S
+>  Commands:
+>   exit    no object    no arguments          exit the interactive mode
+>   find    expression   performance, lines n  search 'expression' in current loaded file
+>   laod    file         no arguments          load 'file' (overwrite current loaded file)
+>   help    no object    no arguments          print this usage guide
+>
+>  Examples:
+>   find expression
+>   find "expre ssion"
+>   find expre-ssion
+>   find expression --lines 5 --performance
+>   load /path/to/file
+> ```
+
+```
+> find expression --performance
+Searching for 'expression'...
+Performance Report:
+StringFinder.measurePerformance(expression, 0):
  total lines:   6131837
- total matches: 21218
- query time:    0.14958 s
- time / match:  7.04967e-06 s
-
- ```
-
-#### Benchmark substring search on expression
-> **defaults:**
-> ```
-> expression:  "badminton",
-> iterations:  100,
-> matchCase:   false
-> ```
-```bash
-./BenchmarkMain wikidata-people.tsv --iterations 100 --expression "badminton" --matchCase
-Benchmark 'find("badminton", true)':
- Iterations: 100
- Walltime       [/s]:
-  Mean:         0.148864
-  Variance:     1.54338e-06
-  Stddev:       0.00124233
-  Max:          0.154061
-  Min:          0.147468
+ total matches: 2
+ query time:    0.825045 s
+ time / match:  0.412523 s
 ```
 
 ## Files
@@ -44,4 +59,4 @@ Benchmark 'find("badminton", true)':
 
 05.11.21 09:40 - [53f4113e4d668c241f2e76c21e0ea90b28cbf3c3](https://github.com/lfreist/bachelorprojekt/commit/53f4113e4d668c241f2e76c21e0ea90b28cbf3c3) - only return pointers to matched strings from find()
 
-
+16.11.21 12:54 - 

@@ -60,8 +60,8 @@ void StringFinder::readFile(const string& path, bool deleteOld) {
     string line;
     ifstream file(path.c_str());
     if (!file.is_open()) {
-        cerr << "Error: Cannot open file" << path << endl;
-        exit(1);
+        cerr << "Error: Cannot open file " << path << endl;
+        return;
     }
     if (deleteOld) {
         _data.clear();
@@ -79,6 +79,7 @@ vector<const string*> StringFinder::find(string expression,
     // #pragma omp declare reduction
     // (merge: vector<const string*> : omp_out.insert(omp_out.end(),
     // omp_in.begin(), omp_in.end()))
+    // TODO(lfreist): user merge sort here!
     vector<const string*> results;
     if (!matchCase) {
         transform(expression.begin(),
