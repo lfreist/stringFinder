@@ -123,15 +123,17 @@ void InteractiveFinder::run() {
                     _sf.measurePerformance(*(ip.getCommand()->getObject()),
                                            matchCase);
                 }
-                if (numberLines == 0) {
-                    break;
-                }
                 results = _sf.find(*(ip.getCommand()->getObject()),
                                    matchCase);
                 sort(results.begin(), results.end());
+                cout << " Found " << results.size() << " matching lines." << endl;
+                if (numberLines == 0) {
+                    break;
+                }
+                cout << " Here are the first " << numberLines << ":" << endl;
                 counter = 0;
                 for (auto result : results) {
-                    cout << counter << ". " << *result << endl;
+                    cout << "   " << counter << ". \t" << *result << endl;
                     numberLines--;
                     counter++;
                     if (numberLines <= 0) {
