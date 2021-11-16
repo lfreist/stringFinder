@@ -9,7 +9,7 @@ LIBRARIES = -lgtest -lgtest_main -lpthread -fopenmp
 
 .PRECIOUS: %.o
 .SUFFIXES:
-.PHONY: all compile valgrind test checkstyle benchmark clean builddocker buildwharfer
+.PHONY: all compile valgrind test checkstyle clean
 
 all: compile valgrind test checkstyle
 
@@ -23,16 +23,6 @@ checkstyle:
 
 valgrind: $(TEST_BINARIES)
 	for T in $(TEST_BINS); do valgrind -s --leak-check=full ./$$T; done
-
-benchmark:
-
-builddocker:
-	docker build -t leon-freist-bachelorprojekt .
-	docker run -it -v $(pwd)/files:/inputfiles/input:ro --name leon-freist-bachelorprojekt leon-freist-bachelorprojekt
-
-buildwharfer:
-	wharfer build -t leon-freist-bachelorprojekt .
-	wharfer run -it -v $(pwd)/files:/inputfiles/input:ro --name leon-freist-bachelorprojekt leon-freist-bachelorprojekt
 
 clean:
 	rm -f *.o
