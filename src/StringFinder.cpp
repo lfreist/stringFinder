@@ -66,10 +66,20 @@ void StringFinder::readFile(const string& path, bool deleteOld) {
     if (deleteOld) {
         _data.clear();
     }
+    uint counter = 0;
+    uint innerCounter = 1;
     while (!file.eof()) {
         getline(file, line);
         _data.push_back(line);
+        counter++;
+        if (counter == 100000) {
+            cout << "\r" << innerCounter * counter << " lines"
+              << std::flush;
+            counter = 0;
+            innerCounter++;
+        }
     }
+    cout << "\r" << dataSize() << " lines" << endl;
     cout << "done" << endl;
 }
 
@@ -127,4 +137,8 @@ void StringFinder::measurePerformance(const string& expression,
     cout << " query time:\t" << timer.elapsedSeconds() << " s" << endl;
     cout << " time / match:\t" << timer.elapsedSeconds()/results.size()
         << " s" << endl;
+}
+
+int StringFinder::dataSize() const {
+    return _data.size();
 }

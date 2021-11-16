@@ -22,6 +22,7 @@ class StringFinder {
     vector<const string*> find(string expression, bool matchCase = false) const;
     void measurePerformance(const string& expression,
                             bool matchCase = false) const;
+    int dataSize() const;
  private:
     vector<string> _data;
 

@@ -84,11 +84,15 @@ void Benchmark::benchmarkWallTime() {
     Timer timer;
     StringFinder sf;
     sf.readFile(_file);
+    int matches = 0;
     for (int i = 0; i < _iterations; i++) {
         printProcess(i, _iterations);
         timer.start(true);
-        sf.find(_expression, _matchCase);
+        vector<const string*> results = sf.find(_expression, _matchCase);
         timer.stop();
+        if (matches == 0) {
+            matches = static_cast<int>(results.size());
+        }
         printProcess(i+1, _iterations);
         measurements.push_back(timer.elapsedSeconds());
     }
@@ -98,6 +102,9 @@ void Benchmark::benchmarkWallTime() {
     _result << "  Stddev:\t" << stddev(measurements) << endl;
     _result << "  Max:\t\t" << max(measurements) << endl;
     _result << "  Min:\t\t" << min(measurements) << endl;
+    _result << endl;
+    _result << "total lines:\t" << sf.dataSize() << endl;
+    _result << "matching lines:\t" << matches << endl;
 }
 
 // ____________________________________________________________________________
