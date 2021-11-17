@@ -126,7 +126,8 @@ void InteractiveFinder::run() {
                 results = _sf.find(*(ip.getCommand()->getObject()),
                                    matchCase);
                 sort(results.begin(), results.end());
-                cout << " Found " << results.size() << " matching lines." << endl;
+                cout << " Found " << results.size() << " matching lines."
+                  << endl;
                 if (numberLines == 0) {
                     break;
                 }

@@ -8,6 +8,12 @@ make compile
 # run compile, checkstyle, valgrind, tests:
 make all
 ```
+### Use docker
+```bash
+docker build -t leon-freist-bachelorprojekt .
+docker run -it -v $(pwd)/files:/inputfiles/input:ro --name leon-freist-bachelorprojekt leon-freist-bachelorprojekt
+```
+
 ### StringFinderInteractiveMain
 This will start an interactive console reading the provided `file` (where `file` is optional and either a relative or an absolute path to a file).
 
