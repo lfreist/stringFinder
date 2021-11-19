@@ -9,13 +9,11 @@ LIBRARIES = -lgtest -lgtest_main -lpthread -fopenmp
 
 .PRECIOUS: %.o
 .SUFFIXES:
-.PHONY: all compile maccompile valgrind test checkstyle clean
+.PHONY: all compile valgrind test checkstyle clean
 
 all: compile valgrind test checkstyle
 
 compile: $(MAIN_BINS) $(TEST_BINS)
-
-maccompile: $(MAIN_BINS)
 
 test: $(TEST_BINS)
 	for T in $(TEST_BINS); do ./$$T || exit; done
