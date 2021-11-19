@@ -23,21 +23,19 @@ Reading file file
 done
 >
 ```
-> You can now enter commands with arguments:
+> Usage:
 > ```
-> Usage: [COMMAND] {OBJECT} {--ARGUMENT {INT}}S
->  Commands:
->   exit    no object    no arguments          exit the interactive mode
->   find    expression   performance, lines n  search 'expression' in current loaded file
->   laod    file         no arguments          load 'file' (overwrite current loaded file)
->   help    no object    no arguments          print this usage guide
->
->  Examples:
->   find expression
->   find "expre ssion"
->   find expre-ssion
->   find expression --lines 5 --performance
->   load /path/to/file
+> Usage: [COMMAND] {OBJECT} {--ARGUMENT {INT}}s
+> Interactively search for substrings in a file
+> 
+> Commands:
+>  exit                          -> exit interactive mode
+>  find EXPRESSION {--ARGUMENT}s -> find EXPRESSION in currentloaded file
+>   --performance    display performance of a single search
+>   --lines n        display first n lines
+>  load FILE {--ARGUMENT}s       -> load FILE (delete old data)
+>   --append         append the data of FILE to the old data
+>  help                          -> display this guide
 > ```
 
 ```

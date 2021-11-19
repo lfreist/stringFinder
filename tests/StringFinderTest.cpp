@@ -18,7 +18,7 @@ TEST(StringFinderTest, readFile) {
     ASSERT_EQ(sf._data.size(), 5);
     sf.readFile(string("tests/data.test"));
     ASSERT_EQ(sf._data.size(), 5);
-    sf.readFile(string("tests/data.test"), false);
+    sf.readFile(string("tests/data.test"), true);
     ASSERT_EQ(sf._data.size(), 10);
 }
 

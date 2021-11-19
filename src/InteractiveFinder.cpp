@@ -46,23 +46,21 @@ void InteractiveFinder::usage() const {
 
 // ____________________________________________________________________________
 void InteractiveFinder::interactiveUsage() const {
-    cout << "Usage: [COMMAND] {OBJECT} {--ARGUMENT {INT}}S" << endl;
-    cout << " Commands:" << endl;
-    cout << "  exit    no object    no arguments          exit the interactive"
-            " mode" << endl;
-    cout << "  find    expression   performance, lines n  search 'expression'"
-            " in current loaded file" << endl;
-    cout << "  laod    file         no arguments          load 'file'"
-            " (overwrite current loaded file)" << endl;
-    cout << "  help    no object    no arguments          print this usage"
-            " guide" << endl;
     cout << endl;
-    cout << " Examples:" << endl;
-    cout << "  find expression" << endl;
-    cout << "  find \"expre ssion\"" << endl;
-    cout << "  find expre-ssion" << endl;
-    cout << "  find expression --lines --performance" << endl;
-    cout << "  load /path/to/file" << endl;
+    cout << "Usage: [COMMAND] {OBJECT} {--ARGUMENT {INT}}s" << endl;
+    cout << "Interactively search for substrings in a file" << endl;
+    cout << endl;
+    cout << "Commands:" << endl;
+    cout << " exit                          -> exit interactive mode" << endl;
+    cout << " find EXPRESSION {--ARGUMENT}s -> find EXPRESSION in current"
+            "loaded file" << endl;
+    cout << "  --performance    display performance of a single search" << endl;
+    cout << "  --lines n        display first n lines" << endl;
+    cout << " load FILE {--ARGUMENT}s       -> load FILE (delete old data)"
+      << endl;
+    cout << "  --append         append the data of FILE to the old data"
+      << endl;
+    cout << " help                          -> display this guide" << endl;
     cout << endl;
 }
 
@@ -84,6 +82,8 @@ void InteractiveFinder::run() {
     int counter = 0;
     vector<const string*> results;
     bool performance;
+
+    bool append;
 
     while (!exit) {
         cout << "> ";
@@ -115,6 +115,8 @@ void InteractiveFinder::run() {
                         matchCase = true;
                     } else if (*(arg->getName()) == "lines") {
                         numberLines = arg->getValue();
+                    } else {
+                        cout << "Unknown argument '" << *arg->getName() << "'";
                     }
                 }
                 cout << "Searching for '" << *(ip.getCommand()->getObject())
@@ -144,7 +146,15 @@ void InteractiveFinder::run() {
                 break;
             // load
             case 3:
-                _sf.readFile(*(ip.getCommand()->getObject()), true);
+                append = false;
+                for (auto arg : *(ip.getCommand()->getArguments())) {
+                    if (*(arg->getName()) == "append") {
+                        append = true;
+                    } else {
+                        cout << "Unknown argument '" << *arg->getName() << "'";
+                    }
+                }
+                _sf.readFile(*(ip.getCommand()->getObject()), !append);
                 break;
             // help
             case 4:
@@ -194,6 +204,7 @@ void InputParser::parse(const string &input) {
                     _command = Command(4);
                 } else {
                     cout << "Unknown command '" << tmpStr << "'" << endl;
+                    _command = Command(0);
                 }
                 commandParsed = true;
             } else {

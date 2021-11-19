@@ -55,7 +55,7 @@ void StringFinder::parseCommandLineArguments(int argc, char **argv) {
 }
 
 // ____________________________________________________________________________
-void StringFinder::readFile(const string& path, bool deleteOld) {
+void StringFinder::readFile(const string& path, bool append) {
     cout << "Reading file " << path << endl;
     string line;
     ifstream file(path.c_str());
@@ -63,7 +63,7 @@ void StringFinder::readFile(const string& path, bool deleteOld) {
         cerr << "Error: Cannot open file " << path << endl;
         return;
     }
-    if (deleteOld) {
+    if (!append) {
         _data.clear();
     }
     uint counter = 0;

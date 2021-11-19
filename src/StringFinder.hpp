@@ -18,7 +18,7 @@ class StringFinder {
     StringFinder();
     ~StringFinder();
     void parseCommandLineArguments(int argc, char** argv);
-    void readFile(const string& path, bool deleteOld = true);
+    void readFile(const string& path, bool append = false);
     vector<const string*> find(string expression, bool matchCase = false) const;
     void measurePerformance(const string& expression,
                             bool matchCase = false) const;
