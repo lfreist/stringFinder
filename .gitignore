@@ -3,3 +3,4 @@ files/wikidata-people.tsv
 files/wikidata-publications.tsv
 .idea
 reminders
+build/*

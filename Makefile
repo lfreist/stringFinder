@@ -1,10 +1,10 @@
 COMPILER = g++ -pedantic
 PYTHON = python3
 MAIN_BINS = $(basename $(wildcard *Main.cpp))
-TEST_BINS = $(basename $(wildcard tests/*Test.cpp))
+TEST_BINS = $(basename $(wildcard test/*Test.cpp))
 LIB_PATH = src
 HEADERS = $(wildcard src/*.hpp)
-OBJECTS = $(addsuffix .o, $(basename $(filter-out %Main.cpp tests/%Test.cpp, $(wildcard src/*.cpp))))
+OBJECTS = $(addsuffix .o, $(basename $(filter-out %Main.cpp test/%Test.cpp, $(wildcard src/*.cpp))))
 LIBRARIES = -lgtest -lgtest_main -lpthread -fopenmp
 
 .PRECIOUS: %.o
@@ -28,7 +28,7 @@ clean:
 	rm -f *.o
 	rm -f $(MAIN_BINS)
 	rm -f $(TEST_BINS)
-	rm -f $(OBJECTS) tests/*.o
+	rm -f $(OBJECTS) test/*.o
 
 %Main: %Main.o $(OBJECTS)
 	$(COMPILER) -o $@ $^ $(LIBRARIES)

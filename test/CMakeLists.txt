@@ -1,0 +1,8 @@
+add_executable(InteractiveFinderTest InteractiveFinderTest.cpp)
+target_link_libraries(InteractiveFinderTest StringFinder gtest_main)
+
+add_executable(StringFinderTest StringFinderTest.cpp)
+target_link_libraries(StringFinderTest StringFinder gtest_main)
+
+add_executable(WallTimerTest WallTimerTest.cpp)
+target_link_libraries(WallTimerTest Benchmark gtest_main)
