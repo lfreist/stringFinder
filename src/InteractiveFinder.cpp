@@ -2,13 +2,12 @@
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
 #include <getopt.h>
-#include <fstream>
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <iostream>
 
 #include "InteractiveFinder.hpp"
-#include "StringFinder.hpp"
 
 using std::vector;
 using std::string;
@@ -79,7 +78,7 @@ void InteractiveFinder::run() {
 
     bool matchCase;
     int numberLines;
-    int counter = 0;
+    int counter;
     vector<const string*> results;
     bool performance;
 
@@ -127,12 +126,12 @@ void InteractiveFinder::run() {
                 }
                 results = _sf.find(*(ip.getCommand()->getObject()),
                                    matchCase);
-                sort(results.begin(), results.end());
                 cout << " Found " << results.size() << " matching lines."
                   << endl;
                 if (numberLines == 0) {
                     break;
                 }
+                sort(results.begin(), results.end());
                 cout << " Here are the first " << numberLines << ":" << endl;
                 counter = 0;
                 for (auto result : results) {
@@ -336,7 +335,7 @@ Argument::Argument(string name, int value) {
 Argument::~Argument() = default;
 
 // ____________________________________________________________________________
-int Argument::getValue() {
+int Argument::getValue() const {
     if (!_hasValue) {
         return -1;
     }

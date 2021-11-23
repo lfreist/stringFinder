@@ -40,7 +40,7 @@ class Argument {
     Argument(string name, int value);
     ~Argument();
 
-    int getValue();
+    int getValue() const;
     string* getName();
     void setValue(int value);
  private:

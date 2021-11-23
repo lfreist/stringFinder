@@ -3,6 +3,7 @@
 
 #include <getopt.h>
 #include <fstream>
+#include <iostream>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -66,8 +67,8 @@ void StringFinder::readFile(const string& path, bool append) {
     if (!append) {
         _data.clear();
     }
-    uint counter = 0;
-    uint innerCounter = 1;
+    int counter = 0;
+    int innerCounter = 1;
     while (!file.eof()) {
         getline(file, line);
         _data.push_back(line);
