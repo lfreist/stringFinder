@@ -9,18 +9,17 @@
 // ____________________________________________________________________________
 TEST(InteractiveFinderTest, parseInput) {
     InputParser ip;
-    Command* cmd;
     {
         ip.parse("find expression");
         Command* cmd = ip.getCommand();
         ASSERT_EQ(cmd->getName(), 2);
-        ASSERT_EQ(*(cmd->getObject()), "expression");
+        ASSERT_EQ(*cmd->getObject(), "expression");
     }
     // exit
     {
         // exit
         ip.parse("exit");
-        cmd = ip.getCommand();
+        Command* cmd = ip.getCommand();
         ASSERT_EQ(cmd->getName(), 1);
         ASSERT_TRUE(cmd->getObject()->empty());
         ASSERT_TRUE(cmd->getArguments()->empty());
@@ -44,7 +43,7 @@ TEST(InteractiveFinderTest, parseInput) {
     {
         // find expression
         ip.parse("find expression");
-        cmd = ip.getCommand();
+        Command* cmd = ip.getCommand();
         ASSERT_EQ(cmd->getName(), 2);
         ASSERT_EQ(*cmd->getObject(), "expression");
         ASSERT_TRUE(cmd->getArguments()->empty());
@@ -69,9 +68,9 @@ TEST(InteractiveFinderTest, parseInput) {
         ASSERT_EQ(cmd->getName(), 2);
         ASSERT_EQ(*cmd->getObject(), "expression");
         ASSERT_EQ(cmd->getArguments()->size(), 2);
-        ASSERT_EQ(*cmd->getArguments()->at(0)->getName(), "lines");
-        ASSERT_EQ(cmd->getArguments()->at(0)->getValue(), 5);
-        ASSERT_EQ(*cmd->getArguments()->at(1)->getName(), "arg2");
+        ASSERT_EQ(*cmd->getArguments()->at(0).getName(), "lines");
+        ASSERT_EQ(cmd->getArguments()->at(0).getValue(), 5);
+        ASSERT_EQ(*cmd->getArguments()->at(1).getName(), "arg2");
         ASSERT_TRUE(ip.validInput());
         // find expression with '-'
         ip.parse("find expression-test --arg1");
@@ -79,7 +78,7 @@ TEST(InteractiveFinderTest, parseInput) {
         ASSERT_EQ(cmd->getName(), 2);
         ASSERT_EQ(*cmd->getObject(), "expression-test");
         ASSERT_EQ(cmd->getArguments()->size(), 1);
-        ASSERT_EQ(*cmd->getArguments()->at(0)->getName(), "arg1");
+        ASSERT_EQ(*cmd->getArguments()->at(0).getName(), "arg1");
         ASSERT_TRUE(ip.validInput());
         // find expression with spaces
         ip.parse("find \"expression test\" --arg1");
@@ -87,14 +86,14 @@ TEST(InteractiveFinderTest, parseInput) {
         ASSERT_EQ(cmd->getName(), 2);
         ASSERT_EQ(*cmd->getObject(), "expression test");
         ASSERT_EQ(cmd->getArguments()->size(), 1);
-        ASSERT_EQ(*cmd->getArguments()->at(0)->getName(), "arg1");
+        ASSERT_EQ(*cmd->getArguments()->at(0).getName(), "arg1");
         ASSERT_TRUE(ip.validInput());
     }
     // load
     {
         // load file
         ip.parse("load /path/to/file");
-        cmd = ip.getCommand();
+        Command* cmd = ip.getCommand();
         ASSERT_EQ(cmd->getName(), 3);
         ASSERT_EQ(*cmd->getObject(), "/path/to/file");
         ASSERT_TRUE(cmd->getArguments()->empty());
@@ -112,7 +111,7 @@ TEST(InteractiveFinderTest, parseInput) {
         ASSERT_EQ(cmd->getName(), 3);
         ASSERT_TRUE(cmd->getObject()->empty());
         ASSERT_EQ(cmd->getArguments()->size(), 1);
-        ASSERT_EQ(*cmd->getArguments()->at(0)->getName(), "arg1");
+        ASSERT_EQ(*cmd->getArguments()->at(0).getName(), "arg1");
         ASSERT_FALSE(ip.validInput());
         // find expression --arg
         ip.parse("load file --arg1 5 --arg2");
@@ -120,16 +119,16 @@ TEST(InteractiveFinderTest, parseInput) {
         ASSERT_EQ(cmd->getName(), 3);
         ASSERT_EQ(*cmd->getObject(), "file");
         ASSERT_EQ(cmd->getArguments()->size(), 2);
-        ASSERT_EQ(*cmd->getArguments()->at(0)->getName(), "arg1");
-        ASSERT_EQ(cmd->getArguments()->at(0)->getValue(), -1);
-        ASSERT_EQ(*cmd->getArguments()->at(1)->getName(), "arg2");
+        ASSERT_EQ(*cmd->getArguments()->at(0).getName(), "arg1");
+        ASSERT_EQ(cmd->getArguments()->at(0).getValue(), -1);
+        ASSERT_EQ(*cmd->getArguments()->at(1).getName(), "arg2");
         ASSERT_TRUE(ip.validInput());
     }
     // help
     {
         // help
         ip.parse("help");
-        cmd = ip.getCommand();
+        Command* cmd = ip.getCommand();
         ASSERT_EQ(cmd->getName(), 4);
         ASSERT_TRUE(cmd->getObject()->empty());
         ASSERT_TRUE(cmd->getArguments()->empty());
@@ -152,7 +151,7 @@ TEST(InteractiveFinderTest, parseInput) {
     // no input
     {
         ip.parse("");
-        cmd = ip.getCommand();
+        Command* cmd = ip.getCommand();
         ASSERT_EQ(cmd->getName(), 0);
     }
 }

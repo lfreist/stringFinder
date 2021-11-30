@@ -107,15 +107,15 @@ void InteractiveFinder::run() {
                 numberLines = 5;
                 performance = false;
                 for (auto arg : *(ip.getCommand()->getArguments())) {
-                    if (*(arg->getName()) == "performance") {
+                    if (*(arg.getName()) == "performance") {
                         performance = true;
                         numberLines = 0;
-                    } else if (*(arg->getName()) == "matchCase") {
+                    } else if (*(arg.getName()) == "matchCase") {
                         matchCase = true;
-                    } else if (*(arg->getName()) == "lines") {
-                        numberLines = arg->getValue();
+                    } else if (*(arg.getName()) == "lines") {
+                        numberLines = arg.getValue();
                     } else {
-                        cout << "Unknown argument '" << *arg->getName() << "'";
+                        cout << "Unknown argument '" << *arg.getName() << "'";
                     }
                 }
                 cout << "Searching for '" << *(ip.getCommand()->getObject())
@@ -147,10 +147,10 @@ void InteractiveFinder::run() {
             case 3:
                 append = false;
                 for (auto arg : *(ip.getCommand()->getArguments())) {
-                    if (*(arg->getName()) == "append") {
+                    if (*(arg.getName()) == "append") {
                         append = true;
                     } else {
-                        cout << "Unknown argument '" << *arg->getName() << "'";
+                        cout << "Unknown argument '" << *arg.getName() << "'";
                     }
                 }
                 _sf.readFile(*(ip.getCommand()->getObject()), !append);
@@ -184,8 +184,6 @@ void InputParser::parse(const string &input) {
     bool useSpace = false;
     string tmpStr = "";
 
-    Argument* arg = nullptr;
-
     for (int i = 0; i <= input.size(); i++) {
         if (((input[i] == ' ' || input[i] == '\t') && !useSpace)
             || i == input.size()) {
@@ -208,9 +206,7 @@ void InputParser::parse(const string &input) {
                 commandParsed = true;
             } else {
                 if (isArgument) {
-                    arg = new Argument(tmpStr);
-                    _command.addArgument(arg);
-                    arg = nullptr;
+                    _command.addArgument(tmpStr);
                     isArgument = false;
                 } else if (!objectParsed) {
                     _command.setObject(tmpStr);
@@ -269,11 +265,7 @@ Command::Command(char name) {
 }
 
 // ____________________________________________________________________________
-Command::~Command() {
-    for (auto& arg : _arguments) {
-        delete arg;
-    }
-}
+Command::~Command() = default;
 
 // ____________________________________________________________________________
 char Command::getName() {
@@ -281,17 +273,17 @@ char Command::getName() {
 }
 
 // ____________________________________________________________________________
-void Command::addArgument(Argument* arg) {
+void Command::addArgument(string argStr) {
     // exit and help do not take args
     if (_name == 1 || _name == 4) {
         return;
     }
-    _arguments.push_back(arg);
+    _arguments.push_back(Argument(argStr));
 }
 
 // ____________________________________________________________________________
 void Command::addValueToLastArg(int value) {
-    _arguments.back()->setValue(value);
+    _arguments.back().setValue(value);
 }
 
 // ____________________________________________________________________________
@@ -309,7 +301,7 @@ string* Command::getObject() {
 }
 
 // ____________________________________________________________________________
-vector<Argument*>* Command::getArguments() {
+vector<Argument>* Command::getArguments() {
     return &(_arguments);
 }
 

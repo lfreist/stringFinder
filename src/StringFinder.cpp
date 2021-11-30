@@ -71,6 +71,9 @@ void StringFinder::readFile(const string& path, bool append) {
     int innerCounter = 1;
     while (!file.eof()) {
         getline(file, line);
+        if (line.empty()) {
+            continue;
+        }
         _data.push_back(line);
         counter++;
         if (counter == 100000) {

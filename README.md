@@ -1,12 +1,11 @@
 # bachelorprojekt
 Search file for substrings.
+
 ## Usage:
 ```bash
-# only build binaries:
-make compile
-
-# run compile, checkstyle, valgrind, tests:
-make all
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)
 ```
 ### Use docker
 ```bash

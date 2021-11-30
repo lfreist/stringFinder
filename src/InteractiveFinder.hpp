@@ -59,11 +59,11 @@ class Command {
     char getName();
     void setObject(const string obj);
     string* getObject();
-    vector<Argument*>* getArguments();
-    void addArgument(Argument* arg);
+    vector<Argument>* getArguments();
+    void addArgument(string argStr);
     void addValueToLastArg(int value);
  private:
-    vector<Argument*> _arguments;
+    vector<Argument> _arguments;
     // either expression (for find) or file (for load)
     string _object;
     char _name;

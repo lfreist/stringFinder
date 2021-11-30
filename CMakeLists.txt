@@ -15,6 +15,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 # set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 
+find_package(OpenMP)
+
 # GTEST
 add_subdirectory(third_party/googletest/googletest)
 include_directories(third_party/googletest/googletest/include)
@@ -28,8 +30,14 @@ target_link_libraries(StringFinderInteractiveMain PUBLIC StringFinder)
 add_executable(BenchmarkMain BenchmarkMain.cpp)
 target_link_libraries(BenchmarkMain PUBLIC Benchmark)
 
+add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
+target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer)
+
+
+configure_file(test/data.test test/data.test)
+
 add_subdirectory(test)
-enable_testing()
-add_test(InteractiveFinderTest test/InteractiveFinderTest.cpp)
-add_test(StringFinderTest test/StringFinderTest.cpp)
-add_test(WallTimerTest test/WallTimerTest.cpp)
+include(CTest)
+add_test(InteractiveFinderTest test/InteractiveFinderTest)
+add_test(StringFinderTest test/StringFinderTest)
+add_test(WallTimerTest test/WallTimerTest)

@@ -14,18 +14,18 @@ using std::sort;
 TEST(StringFinderTest, readFile) {
     StringFinder sf;
     ASSERT_EQ(sf._data.size(), 0);
-    sf.readFile(string("tests/data.test"));
+    sf.readFile(string("test/data.test"));
     ASSERT_EQ(sf._data.size(), 5);
-    sf.readFile(string("tests/data.test"));
+    sf.readFile(string("test/data.test"));
     ASSERT_EQ(sf._data.size(), 5);
-    sf.readFile(string("tests/data.test"), true);
+    sf.readFile(string("test/data.test"), true);
     ASSERT_EQ(sf._data.size(), 10);
 }
 
 // ____________________________________________________________________________
 TEST(StringDataTest, findExpression) {
     StringFinder sf;
-    sf.readFile(string("tests/data.test"));
+    sf.readFile(string("test/data.test"));
     {
         vector<const string*> result = sf.find("NotInFile", true);
         ASSERT_EQ(result.size(), 0);
