@@ -184,7 +184,7 @@ void InputParser::parse(const string &input) {
     bool useSpace = false;
     string tmpStr = "";
 
-    for (int i = 0; i <= input.size(); i++) {
+    for (long unsigned int i = 0; i <= input.size(); i++) {
         if (((input[i] == ' ' || input[i] == '\t') && !useSpace)
             || i == input.size()) {
             if (!commandParsed) {

@@ -18,6 +18,30 @@ using std::cerr;
 using std::endl;
 using std::ifstream;
 
+
+void merge(vector<const string*> *out, vector<const string*> *in) {
+    long unsigned int in_loc = 0;
+    long unsigned int out_loc = 0;
+    while (true) {
+        if (in_loc >= in->size()) {
+            break;
+        }
+        if (out_loc >= out->size()) {
+            out->insert(out->end(), in->begin() + in_loc, in->end());
+            break;
+        }
+
+        if (in->at(in_loc) < out->at(out_loc)) {
+            out->insert(out->begin() + out_loc, in->at(in_loc));
+            in_loc++;
+            out_loc++;
+        } else {
+            out_loc++;
+        }
+    }
+}
+
+
 // ____________________________________________________________________________
 StringFinder::StringFinder() = default;
 
@@ -87,13 +111,10 @@ void StringFinder::readFile(const string& path, bool append) {
     cout << "done" << endl;
 }
 
+
 // ____________________________________________________________________________
-vector<const string*> StringFinder::find(string expression,
-                                         bool matchCase) const {
-    // #pragma omp declare reduction
-    // (merge: vector<const string*> : omp_out.insert(omp_out.end(),
-    // omp_in.begin(), omp_in.end()))
-    // TODO(lfreist): user merge sort here!
+vector<const string*> StringFinder::find(string expression, bool matchCase) const {
+    #pragma omp declare reduction (merge: vector<const string*> : merge(&omp_out, &omp_in))
     vector<const string*> results;
     if (!matchCase) {
         transform(expression.begin(),
@@ -101,8 +122,8 @@ vector<const string*> StringFinder::find(string expression,
                   expression.begin(),
                   ::tolower);
     }
-    // #pragma omp parallel for reduction(merge: results)
-    #pragma omp parallel for
+    #pragma omp parallel for reduction(merge: results)
+    // #pragma omp parallel for
     for (vector<string>::const_iterator it = _data.begin();
          it != _data.end();
          it++) {
