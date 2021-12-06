@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 find_package(OpenMP)
 
 # GTEST
-add_subdirectory(third_party/googletest/googletest)
+add_subdirectory(third_party/googletest/)
 include_directories(third_party/googletest/googletest/include)
 
 # StringFinder Project
