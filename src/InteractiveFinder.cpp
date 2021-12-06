@@ -77,10 +77,11 @@ void InteractiveFinder::run() {
     string input;
 
     bool matchCase;
-    int numberLines;
-    int counter;
+    unsigned long int numberLines;
+    unsigned long int counter;
     vector<const string*> results;
     bool performance;
+    bool lnumbers;
 
     bool append;
 
@@ -92,11 +93,13 @@ void InteractiveFinder::run() {
             cout << "Input not valid! Find more using 'help'." << endl;
             continue;
         }
+        if (ip.getCommand()->getName() == 2 && _sf.dataSize() == 0) {
+            cout << " No data provided. Please run 'load path/to/file' to read a file." << endl;
+            continue;
+        }
 
         switch (ip.getCommand()->getName()) {
             // exit
-            case 0:
-                continue;
             case 1:
                 cout << "Bye!" << endl;
                 exit = true;
@@ -106,14 +109,17 @@ void InteractiveFinder::run() {
                 matchCase = false;
                 numberLines = 5;
                 performance = false;
+                lnumbers = false;
                 for (auto arg : *(ip.getCommand()->getArguments())) {
                     if (*(arg.getName()) == "performance") {
                         performance = true;
                         numberLines = 0;
-                    } else if (*(arg.getName()) == "matchCase") {
+                    } else if (*arg.getName() == "matchCase") {
                         matchCase = true;
-                    } else if (*(arg.getName()) == "lines") {
+                    } else if (*arg.getName() == "lines") {
                         numberLines = arg.getValue();
+                    } else if (*arg.getName() == "lnumbers") {
+                        lnumbers = true;
                     } else {
                         cout << "Unknown argument '" << *arg.getName() << "'";
                     }
@@ -121,21 +127,23 @@ void InteractiveFinder::run() {
                 cout << "Searching for '" << *(ip.getCommand()->getObject())
                   << "'..." << endl;
                 if (performance) {
-                    _sf.measurePerformance(*(ip.getCommand()->getObject()),
-                                           matchCase);
+                    _sf.measurePerformance(*(ip.getCommand()->getObject()), matchCase);
                 }
-                results = _sf.find(*(ip.getCommand()->getObject()),
-                                   matchCase);
+                results = _sf.find(*(ip.getCommand()->getObject()), matchCase);
                 cout << " Found " << results.size() << " matching lines."
                   << endl;
-                if (numberLines == 0) {
+                if (numberLines == 0 || results.empty()) {
                     break;
                 }
-                sort(results.begin(), results.end());
+                numberLines = numberLines > results.size() ? results.size() : numberLines;
                 cout << " Here are the first " << numberLines << ":" << endl;
-                counter = 0;
+                counter = 1;
                 for (auto result : results) {
-                    cout << "   " << counter << ". \t" << *result << endl;
+                    if (lnumbers) {
+                        cout << "   " << counter << ". ()\t" << *result << endl;
+                    } else {
+                        cout << "   " << counter << ". \t" << *result << endl;
+                    }
                     numberLines--;
                     counter++;
                     if (numberLines <= 0) {

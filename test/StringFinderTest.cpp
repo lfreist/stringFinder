@@ -32,7 +32,6 @@ TEST(StringDataTest, findExpression) {
     }
     {
         vector<const string*> result = sf.find("l", false);
-        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 5);
         ASSERT_STREQ(
                 result[0]->c_str(),
@@ -52,7 +51,6 @@ TEST(StringDataTest, findExpression) {
     }
     {
         vector<const string*> result = sf.find("E", false);
-        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 4);
         ASSERT_STREQ(
                 result[0]->c_str(),
@@ -69,7 +67,6 @@ TEST(StringDataTest, findExpression) {
     }
     {
         vector<const string*> result = sf.find("e", false);
-        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 4);
         ASSERT_STREQ(
                 result[0]->c_str(),
@@ -86,7 +83,6 @@ TEST(StringDataTest, findExpression) {
     }
     {
         vector<const string*> result = sf.find("E", true);
-        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 2);
         ASSERT_STREQ(
                 result[0]->c_str(),
@@ -97,7 +93,6 @@ TEST(StringDataTest, findExpression) {
     }
     {
         vector<const string*> result = sf.find("e", true);
-        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 2);
         ASSERT_STREQ(
                 result[0]->c_str(),
@@ -108,7 +103,6 @@ TEST(StringDataTest, findExpression) {
     }
     {
         vector<const string*> result = sf.find("EurEka", true);
-        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 1);
         ASSERT_STREQ(
                 result[0]->c_str(),
@@ -116,7 +110,6 @@ TEST(StringDataTest, findExpression) {
     }
     {
         vector<const string*> result = sf.find("EurEka", false);
-        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 2);
         ASSERT_STREQ(
                 result[0]->c_str(),
@@ -127,7 +120,6 @@ TEST(StringDataTest, findExpression) {
     }
     {
         vector<const string*> result = sf.find("eureka", true);
-        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 1);
         ASSERT_STREQ(
                 result[0]->c_str(),
@@ -135,7 +127,6 @@ TEST(StringDataTest, findExpression) {
     }
     {
         vector<const string*> result = sf.find("eureka", false);
-        sort(result.begin(), result.end());
         ASSERT_EQ(result.size(), 2);
         ASSERT_STREQ(
                 result[0]->c_str(),
