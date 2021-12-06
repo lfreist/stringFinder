@@ -18,8 +18,8 @@ using std::cerr;
 using std::endl;
 using std::ifstream;
 
-
-void merge(vector<const string*> *out, vector<const string*> *in) {
+/*
+void mergeArrays(vector<const string*> *out, vector<const string*> *in) {
     long unsigned int in_loc = 0;
     long unsigned int out_loc = 0;
     while (true) {
@@ -40,7 +40,14 @@ void merge(vector<const string*> *out, vector<const string*> *in) {
         }
     }
 }
+*/
 
+// find badminton --matchCase --performance takes ~0.23s on wikidata-publications.tsv
+void mergeArrays(vector<const string*> *out, vector<const string*> *in) {
+    vector<const string*> tmp(out->size() +  in->size());
+    std::merge(out->begin(), out->end(), in->begin(), in->end(), tmp.begin());
+    *out = std::move(tmp);
+}
 
 // ____________________________________________________________________________
 StringFinder::StringFinder() = default;
@@ -114,25 +121,19 @@ void StringFinder::readFile(const string& path, bool append) {
 
 // ____________________________________________________________________________
 vector<const string*> StringFinder::find(string expression, bool matchCase) const {
-    #pragma omp declare reduction (merge: vector<const string*> : merge(&omp_out, &omp_in))
+    #pragma omp declare reduction (merge: vector<const string*> : mergeArrays(&omp_out, &omp_in))
     vector<const string*> results;
     if (!matchCase) {
-        transform(expression.begin(),
-                  expression.end(),
-                  expression.begin(),
-                  ::tolower);
+        transform(expression.begin(), expression.end(), expression.begin(), ::tolower);
     }
     #pragma omp parallel for reduction(merge: results)
     // #pragma omp parallel for
     for (vector<string>::const_iterator it = _data.begin();
-         it != _data.end();
-         it++) {
+        it != _data.end();
+        it++) {
         if (!matchCase) {
             string newStr = *it;
-            transform(newStr.begin(),
-                      newStr.end(),
-                      newStr.begin(),
-                      ::tolower);
+            transform(newStr.begin(), newStr.end(), newStr.begin(), ::tolower);
             if (newStr.find(expression) != string::npos) {
                 #pragma omp critical
                 results.push_back(&(*it));
@@ -148,8 +149,7 @@ vector<const string*> StringFinder::find(string expression, bool matchCase) cons
 }
 
 // ____________________________________________________________________________
-void StringFinder::measurePerformance(const string& expression,
-                                      bool matchCase) const {
+void StringFinder::measurePerformance(const string& expression, bool matchCase) const {
     Timer timer;
     timer.start();
     vector<const string*> results = find(expression, matchCase);

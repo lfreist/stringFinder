@@ -53,6 +53,7 @@ void InteractiveFinder::interactiveUsage() const {
     cout << " exit                          -> exit interactive mode" << endl;
     cout << " find EXPRESSION {--ARGUMENT}s -> find EXPRESSION in current"
             "loaded file" << endl;
+    cout << "  --matchCase      find exact expression" << endl;
     cout << "  --performance    display performance of a single search" << endl;
     cout << "  --lines n        display first n lines" << endl;
     cout << " load FILE {--ARGUMENT}s       -> load FILE (delete old data)"
@@ -210,6 +211,7 @@ void InputParser::parse(const string &input) {
                 } else {
                     cout << "Unknown command '" << tmpStr << "'" << endl;
                     _command = Command(0);
+                    break;
                 }
                 commandParsed = true;
             } else {

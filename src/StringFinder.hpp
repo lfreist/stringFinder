@@ -13,7 +13,7 @@ using std::vector;
 using std::string;
 
 // merge two sorted vectors. used for omp reduction in StringFinder.find()
-void merge(vector<const string*> *out, vector<const string*> *in);
+void mergeArrays(vector<const string*> *out, vector<const string*> *in);
 
 // Class StringData
 class StringFinder {
