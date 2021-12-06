@@ -6,8 +6,6 @@ RUN rm -rf /var/lib/apt/lists/*
 COPY . leon-freist-bachelorprojekt
 WORKDIR "leon-freist-bachelorprojekt"
 RUN git submodule init > /dev/null && git submodule update > /dev/null
-RUN mkdir
-WORKDIR "third_party/googletest"
 RUN mkdir build
 WORKDIR "build"
 RUN cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)
