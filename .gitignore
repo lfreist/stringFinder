@@ -1,6 +1,5 @@
 *.o
-files/wikidata-people.tsv
-files/wikidata-publications.tsv
+cmake-build-debug
 .idea
 reminders
 build/*
