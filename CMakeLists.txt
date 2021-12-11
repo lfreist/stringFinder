@@ -30,8 +30,8 @@ target_link_libraries(StringFinderInteractiveMain PUBLIC StringFinder)
 add_executable(BenchmarkMain BenchmarkMain.cpp)
 target_link_libraries(BenchmarkMain PUBLIC Benchmark)
 
-# add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
-# target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer)
+add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
+target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer)
 
 
 configure_file(test/data.test test/data.test)

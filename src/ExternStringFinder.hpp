@@ -10,21 +10,15 @@
 
 using std::vector;
 
-#define NR_OF_CHARS 256
-#define MAX_BUFFER_SIZE 2 << 16
+#define MAX_BUFFER_SIZE (2 << 21)
+#define BUFFER_OVERFLOW (2 << 11)
 
-/* Read file content from current file pointer position + shift
-   into buffer
-   assuming fp is not NULL */
-bool nextBuffer(FILE* fp, char* buffer, int shift);
+void readBuffer1(char *path);
 
-/* get maximum of two integers */
-int max(int a, int b);
+void readBuffer2(char *path);
 
-// ____________________________________________________________________________
-// Boyer-Moore-Search
+int nextBuffer1(FILE* fp, char* buffer);
 
-
-vector<int> search(FILE* fp, char* pattern);
+int nextBuffer2(int fd, char* buffer);
 
 #endif  // LIB_FILEREADER_HPP_

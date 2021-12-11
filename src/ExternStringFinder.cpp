@@ -5,117 +5,101 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <fcntl.h>
 
 #include <vector>
 
 using std::vector;
 
+#include "Timer.hpp"
+
 #include "ExternStringFinder.hpp"
 
-// ____________________________________________________________________________
-bool nextBuffer(FILE* fp, char* buffer, int shift) {
-    if (shift != 0) {
-        fseek(fp, shift, SEEK_CUR);
-    }
+void readBuffer1(char *path) {
+    FILE *fp = fopen(path, "r");
+    char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];
     char c;
-    for (int i = 0; i < MAX_BUFFER_SIZE; i++) {
-        c = fgetc(fp);
-        if (c == EOF) {
+    while (!feof(fp)) {
+        fread(textBuffer, MAX_BUFFER_SIZE, 1, fp);
+        for (int i = MAX_BUFFER_SIZE; i < BUFFER_OVERFLOW; i++) {
+            if ((c = fgetc(fp)) == EOF) {
+                textBuffer[i] = '\0';
+                break;
+            }
+            if (c  == '\n') {
+                textBuffer[i] = c;
+                textBuffer[i+1] = '\0';
+                break;
+            }
+            textBuffer[i] = c;
+        }
+        // printf("New Block \n");
+    }
+    fclose(fp);
+}
+
+void readBuffer2(char *path) {
+    int fd = open(path, O_RDONLY);
+    char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];
+    char c[2];
+    c[1] = '\0';
+    ssize_t s;
+    while ((s = read(fd, textBuffer, MAX_BUFFER_SIZE)) > 0) {
+        c[0] = textBuffer[s-1];
+        for (int i = 0; i < BUFFER_OVERFLOW; i++) {
+            if (c[0] == '\n') {
+                textBuffer[MAX_BUFFER_SIZE+i+1] = '\0';
+                break;
+            }
+            if (read(fd, c, 1) == 0) {
+                textBuffer[MAX_BUFFER_SIZE+i+1] = '\0';
+                break;
+            }
+            textBuffer[MAX_BUFFER_SIZE+i] = c[0];
+        }
+    }
+    close(fd);
+}
+
+// ____________________________________________________________________________________________________________________
+int nextBuffer1(FILE* fp, char* buffer) {
+    char c;
+    if (feof(fp)) {
+        return 0;
+    }
+    fread(buffer, MAX_BUFFER_SIZE, 1, fp);
+    for (int i = MAX_BUFFER_SIZE; i < BUFFER_OVERFLOW+MAX_BUFFER_SIZE; i++) {
+        if ((c = fgetc(fp)) == EOF) {
             buffer[i] = '\0';
-            return false;
+            return i;
+        }
+        if (c  == '\n') {
+            buffer[i] = c;
+            buffer[i+1] = '\0';
+            return i;
         }
         buffer[i] = c;
     }
-    buffer[MAX_BUFFER_SIZE+1] = '\0';
-    return true;
+    return -1;
 }
 
-// ____________________________________________________________________________
-int max(int a, int b) {
-    return (a > b) ? a : b;
-}
-
-// ____________________________________________________________________________
-void buildBadCharTable(char* pattern, int size, int badCharTable[NR_OF_CHARS]) {
-    int i;
-    for (i = 0; i < 256; i++) {
-        badCharTable[i] = -1;
+int nextBuffer2(int fd, char* buffer) {
+    char c[2];
+    c[1] = '\0';
+    ssize_t s = read(fd, buffer, MAX_BUFFER_SIZE);
+    if (s == 0) {
+        return 0;
     }
-    for (i = 0; i < size; i++) {
-        badCharTable[static_cast<int>(pattern[i])] = i;
+    for (int i = MAX_BUFFER_SIZE; i < BUFFER_OVERFLOW+MAX_BUFFER_SIZE; i++) {
+        if (c[0] == '\n') {
+            buffer[i] = '\0';
+            return i;
+        }
+        if (read(fd, c, 1) == 0) {
+            buffer[i] = '\0';
+            return i;
+        }
+        buffer[i] = c[0];
     }
-}
-
-// ____________________________________________________________________________
-vector<int> search(FILE* fp, char* pattern) {
-    vector<int> results;
-    char textBuffer[MAX_BUFFER_SIZE+1];
-
-    int patternLength = strlen(pattern);
-    int textLength;
-
-    // 256
-    int badCharTable[NR_OF_CHARS];
-
-    buildBadCharTable(pattern, patternLength, badCharTable);
-
-    int shift = 0;
-    int oldShift = 0;
-    bool lastBuffer = !nextBuffer(fp, textBuffer, 0);
-
-    int bufferLength = strlen(textBuffer);
-
-    // printf("Buffer: %s, %d\n", textBuffer, bufferLength);
-
-    int bytePosition = 0;
-    int bufferShift = 0;
-
-    bool newBuffer = false;
-
-    while (true) {
-        if (shift > (bufferLength - patternLength) || newBuffer) {
-            if (bufferShift == 0) {
-                bufferShift = shift-bufferLength+1;
-            }
-            bytePosition += shift-bufferShift;
-            lastBuffer = !nextBuffer(fp, textBuffer, bufferShift);
-            oldShift = 0;
-            shift = 0;
-            bufferLength = strlen(textBuffer);
-            newBuffer = false;
-            // printf("Buffer: %s, len: %d\n", textBuffer, bufferLength);
-        }
-        int j = patternLength - 1;
-        // printf(" shift: %d\n", shift);
-        while (j >= 0 && pattern[j] == textBuffer[shift+j]) {
-            j--;
-        }
-        if (j < 0) {
-            // printf("-> Match at byte %d\n", bytePosition+shift);
-            results.push_back(bytePosition+shift);
-            if (shift + patternLength < bufferLength && !lastBuffer) {
-                oldShift = shift;
-                shift += patternLength-badCharTable[textBuffer[shift+patternLength]];
-            } else {
-                oldShift = shift;
-                shift += 1;
-            }
-        } else {
-            oldShift = shift;
-            // printf("\tnum: %d (%c) -> %d\n", j, textBuffer[shift+j], badCharTable[textBuffer[shift+j]]);
-            oldShift = shift;
-            shift += max(1, j - badCharTable[textBuffer[shift+j]]);
-        }
-        if (lastBuffer && shift > (bufferLength - patternLength)) {
-            break;
-        }
-        if (shift+j >= bufferLength) {
-            // bufferShift = 1-(patternLength - (bufferLength - shift));
-            bufferShift = -(bufferLength+1 - (oldShift + patternLength));
-            newBuffer = true;
-            // printf("  continue... (-(%d - (%d + %d))) -> %d\n", bufferLength, oldShift, patternLength, bufferShift);
-            continue;
-        }
-    }
-    return results;
+    return -1;
 }
