@@ -8,7 +8,6 @@
 #include "../src/StringFinder.hpp"
 
 using std::string;
-using std::sort;
 
 // ____________________________________________________________________________
 TEST(StringFinderTest, readFile) {

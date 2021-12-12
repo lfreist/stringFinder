@@ -17,6 +17,7 @@ void removeRAMCache() {
     close(fd);
 }
 
+char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];
 
 int main(int argc, char** argv) {
     if (argc < 1) {
@@ -27,10 +28,10 @@ int main(int argc, char** argv) {
     cout << "Buffersize: " << MAX_BUFFER_SIZE << endl;
 
     Timer timer;
-
+/*
     removeRAMCache();
 
-/*
+
     timer.start(true);
     readBuffer1(argv[1]);
     timer.stop();
@@ -44,10 +45,9 @@ int main(int argc, char** argv) {
     cout << "readBuffer3(): " << timer.elapsedSeconds() << endl;
 
     removeRAMCache();
-*/
+
     {
         Timer timer;
-        char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];
         FILE *fp = fopen(argv[1], "r");
         int s;
         timer.start(true);
@@ -63,12 +63,10 @@ int main(int argc, char** argv) {
         cout << timer.elapsedSeconds() << endl;
     }
 
-    removeRAMCache();
     cout << endl;
 
     {
         Timer timer;
-        char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];
         int fd = open(argv[1], O_RDONLY);
         int s;
         timer.start(true);
@@ -83,8 +81,16 @@ int main(int argc, char** argv) {
         close(fd);
         cout << timer.elapsedSeconds() << endl;
     }
+*/
 
     cout << endl;
+    char* filename = argv[1];
+    char* pattern = argv[2];
+
+    int matches;
+    matches = find1(pattern, filename);
+
+    cout << matches << " Matches found" << endl;
 
     return 0;
 }

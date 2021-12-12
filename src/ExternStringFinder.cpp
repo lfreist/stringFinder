@@ -15,6 +15,8 @@ using std::vector;
 
 #include "ExternStringFinder.hpp"
 
+// char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];
+
 void readBuffer1(char *path) {
     FILE *fp = fopen(path, "r");
     char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];
@@ -84,6 +86,7 @@ int nextBuffer1(FILE* fp, char* buffer) {
 }
 
 int nextBuffer2(int fd, char* buffer) {
+    // fix this...
     char c[2];
     c[1] = '\0';
     ssize_t s = read(fd, buffer, MAX_BUFFER_SIZE);
@@ -102,4 +105,58 @@ int nextBuffer2(int fd, char* buffer) {
         buffer[i] = c[0];
     }
     return -1;
+}
+
+int findPattern(char* pattern, char* content) {
+    char* tmp = content;
+    int counter = 0;
+    size_t patLen = strlen(pattern);
+    while (true) {
+        tmp = strstr(tmp, pattern);
+        if (tmp == NULL) {
+            return counter;
+        }
+        counter++;
+        tmp = strchr(tmp, '\n');
+        if (tmp == NULL) {
+            return counter;
+        }
+        // tmp += patLen;
+    }
+}
+
+int find1(char* pattern, char* filename) {
+    FILE* fp = fopen(filename, "r");
+    int s;
+    int counter = 0;
+    char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];
+    while (true) {
+        s = nextBuffer1(fp, textBuffer);
+        if (s < 0) {
+            exit(1);
+        } else if( s == 0) {
+            break;
+        }
+        counter += findPattern(pattern, textBuffer);
+    }
+    fclose(fp);
+    return counter;
+}
+
+int find2(char* pattern, char* filename) {
+    int fd = open(filename, O_RDONLY);
+    int s;
+    int counter = 0;
+    char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];
+    while (true) {
+        s = nextBuffer2(fd, textBuffer);
+        if (s < 0) {
+            exit(1);
+        } else if( s == 0) {
+            break;
+        }
+        counter += findPattern(pattern, textBuffer);
+    }
+    close(fd);
+    return counter;
 }

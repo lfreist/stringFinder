@@ -35,9 +35,11 @@ target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer)
 
 
 configure_file(test/data.test test/data.test)
+configure_file(test/externFinderTest.txt test/externFinderTest.txt)
 
 add_subdirectory(test)
 include(CTest)
 add_test(InteractiveFinderTest test/InteractiveFinderTest)
 add_test(StringFinderTest test/StringFinderTest)
 add_test(WallTimerTest test/WallTimerTest)
+add_test(ExternStringFinderTest test/ExternStringFinderTest)

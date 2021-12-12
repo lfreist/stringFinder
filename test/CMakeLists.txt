@@ -6,3 +6,6 @@ target_link_libraries(StringFinderTest StringFinder gtest_main)
 
 add_executable(WallTimerTest WallTimerTest.cpp)
 target_link_libraries(WallTimerTest Benchmark gtest_main)
+
+add_executable(ExternStringFinderTest ExternStringFinderTest.cpp)
+target_link_libraries(ExternStringFinderTest ExternStringFinder gtest_main)
