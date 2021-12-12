@@ -109,19 +109,30 @@ int nextBuffer2(int fd, char* buffer) {
 
 int findPattern(char* pattern, char* content) {
     char* tmp = content;
+    char* tmp2 = content;
+    int len;
+    int position;
     int counter = 0;
-    size_t patLen = strlen(pattern);
+    int shift;
     while (true) {
         tmp = strstr(tmp, pattern);
         if (tmp == NULL) {
             return counter;
         }
         counter++;
+        tmp2 = tmp;
         tmp = strchr(tmp, '\n');
         if (tmp == NULL) {
             return counter;
         }
-        // tmp += patLen;
+        position = strlen(content) - strlen(tmp2);
+        shift = 0;
+        while (position >= 0 && content[position] != '\n') {
+            position--;
+            shift++;
+        }
+        len = strlen(tmp2) - strlen(tmp) + shift;
+        printf("%.*s",  len, content + position + 1);
     }
 }
 
@@ -145,6 +156,9 @@ int find1(char* pattern, char* filename) {
 
 int find2(char* pattern, char* filename) {
     int fd = open(filename, O_RDONLY);
+    if (fd < 0) {
+        exit(1);
+    }
     int s;
     int counter = 0;
     char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];

@@ -20,7 +20,7 @@ void removeRAMCache() {
 char textBuffer[MAX_BUFFER_SIZE+1+BUFFER_OVERFLOW];
 
 int main(int argc, char** argv) {
-    if (argc < 1) {
+    if (argc < 2) {
         cout << "No input provided." << endl;
         return 1;
     }
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
     int matches;
     matches = find1(pattern, filename);
 
-    cout << matches << " Matches found" << endl;
+    cout << endl << matches << " Matches found" << endl;
 
     return 0;
 }
