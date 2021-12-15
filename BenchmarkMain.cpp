@@ -3,11 +3,10 @@
 
 #include "src/Benchmark.hpp"
 
+int main(int argc, char **argv) {
+  Benchmark bm;
+  bm.parseCommandLineArguments(argc, argv);
+  bm.run();
 
-int main(int argc, char** argv) {
-    Benchmark bm;
-    bm.parseCommandLineArguments(argc, argv);
-    bm.run();
-
-    return 0;
+  return 0;
 }

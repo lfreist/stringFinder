@@ -16,57 +16,72 @@ using std::vector;
 
 class InteractiveFinder {
  public:
-    InteractiveFinder();
-    ~InteractiveFinder();
+  InteractiveFinder();
 
-    // only takes input file (optionally)
-    void parseCommandLineArguments(int argc, char** argv);
+  ~InteractiveFinder();
 
-    void run();
+  // only takes input file (optionally)
+  void parseCommandLineArguments(int argc, char **argv);
+
+  void run();
+
  private:
-    StringFinder _sf;
+  StringFinder _sf;
 
-    uint8_t parseInput();
+  uint8_t parseInput();
 
-    void usage() const;
-    void interactiveUsage() const;
-    void printUsageAndExit() const;
+  void usage() const;
+
+  void interactiveUsage() const;
+
+  void printUsageAndExit() const;
 };
-
 
 class Argument {
  public:
-    explicit Argument(string name);
-    Argument(string name, int value);
-    ~Argument();
+  explicit Argument(string name);
 
-    int getValue() const;
-    string* getName();
-    void setValue(int value);
+  Argument(string name, int value);
+
+  ~Argument();
+
+  int getValue() const;
+
+  string *getName();
+
+  void setValue(int value);
+
  private:
-    string _name;
-    int _value;
-    bool _hasValue;
+  string _name;
+  int _value;
+  bool _hasValue;
 };
-
 
 class Command {
  public:
-    Command();
-    explicit Command(char name);
-    ~Command();
+  Command();
 
-    char getName();
-    void setObject(const string obj);
-    string* getObject();
-    vector<Argument>* getArguments();
-    void addArgument(string argStr);
-    void addValueToLastArg(int value);
+  explicit Command(char name);
+
+  ~Command();
+
+  char getName();
+
+  void setObject(const string obj);
+
+  string *getObject();
+
+  vector<Argument> *getArguments();
+
+  void addArgument(string argStr);
+
+  void addValueToLastArg(int value);
+
  private:
-    vector<Argument> _arguments;
-    // either expression (for find) or file (for load)
-    string _object;
-    char _name;
+  vector<Argument> _arguments;
+  // either expression (for find) or file (for load)
+  string _object;
+  char _name;
 };
 
 // valid inputs start with command followed by ONE single object
@@ -76,18 +91,22 @@ class Command {
 //   ...
 class InputParser {
  public:
-    InputParser();
-    ~InputParser();
+  InputParser();
 
-    Command* getCommand();
-    void parse(const string &input);
-    bool validInput();
+  ~InputParser();
+
+  Command *getCommand();
+
+  void parse(const string &input);
+
+  bool validInput();
+
  private:
-    Command _command;
+  Command _command;
 
-    FRIEND_TEST(InteractiveFinderTest, parseInput);
+  FRIEND_TEST(InteractiveFinderTest, parseInput);
 };
 
-bool isInteger(const string& str);
+bool isInteger(const string &str);
 
 #endif  // SRC_INTERACTIVEFINDER_HPP_

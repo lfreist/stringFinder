@@ -3,8 +3,8 @@
 
 #include "src/InteractiveFinder.hpp"
 
-int main(int argc, char** argv) {
-    InteractiveFinder finder;
-    finder.parseCommandLineArguments(argc, argv);
-    finder.run();
+int main(int argc, char **argv) {
+  InteractiveFinder finder;
+  finder.parseCommandLineArguments(argc, argv);
+  finder.run();
 }

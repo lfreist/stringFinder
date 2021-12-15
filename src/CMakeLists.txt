@@ -18,4 +18,5 @@ target_link_libraries(Benchmark PUBLIC OpenMP::OpenMP_CXX)
 
 add_library(ExternStringFinder
         ExternStringFinder.hpp ExternStringFinder.cpp
+        Timer.hpp Timer.cpp
 )
