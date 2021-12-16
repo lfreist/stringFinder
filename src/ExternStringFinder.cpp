@@ -144,16 +144,17 @@ int find2(char *pattern, char *filename, bool performance, bool count) {
 // ExternFinder Class
 
 ExternFinder::ExternFinder() {
-  buffer = new char[MAX_BUFFER_SIZE];
-  performance = false;
-  silent = false;
-  count = false;
-  filename = nullptr;
-  pattern = nullptr;
+  _buffer = new char[MAX_BUFFER_SIZE];
+  _performance = false;
+  _silent = false;
+  _count = false;
+  _filename = nullptr;
+  _pattern = nullptr;
+  _bufferPosition = 0;
 }
 
 ExternFinder::~ExternFinder() {
-  delete[] buffer;
+  delete[] _buffer;
 }
 
 void ExternFinder::parseCommandLineArguments(int argc, char **argv) {
@@ -168,82 +169,91 @@ void ExternFinder::parseCommandLineArguments(int argc, char **argv) {
     int c = getopt_long(argc, argv, "p:s:c", options, nullptr);
     if (c == -1) { break; }
     switch (c) {
-      case 'p': performance = true; break;
-      case 's': silent = true; break;
-      case 'c': count = true; break;
+      case 'p': _performance = true; break;
+      case 's': _silent = true; break;
+      case 'c': _count = true; break;
       default: break;
     }
   }
   if (optind >= argc) {
     std::cout << "Missing input file or pattern" << std::endl;
   }
-  pattern = argv[optind++];
-  filename = argv[optind];
+  _pattern = argv[optind++];
+  _filename = argv[optind];
 }
 
 int ExternFinder::find(char *pat) {
-  int fd = open(filename, O_RDONLY);
+  _bufferPosition = 0;
+  _bytePositions.clear();
+  int fd = open(_filename, O_RDONLY);
   if (fd < 0) {
-    printf("Could not open file '%s'\n", filename);
+    printf("Could not open file '%s'\n", _filename);
     exit(1);
   }
   int s;
   int counter = 0;
-  if (performance) {
-    timer.start(true);
+  if (_performance) {
+    _timer.start(true);
   }
   while (true) {
     s = nextBuffer(fd);
     if (s < 0) {
+      puts("Error loading new buffer\n");
       exit(1);
     } else if (s == 0) {
       break;
     }
-    counter += findPattern(pat, buffer);
+    counter += findPattern(pat, _buffer);
+    _bufferPosition += s;
   }
-  if (count) {
+  if (_count) {
     std::cout << "Found " << counter << " Matches" << std::endl;
   }
-  if (performance) {
-    timer.stop();
-    std::cout << "Time: " << timer.elapsedSeconds() << " s" << std:: endl;
+  if (_performance) {
+    _timer.stop();
+    std::cout << "Time: " << _timer.elapsedSeconds() << " s" << std:: endl;
   }
   close(fd);
   return counter;
 }
 
 int ExternFinder::find() {
-  return find(pattern);
+  return find(_pattern);
 }
 
 void ExternFinder::setFilePath(char *filepath) {
-  delete[] filename;
-  filename = filepath;
+  delete[] _filename;
+  _filename = filepath;
+}
+
+std::vector<unsigned long> *ExternFinder::getResult() {
+  return &_bytePositions;
 }
 
 int ExternFinder::nextBuffer(int fd) {
   char c;
-  ssize_t s = read(fd, buffer, INIT_BUFFER_SIZE);
+  ssize_t s = read(fd, _buffer, INIT_BUFFER_SIZE);
   if (s == 0) { return 0; }
   for (int i = INIT_BUFFER_SIZE; i < MAX_BUFFER_SIZE; i++) {
     if (read(fd, &c, 1) == 0) {
-      buffer[i+1] = '\0';
+      _buffer[i+1] = '\0';
       return i;
     }
     if (c == '\n') {
-      buffer[i] = c;
-      buffer[i+1] = '\0';
+      _buffer[i] = c;
+      _buffer[i+1] = '\0';
       return i;
     }
-    buffer[i] = c;
+    _buffer[i] = c;
   }
   return -1;
 }
 
-int ExternFinder::findPattern(char *pat, char *content) const {
+int ExternFinder::findPattern(char *pat, char *content) {
   char *tmp = content;
   char *tmp2;
   int len;
+  unsigned long contentLen = strlen(content);
   int position;
   int counter = 0;
   unsigned long shift;
@@ -258,10 +268,11 @@ int ExternFinder::findPattern(char *pat, char *content) const {
     if (tmp == nullptr) {
       return counter;
     }
-    if (silent) {
+    position = contentLen - strlen(tmp2);
+    _bytePositions.push_back(_bufferPosition+position);
+    if (_silent) {
       continue;
     }
-    position = strlen(content) - strlen(tmp2);
     shift = 0;
     while (position >= 0 && content[position] != '\n') {
       position--;

@@ -5,9 +5,16 @@
 // ____________________________________________________________________________
 TEST(ExternStringFinder, find1) {
   char filename[26] = "test/externFinderTest.txt";
-  char pattern[12] = "ratzefummel";
-  int c = find1(pattern, filename, false, false);
-  ASSERT_EQ(c, 3);
+  char pattern[8] = "keyword";
+  ExternFinder ef;
+  ef.setFilePath(filename);
+  {
+    int count = ef.find(pattern);
+    ASSERT_EQ(count, 2);
+    ASSERT_EQ(ef.getResult()->size(), 2);
+    ASSERT_EQ(ef.getResult()->at(0), 15639);
+    ASSERT_EQ(ef.getResult()->at(1), 28350);
+  }
 }
 
 int main(int argc, char **argv) {
