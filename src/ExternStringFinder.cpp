@@ -153,33 +153,57 @@ ExternFinder::ExternFinder() {
   _bufferPosition = 0;
 }
 
+ExternFinder::ExternFinder(char *file, char *pattern, bool performance, bool silent, bool count) {
+  _buffer = new char[MAX_BUFFER_SIZE];
+  _filename = file;
+  _pattern = pattern;
+  _performance = performance;
+  _silent = silent;
+  _count = count;
+}
+
 ExternFinder::~ExternFinder() {
   delete[] _buffer;
 }
 
 void ExternFinder::parseCommandLineArguments(int argc, char **argv) {
   struct option options[] = {
-    {"performance", 0, nullptr, 'p'},
-    {"silent", 0, nullptr, 's'},
-    {"count", 0, nullptr, 'c'},
-    {nullptr, 0, nullptr, 0}
+      {"help", 0, nullptr, 'h'},
+      {"performance", 0, nullptr, 'p'},
+      {"silent", 0, nullptr, 's'},
+      {"count", 0, nullptr, 'c'},
+      {nullptr, 0, nullptr, 0}
   };
   optind = 1;
   while (true) {
-    int c = getopt_long(argc, argv, "p:s:c", options, nullptr);
+    int c = getopt_long(argc, argv, "h:p:s:c", options, nullptr);
     if (c == -1) { break; }
     switch (c) {
+      case 'h': printHelpAndExit();
       case 'p': _performance = true; break;
       case 's': _silent = true; break;
       case 'c': _count = true; break;
       default: break;
     }
   }
-  if (optind >= argc) {
-    std::cout << "Missing input file or pattern" << std::endl;
+  if (optind+1 >= argc) {
+    std::cout << "Missing input file and/or pattern" << std::endl;
+    printHelpAndExit();
   }
   _pattern = argv[optind++];
   _filename = argv[optind];
+}
+
+void ExternFinder::printHelpAndExit() {
+  std::cout
+    << "StringFinder - ExternStringFinder - Leon Freist <freist@informatik.uni-freibur.de>" << std::endl
+    << "Usage: ExternStringFinderMain [pattern] [file] [OPTIONS]" << std::endl
+    << "  OPTIONS:" << std::endl
+    << "    --help         -h  print this guide and exit." << std::endl
+    << "    --performance  -p  measure wall time on find and print result." << std::endl
+    << "    --silent       -s  dont print matching lines." << std::endl
+    << "    --count        -c  print number of matching lines." << std::endl;
+  exit(0);
 }
 
 int ExternFinder::find(char *pat) {

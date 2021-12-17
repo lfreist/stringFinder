@@ -28,6 +28,7 @@ int findPattern(char *pattern, char *content);
 class ExternFinder {
  public:
   ExternFinder();
+  ExternFinder(char* file, char* pattern, bool performance, bool silent, bool count);
   ~ExternFinder();
 
   void parseCommandLineArguments(int argc, char** argv);
@@ -42,6 +43,8 @@ class ExternFinder {
  private:
   int nextBuffer(int fd);
   int findPattern(char *pattern, char *text);
+
+  static void printHelpAndExit();
 
   char *_buffer;
   char *_filename;
