@@ -36,18 +36,17 @@ class ExternFinder {
   int find();
   int find(char *pattern);
 
-  void setFilePath(char *filepath);
+  void setFile(char *filepath);
 
   std::vector<unsigned long>* getResult();
 
  private:
   int nextBuffer(int fd);
   int findPattern(char *pattern, char *text);
-
-  static void printHelpAndExit();
+  static void printHelpAndExit() ;
 
   char *_buffer;
-  char *_filename;
+  int _fd;
   char *_pattern;
 
   unsigned long _bufferPosition;

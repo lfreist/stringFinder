@@ -7,7 +7,7 @@ TEST(ExternStringFinder, find1) {
   char filename[26] = "test/externFinderTest.txt";
   char pattern[8] = "keyword";
   ExternFinder ef;
-  ef.setFilePath(filename);
+  ef.setFile(filename);
   {
     int count = ef.find(pattern);
     ASSERT_EQ(count, 2);

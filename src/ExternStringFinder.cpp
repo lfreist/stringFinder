@@ -148,79 +148,95 @@ ExternFinder::ExternFinder() {
   _performance = false;
   _silent = false;
   _count = false;
-  _filename = nullptr;
+  _fd = 0;
   _pattern = nullptr;
   _bufferPosition = 0;
 }
 
 ExternFinder::ExternFinder(char *file, char *pattern, bool performance, bool silent, bool count) {
   _buffer = new char[MAX_BUFFER_SIZE];
-  _filename = file;
-  _pattern = pattern;
   _performance = performance;
   _silent = silent;
   _count = count;
+  _fd = open(file, O_RDONLY);
+  _pattern = pattern;
+  _bufferPosition = 0;
 }
 
 ExternFinder::~ExternFinder() {
+  close(_fd);
   delete[] _buffer;
 }
 
 void ExternFinder::parseCommandLineArguments(int argc, char **argv) {
   struct option options[] = {
-      {"help", 0, nullptr, 'h'},
-      {"performance", 0, nullptr, 'p'},
-      {"silent", 0, nullptr, 's'},
-      {"count", 0, nullptr, 'c'},
-      {nullptr, 0, nullptr, 0}
+    {"help", 0, nullptr, 'h'},
+    {"performance", 0, nullptr, 'p'},
+    {"silent", 0, nullptr, 's'},
+    {"count", 0, nullptr, 'c'},
+    {nullptr, 0, nullptr, 0}
   };
   optind = 1;
   while (true) {
     int c = getopt_long(argc, argv, "h:p:s:c", options, nullptr);
     if (c == -1) { break; }
     switch (c) {
-      case 'h': printHelpAndExit();
-      case 'p': _performance = true; break;
+      case 'h': printHelpAndExit(); break;
+      case 'p':
+        _performance = true;
+        _silent = true;
+        break;
       case 's': _silent = true; break;
       case 'c': _count = true; break;
       default: break;
     }
   }
-  if (optind+1 >= argc) {
-    std::cout << "Missing input file and/or pattern" << std::endl;
+  if (optind >= argc) {
+    std::cout << "Missing input file or pattern" << std::endl;
     printHelpAndExit();
   }
+  std::cout << optind << " " << argc << std::endl;
   _pattern = argv[optind++];
-  _filename = argv[optind];
+  std::cout << optind << " " << argc << std::endl;
+  if (optind >= argc) {
+    _fd = 0;
+  } else {
+    _fd = open(argv[optind], O_RDONLY);
+  }
+  if (_fd < 0) {
+    printf("1. Could not open file '%s'\n", argv[optind]);
+    exit(1);
+  }
 }
 
 void ExternFinder::printHelpAndExit() {
   std::cout
     << "StringFinder - ExternStringFinder - Leon Freist <freist@informatik.uni-freibur.de>" << std::endl
-    << "Usage: ExternStringFinderMain [pattern] [file] [OPTIONS]" << std::endl
+    << "Usage: ./ExternStringFinderMain [PATTERN] [FILE] [OPTION]..." << std::endl
+    << " Search for a PATTERN in a FILE." << std::endl
+    << " Example: ./ExternStringFinderMain 'hello world' main.c"
+    << std::endl
     << "  OPTIONS:" << std::endl
-    << "    --help         -h  print this guide and exit." << std::endl
-    << "    --performance  -p  measure wall time on find and print result." << std::endl
-    << "    --silent       -s  dont print matching lines." << std::endl
-    << "    --count        -c  print number of matching lines." << std::endl;
+    << "  --help         -h  print this guide and exit." << std::endl
+    << "  --performance  -p  measure wall time on find and print result." << std::endl
+    << "  --silent       -s  dont print matching lines." << std::endl
+    << "  --count        -c  print number of matching lines." << std::endl
+    << std::endl
+    << "When FILE is not provided read standard input" << std::endl
+    << " Example: cat main.c | ./ExternStringFinderMain 'hello world'" << std::endl;
   exit(0);
 }
 
 int ExternFinder::find(char *pat) {
   _bufferPosition = 0;
   _bytePositions.clear();
-  int fd = open(_filename, O_RDONLY);
-  if (fd < 0) {
-    printf("Could not open file '%s'\n", _filename);
-    exit(1);
-  }
   int s;
   int counter = 0;
   if (_performance) {
     _timer.start(true);
   }
   while (true) {
-    s = nextBuffer(fd);
+    s = nextBuffer(_fd);
     if (s < 0) {
       puts("Error loading new buffer\n");
       exit(1);
@@ -237,7 +253,6 @@ int ExternFinder::find(char *pat) {
     _timer.stop();
     std::cout << "Time: " << _timer.elapsedSeconds() << " s" << std:: endl;
   }
-  close(fd);
   return counter;
 }
 
@@ -245,9 +260,14 @@ int ExternFinder::find() {
   return find(_pattern);
 }
 
-void ExternFinder::setFilePath(char *filepath) {
-  delete[] _filename;
-  _filename = filepath;
+void ExternFinder::setFile(char *filepath) {
+  int fd = open(filepath, O_RDONLY);
+  if (fd < 0) {
+    printf("Could not open file '%s'\n", filepath);
+    puts("Keeping current file descriptor");
+  } else {
+    _fd = fd;
+  }
 }
 
 std::vector<unsigned long> *ExternFinder::getResult() {
