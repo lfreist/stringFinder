@@ -43,7 +43,7 @@ class ExternFinder {
  private:
   int nextBuffer(int fd);
   int findPattern(char *pattern, char *text);
-  static void printHelpAndExit() ;
+  static void printHelpAndExit();
 
   char *_buffer;
   int _fd;

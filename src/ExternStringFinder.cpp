@@ -195,9 +195,7 @@ void ExternFinder::parseCommandLineArguments(int argc, char **argv) {
     std::cout << "Missing input file or pattern" << std::endl;
     printHelpAndExit();
   }
-  std::cout << optind << " " << argc << std::endl;
   _pattern = argv[optind++];
-  std::cout << optind << " " << argc << std::endl;
   if (optind >= argc) {
     _fd = 0;
   } else {
