@@ -3,7 +3,6 @@
 
 #include <cstdio>
 #include <cstring>
-#include <fcntl.h>
 #include <getopt.h>
 
 #include <iostream>
@@ -11,144 +10,13 @@
 #include "ExternStringFinder.hpp"
 #include "Timer.hpp"
 
-// ____________________________________________________________________________________________________________________
-int nextBuffer1(FILE *fp, char *buffer) {
-  char c;
-  size_t s = fread(buffer, INIT_BUFFER_SIZE, 1, fp);
-  if (s == 0) { return 0; }
-  for (int i = INIT_BUFFER_SIZE; i < MAX_BUFFER_SIZE; i++) {
-    if ((c = fgetc(fp)) == EOF) {
-      buffer[i] = '\0';
-      return i;
-    }
-    if (c == '\n') {
-      buffer[i] = c;
-      buffer[i + 1] = '\0';
-      return i;
-    }
-    buffer[i] = c;
-  }
-  return -1;
-}
-
-int nextBuffer2(int fd, char *buffer) {
-  char c;
-  ssize_t s = read(fd, buffer, INIT_BUFFER_SIZE);
-  if (s == 0) { return 0; }
-  for (int i = INIT_BUFFER_SIZE; i < MAX_BUFFER_SIZE; i++) {
-    if (read(fd, &c, 1) == 0) {
-      buffer[i] = '\0';
-      return i;
-    }
-    if (c == '\n') {
-      buffer[i] = c;
-      buffer[i+1] = '\0';
-      return i;
-    }
-    buffer[i] = c;
-  }
-  return -1;
-}
-
-int findPattern(char *pattern, char *content) {
-  char *tmp = content;
-  char *tmp2;
-  int len;
-  int position;
-  int counter = 0;
-  unsigned long shift;
-  while (true) {
-    tmp = strstr(tmp, pattern);
-    if (tmp == nullptr) {
-      return counter;
-    }
-    counter++;
-    tmp2 = tmp;
-    tmp = strchr(tmp, '\n');
-    if (tmp == nullptr) {
-      return counter;
-    }
-    position = strlen(content) - strlen(tmp2);
-    shift = 0;
-    while (position >= 0 && content[position] != '\n') {
-      position--;
-      shift++;
-    }
-    len = strlen(tmp2) - strlen(tmp) + shift;
-    printf("%.*s", len, content + position + 1);
-  }
-}
-
-int find1(char *pattern, char *filename, bool performance, bool count) {
-  FILE *fp = fopen(filename, "r");
-  int s;
-  int counter = 0;
-  char textBuffer[MAX_BUFFER_SIZE];
-  Timer timer;
-  if (performance) {
-    timer.start(true);
-  }
-  while (true) {
-    s = nextBuffer1(fp, textBuffer);
-    if (s < 0) {
-      exit(1);
-    } else if (s == 0) {
-      break;
-    }
-    counter += findPattern(pattern, textBuffer);
-  }
-  if (count) {
-    std::cout << "Found " << counter << " Matches" << std::endl;
-  }
-  if (performance) {
-    timer.stop();
-    std::cout << "Time: " << timer.elapsedSeconds() << " s" << std:: endl;
-  }
-  fclose(fp);
-  return counter;
-}
-
-int find2(char *pattern, char *filename, bool performance, bool count) {
-  int fd = open(filename, O_RDONLY);
-  if (fd < 0) {
-    exit(1);
-  }
-  int s;
-  int counter = 0;
-  char textBuffer[MAX_BUFFER_SIZE];
-  Timer timer;
-  if (performance) {
-    timer.start(true);
-  }
-  while (true) {
-    s = nextBuffer2(fd, textBuffer);
-    if (s < 0) {
-      exit(1);
-    } else if (s == 0) {
-      break;
-    }
-    counter += findPattern(pattern, textBuffer);
-  }
-  if (count) {
-    std::cout << "Found " << counter << " Matches" << std::endl;
-  }
-  if (performance) {
-    timer.stop();
-    std::cout << "Time: " << timer.elapsedSeconds() << " s" << std:: endl;
-  }
-  close(fd);
-  return counter;
-}
-
-// ____________________________________________________________________________________________________________________
-// ExternFinder Class
 
 ExternFinder::ExternFinder() {
   _buffer = new char[MAX_BUFFER_SIZE];
   _performance = false;
   _silent = false;
   _count = false;
-  _fd = 0;
+  _fp = nullptr;
   _pattern = nullptr;
   _bufferPosition = 0;
 }
@@ -158,13 +26,13 @@ ExternFinder::ExternFinder(char *file, char *pattern, bool performance, bool sil
   _performance = performance;
   _silent = silent;
   _count = count;
-  _fd = open(file, O_RDONLY);
+  _fp = fopen(file, "r");
   _pattern = pattern;
   _bufferPosition = 0;
 }
 
 ExternFinder::~ExternFinder() {
-  close(_fd);
+  fclose(_fp);
   delete[] _buffer;
 }
 
@@ -197,12 +65,12 @@ void ExternFinder::parseCommandLineArguments(int argc, char **argv) {
   }
   _pattern = argv[optind++];
   if (optind >= argc) {
-    _fd = 0;
+    _fp = stdin;
   } else {
-    _fd = open(argv[optind], O_RDONLY);
+    _fp = fopen(argv[optind], "r");
   }
-  if (_fd < 0) {
-    printf("1. Could not open file '%s'\n", argv[optind]);
+  if (_fp == nullptr) {
+    printf("Could not open file '%s'\n", argv[optind]);
     exit(1);
   }
 }
@@ -228,30 +96,32 @@ void ExternFinder::printHelpAndExit() {
 int ExternFinder::find(char *pat) {
   _bufferPosition = 0;
   _bytePositions.clear();
-  int s;
-  int counter = 0;
+  int bytes_read;
+  int match_counter = 0;
   if (_performance) {
     _timer.start(true);
   }
   while (true) {
-    s = nextBuffer(_fd);
-    if (s < 0) {
+    bytes_read = nextBuffer();
+    _nbytes += bytes_read;
+    if (bytes_read < 0) {
       puts("Error loading new buffer\n");
       exit(1);
-    } else if (s == 0) {
+    } else if (bytes_read == 0) {
       break;
     }
-    counter += findPattern(pat, _buffer);
-    _bufferPosition += s;
+    match_counter += findPattern(pat, _buffer);
+    _bufferPosition += bytes_read;
   }
   if (_count) {
-    std::cout << "Found " << counter << " Matches" << std::endl;
+    std::cout << "Found " << match_counter << " Matches" << std::endl;
   }
   if (_performance) {
     _timer.stop();
     std::cout << "Time: " << _timer.elapsedSeconds() << " s" << std:: endl;
   }
-  return counter;
+  printf("Bytes: %ld\n", _nbytes);
+  return match_counter;
 }
 
 int ExternFinder::find() {
@@ -259,12 +129,13 @@ int ExternFinder::find() {
 }
 
 void ExternFinder::setFile(char *filepath) {
-  int fd = open(filepath, O_RDONLY);
-  if (fd < 0) {
+  // int fd = open(filepath, O_RDONLY);
+  FILE *fp = fopen(filepath, "r");
+  if (fp == nullptr) {
     printf("Could not open file '%s'\n", filepath);
-    puts("Keeping current file descriptor");
+    puts("Keeping current file pointer");
   } else {
-    _fd = fd;
+    _fp = fp;
   }
 }
 
@@ -272,12 +143,13 @@ std::vector<unsigned long> *ExternFinder::getResult() {
   return &_bytePositions;
 }
 
-int ExternFinder::nextBuffer(int fd) {
+/*
+int ExternFinder::nextBuffer() {
   char c;
-  ssize_t s = read(fd, _buffer, INIT_BUFFER_SIZE);
-  if (s == 0) { return 0; }
-  for (int i = INIT_BUFFER_SIZE; i < MAX_BUFFER_SIZE; i++) {
-    if (read(fd, &c, 1) == 0) {
+  ssize_t bytes_read = read(_fd, _buffer, INIT_BUFFER_SIZE);
+  if (bytes_read == 0) { return 0; }
+  for (int i = bytes_read; i < MAX_BUFFER_SIZE; i++) {
+    if (read(_fd, &c, 1) == 0) {
       _buffer[i+1] = '\0';
       return i;
     }
@@ -287,6 +159,26 @@ int ExternFinder::nextBuffer(int fd) {
       return i;
     }
     _buffer[i] = c;
+  }
+  return -1;
+}
+ */
+
+int ExternFinder::nextBuffer() {
+  char additional_char;
+  size_t bytes_read = fread(_buffer, sizeof(char), INIT_BUFFER_SIZE, _fp);
+  if (bytes_read == 0) { return 0; }
+  for (int i = (int) bytes_read; i < MAX_BUFFER_SIZE; i++) {
+    if ((additional_char = (char) fgetc(_fp)) == EOF) {
+      _buffer[i] = '\0';
+      return i;
+    }
+    if (additional_char == '\n') {
+      _buffer[i] = additional_char;
+      _buffer[i+1] = '\0';
+      return i;
+    }
+    _buffer[i] = additional_char;
   }
   return -1;
 }
