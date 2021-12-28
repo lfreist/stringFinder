@@ -7,6 +7,9 @@
 
 #include <cstdio>
 #include <vector>
+#include <thread>
+#include <mutex>
+#include <queue>
 
 #include "Timer.hpp"
 
@@ -41,10 +44,13 @@ class ExternFinder {
   FILE *_fp;
   char *_pattern;
 
+  std::queue<char*> _bufferQueue;
+  std::mutex _queueMutex;
+
   unsigned long _bufferPosition;
   std::vector<unsigned long> _bytePositions;
 
-  unsigned long _nbytes;
+  unsigned long _totalNumberBytesRead;
 
   bool _performance;
   bool _silent;

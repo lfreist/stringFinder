@@ -4,8 +4,8 @@
 #include <cstdio>
 #include <cstring>
 #include <getopt.h>
-
 #include <iostream>
+#include <thread>
 
 #include "ExternStringFinder.hpp"
 #include "Timer.hpp"
@@ -93,6 +93,9 @@ void ExternFinder::printHelpAndExit() {
   exit(0);
 }
 
+/*
+ * in while-loop: check for item in _bufferQueue (mutex), pop it and perform search
+*/
 int ExternFinder::find(char *pat) {
   _bufferPosition = 0;
   _bytePositions.clear();
@@ -103,7 +106,7 @@ int ExternFinder::find(char *pat) {
   }
   while (true) {
     bytes_read = nextBuffer();
-    _nbytes += bytes_read;
+    _totalNumberBytesRead += bytes_read;
     if (bytes_read < 0) {
       puts("Error loading new buffer\n");
       exit(1);
@@ -120,7 +123,7 @@ int ExternFinder::find(char *pat) {
     _timer.stop();
     std::cout << "Time: " << _timer.elapsedSeconds() << " s" << std:: endl;
   }
-  printf("Bytes: %ld\n", _nbytes);
+  printf("Bytes: %ld\n", _totalNumberBytesRead);
   return match_counter;
 }
 
@@ -164,6 +167,9 @@ int ExternFinder::nextBuffer() {
 }
  */
 
+/*
+ * create a new char* [MAX_BUFFER_SIZE], fill it and push to _bufferQueue (mutex)
+*/
 int ExternFinder::nextBuffer() {
   char additional_char;
   size_t bytes_read = fread(_buffer, sizeof(char), INIT_BUFFER_SIZE, _fp);
