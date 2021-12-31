@@ -7,11 +7,11 @@
 #include <iostream>
 #include <thread>
 
-#include "ExternStringFinder.hpp"
-#include "Timer.hpp"
+#include "ExternStringFinder.h"
+#include "Timer.h"
 
 
-ExternFinder::ExternFinder() {
+ExternFinder::ExternFinder(unsigned int nBuffers) {
   _buffer = new char[MAX_BUFFER_SIZE];
   _performance = false;
   _silent = false;
@@ -19,16 +19,18 @@ ExternFinder::ExternFinder() {
   _fp = nullptr;
   _pattern = nullptr;
   _bufferPosition = 0;
+  _rotReader = new RotatingReader(nBuffers);
 }
 
-ExternFinder::ExternFinder(char *file, char *pattern, bool performance, bool silent, bool count) {
+ExternFinder::ExternFinder(unsigned int nBuffers, String file, String pattern, bool performance, bool silent, bool count) {
   _buffer = new char[MAX_BUFFER_SIZE];
   _performance = performance;
   _silent = silent;
   _count = count;
-  _fp = fopen(file, "r");
+  _fp = fopen(file.cstring(), "r");
   _pattern = pattern;
   _bufferPosition = 0;
+  _rotReader = new RotatingReader(nBuffers);
 }
 
 ExternFinder::~ExternFinder() {
@@ -93,10 +95,70 @@ void ExternFinder::printHelpAndExit() {
   exit(0);
 }
 
+int ExternFinder::nextBuffer() {
+  Buffer* writeBuffer = _rotReader->getNextWriteBuffer();
+  String* content;
+  char additional_char;
+  size_t bytes_read = fread(_buffer, sizeof(char), INIT_BUFFER_SIZE, _fp);
+  if (bytes_read == 0) { return 0; }
+  for (int i = (int) bytes_read; i < MAX_BUFFER_SIZE; i++) {
+    if ((additional_char = (char) fgetc(_fp)) == EOF) {
+      _buffer[i] = '\0';
+      content = new String(_buffer);
+      writeBuffer->write(content);
+      return i;
+    }
+    if (additional_char == '\n') {
+      _buffer[i] = additional_char;
+      _buffer[i+1] = '\0';
+      content = new String(_buffer);
+      writeBuffer->write(content);
+      return i;
+    }
+    _buffer[i] = additional_char;
+  }
+  return -1;
+}
+
+int ExternFinder::find() {
+  _bufferPosition = 0;
+  _bytePositions.clear();
+  int bytes_read;
+  int match_counter = 0;
+  Buffer* readBuffer;
+
+  if (_performance) {
+    _timer.start(true);
+  }
+  while (true) {
+    bytes_read = nextBuffer();
+    _totalNumberBytesRead += bytes_read;
+    if (bytes_read < 0) {
+      puts("Error loading new buffer\n");
+      exit(1);
+    } else if (bytes_read == 0) {
+      break;
+    }
+    readBuffer = _rotReader->getNextReadBuffer();
+    match_counter += readBuffer->read()->findPerLineCaseSensitive(_pattern).size();
+    _bufferPosition += bytes_read;
+  }
+  if (_count) {
+    std::cout << "Found " << match_counter << " Matches" << std::endl;
+  }
+  if (_performance) {
+    _timer.stop();
+    std::cout << "Time: " << _timer.elapsedSeconds() << " s" << std:: endl;
+  }
+  printf("Bytes: %ld\n", _totalNumberBytesRead);
+  return match_counter;
+}
+
 /*
  * in while-loop: check for item in _bufferQueue (mutex), pop it and perform search
 */
-int ExternFinder::find(char *pat) {
+/*
+int ExternFinder::find(String pattern) {
   _bufferPosition = 0;
   _bytePositions.clear();
   int bytes_read;
@@ -113,7 +175,7 @@ int ExternFinder::find(char *pat) {
     } else if (bytes_read == 0) {
       break;
     }
-    match_counter += findPattern(pat, _buffer);
+    match_counter += findPattern(pattern, _buffer);
     _bufferPosition += bytes_read;
   }
   if (_count) {
@@ -126,16 +188,19 @@ int ExternFinder::find(char *pat) {
   printf("Bytes: %ld\n", _totalNumberBytesRead);
   return match_counter;
 }
+*/
 
+/*
 int ExternFinder::find() {
   return find(_pattern);
 }
+*/
 
-void ExternFinder::setFile(char *filepath) {
-  // int fd = open(filepath, O_RDONLY);
-  FILE *fp = fopen(filepath, "r");
+void ExternFinder::setFile(String filepath) {
+
+  FILE *fp = fopen(filepath.cstring(), "r");
   if (fp == nullptr) {
-    printf("Could not open file '%s'\n", filepath);
+    printf("Could not open file '%s'\n", filepath.cstring());
     puts("Keeping current file pointer");
   } else {
     _fp = fp;
@@ -147,29 +212,9 @@ std::vector<unsigned long> *ExternFinder::getResult() {
 }
 
 /*
-int ExternFinder::nextBuffer() {
-  char c;
-  ssize_t bytes_read = read(_fd, _buffer, INIT_BUFFER_SIZE);
-  if (bytes_read == 0) { return 0; }
-  for (int i = bytes_read; i < MAX_BUFFER_SIZE; i++) {
-    if (read(_fd, &c, 1) == 0) {
-      _buffer[i+1] = '\0';
-      return i;
-    }
-    if (c == '\n') {
-      _buffer[i] = c;
-      _buffer[i+1] = '\0';
-      return i;
-    }
-    _buffer[i] = c;
-  }
-  return -1;
-}
- */
-
-/*
  * create a new char* [MAX_BUFFER_SIZE], fill it and push to _bufferQueue (mutex)
 */
+/*
 int ExternFinder::nextBuffer() {
   char additional_char;
   size_t bytes_read = fread(_buffer, sizeof(char), INIT_BUFFER_SIZE, _fp);
@@ -188,8 +233,10 @@ int ExternFinder::nextBuffer() {
   }
   return -1;
 }
+*/
 
-int ExternFinder::findPattern(char *pat, char *content) {
+/*
+int ExternFinder::findPattern(String pattern, String content) {
   char *tmp = content;
   char *tmp2;
   int len;
@@ -222,3 +269,4 @@ int ExternFinder::findPattern(char *pat, char *content) {
     printf("%.*s", len, content + position + 1);
   }
 }
+*/

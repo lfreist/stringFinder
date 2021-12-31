@@ -8,8 +8,8 @@
 #include <string>
 #include <algorithm>
 
-#include "StringFinder.hpp"
-#include "Timer.hpp"
+#include "StringFinder.h"
+#include "Timer.h"
 
 using std::vector;
 using std::string;

@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-#include "../src/InteractiveFinder.hpp"
+#include "../src/InteractiveFinder.h"
 
 // ____________________________________________________________________________
 TEST(InteractiveFinderTest, parseInput) {

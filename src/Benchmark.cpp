@@ -10,9 +10,9 @@
 #include <utility>
 #include <algorithm>
 
-#include "Benchmark.hpp"
-#include "StringFinder.hpp"
-#include "Timer.hpp"
+#include "Benchmark.h"
+#include "StringFinder.h"
+#include "Timer.h"
 
 using std::cout;
 using std::endl;

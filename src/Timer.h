@@ -1,8 +1,8 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef SRC_TIMER_HPP_
-#define SRC_TIMER_HPP_
+#ifndef SRC_TIMER_H_
+#define SRC_TIMER_H_
 
 #include <gtest/gtest.h>
 
@@ -33,4 +33,4 @@ class Timer {
   FRIEND_TEST(WallTimerTest, wallTimerStartStop);
 };
 
-#endif  // SRC_TIMER_HPP_
+#endif  // SRC_TIMER_H_

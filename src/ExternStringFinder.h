@@ -1,9 +1,8 @@
-//
-// Created by lfreist on 23.11.21.
-//
+// Copyright Leon Freist
+// Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef LIB_FILEREADER_HPP_
-#define LIB_FILEREADER_HPP_
+#ifndef SRC_EXTERNSTRINGFINDER_H_
+#define SRC_EXTERNSTRINGFINDER_H_
 
 #include <cstdio>
 #include <vector>
@@ -11,7 +10,9 @@
 #include <mutex>
 #include <queue>
 
-#include "Timer.hpp"
+#include "Timer.h"
+#include "String.h"
+#include "RotatingReader.h"
 
 // TODO(lfreist): optimize values:
 #define INIT_BUFFER_SIZE ((2 << 15)+1)
@@ -20,31 +21,33 @@
 
 class ExternFinder {
  public:
-  ExternFinder();
-  ExternFinder(char* file, char* pattern, bool performance, bool silent, bool count);
+  ExternFinder(unsigned int nBuffers = 1);
+  ExternFinder(unsigned int nBuffers, String file, String pattern, bool performance, bool silent, bool count);
   ~ExternFinder();
 
   void parseCommandLineArguments(int argc, char** argv);
 
+  // int find();
+  // int find(String pattern);
   int find();
-  int find(char *pattern);
 
-  void setFile(char *filepath);
+  void setFile(String filepath);
 
   std::vector<unsigned long>* getResult();
 
  private:
   // int nextBuffer();
+  // int findPattern(String pattern, String text);
   int nextBuffer();
-  int findPattern(char *pattern, char *text);
   static void printHelpAndExit();
 
-  char *_buffer;
-  // int _fd;
-  FILE *_fp;
-  char *_pattern;
+  RotatingReader* _rotReader;
 
-  std::queue<char*> _bufferQueue;
+  char* _buffer;
+  String _pattern;
+  FILE* _fp;
+
+  std::queue<String> _bufferQueue;
   std::mutex _queueMutex;
 
   unsigned long _bufferPosition;
@@ -58,4 +61,4 @@ class ExternFinder {
   Timer _timer;
 };
 
-#endif  // LIB_FILEREADER_HPP_
+#endif  // SRC_EXTERNSTRINGFINDER_H_

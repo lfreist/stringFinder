@@ -1,15 +1,15 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef SRC_BENCHMARK_HPP_
-#define SRC_BENCHMARK_HPP_
+#ifndef SRC_BENCHMARK_H_
+#define SRC_BENCHMARK_H_
 
 #include <vector>
 #include <string>
 #include <sstream>
 #include <algorithm>
 
-#include "StringFinder.hpp"
+#include "StringFinder.h"
 
 using std::vector;
 using std::string;
@@ -50,4 +50,4 @@ double min(vector<double> data);
 
 void printProcess(int state, int total);
 
-#endif  // SRC_BENCHMARK_HPP_
+#endif  // SRC_BENCHMARK_H_

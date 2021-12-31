@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h>
 
-#include "../src/Timer.hpp"
+#include "../src/Timer.h"
 
 // ____________________________________________________________________________
 TEST(WallTimerTest, wallTimerStartStop) {

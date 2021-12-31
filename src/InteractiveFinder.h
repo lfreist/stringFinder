@@ -1,15 +1,15 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef SRC_INTERACTIVEFINDER_HPP_
-#define SRC_INTERACTIVEFINDER_HPP_
+#ifndef SRC_INTERACTIVEFINDER_H_
+#define SRC_INTERACTIVEFINDER_H_
 
 #include <gtest/gtest.h>
 
 #include <string>
 #include <vector>
 
-#include "StringFinder.hpp"
+#include "StringFinder.h"
 
 using std::string;
 using std::vector;
@@ -109,4 +109,4 @@ class InputParser {
 
 bool isInteger(const string &str);
 
-#endif  // SRC_INTERACTIVEFINDER_HPP_
+#endif  // SRC_INTERACTIVEFINDER_H_

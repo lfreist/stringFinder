@@ -1,8 +1,8 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef SRC_STRINGFINDER_HPP_
-#define SRC_STRINGFINDER_HPP_
+#ifndef SRC_STRINGFINDER_H_
+#define SRC_STRINGFINDER_H_
 
 #include <gtest/gtest.h>
 
@@ -39,4 +39,4 @@ class StringFinder {
   FRIEND_TEST(StringFinderTest, readFile);
 };
 
-#endif  // SRC_STRINGFINDER_HPP_
+#endif  // SRC_STRINGFINDER_H_

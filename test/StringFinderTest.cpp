@@ -5,7 +5,7 @@
 #include <string>
 #include <algorithm>
 
-#include "../src/StringFinder.hpp"
+#include "../src/StringFinder.h"
 
 using std::string;
 

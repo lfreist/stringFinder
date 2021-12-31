@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "InteractiveFinder.hpp"
+#include "InteractiveFinder.h"
 
 using std::vector;
 using std::string;

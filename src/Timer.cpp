@@ -3,7 +3,7 @@
 
 #include <chrono>  // NOLINT(build/c++11)
 
-#include "Timer.hpp"
+#include "Timer.h"
 
 // ____________________________________________________________________________
 Timer::Timer() {

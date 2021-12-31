@@ -1,6 +1,6 @@
 
 #include <gtest/gtest.h>
-#include "../src/ExternStringFinder.hpp"
+#include "../src/ExternStringFinder.h"
 
 // ____________________________________________________________________________
 TEST(ExternStringFinder, find1) {
