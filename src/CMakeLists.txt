@@ -20,13 +20,12 @@ add_library(String
         String.h String.cpp
 )
 
-add_library(ExternStringFinder
-        ExternStringFinder.h ExternStringFinder.cpp
-        String.h String.cpp
-        Timer.h Timer.cpp
-)
+#add_library(ExternStringFinder
+#        ExternStringFinder.h ExternStringFinder.cpp
+#        String.h String.cpp
+#        Timer.h Timer.cpp
+#)
 
-add_library(RotatingReader
-        RotatingReader.h RotatingReader.cpp
-        String.h String.cpp
+add_library(ThreadSafeQueue
+        ThreadSafeQueue.h ThreadSafeQueue.cpp
 )

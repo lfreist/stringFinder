@@ -13,5 +13,5 @@ target_link_libraries(WallTimerTest Benchmark gtest_main)
 add_executable(StringTest StringTest.cpp)
 target_link_libraries(StringTest String gtest_main)
 
-add_executable(RotatingReaderTest RotatingReaderTest.cpp)
-target_link_libraries(RotatingReaderTest RotatingReader gtest_main)
+add_executable(ThreadSafeQueueTest ThreadSafeQueueTest.cpp)
+target_link_libraries(ThreadSafeQueueTest ThreadSafeQueue gtest_main)

@@ -14,21 +14,35 @@
 #include "String.h"
 #include "RotatingReader.h"
 
-// TODO(lfreist): optimize values:
+
 #define INIT_BUFFER_SIZE ((2 << 15)+1)
 #define BUFFER_OVERFLOW (2 << 11)
 #define MAX_BUFFER_SIZE (INIT_BUFFER_SIZE + BUFFER_OVERFLOW)
 
-class ExternFinder {
+/**
+ * @brief ExternStringFinder class should be run using ExternStringFinderMain.
+ * See printHelpAndExit() fro more informations
+ * 
+ */
+class ExternStringFinder {
  public:
-  ExternFinder(unsigned int nBuffers = 1);
-  ExternFinder(unsigned int nBuffers, String file, String pattern, bool performance, bool silent, bool count);
-  ~ExternFinder();
+  // Constructor taking number of buffers to be initialized.
+  //  Run parseCommandLineAruments afterwards to set fp, pattern etc.
+  ExternStringFinder(unsigned int nBuffers = 1);
+  // Constructor taking all mandatory properties.
+  //  No need to run parseCommandLineArguments afterwards.
+  ExternStringFinder(unsigned int nBuffers, String file, String pattern, bool performance, bool silent, bool count);
+  // Destructor
+  ~ExternStringFinder();
 
+  /**
+   * @brief parsing command line arguments.
+   * 
+   * @param argc
+   * @param argv
+   */
   void parseCommandLineArguments(int argc, char** argv);
 
-  // int find();
-  // int find(String pattern);
   int find();
 
   void setFile(String filepath);
@@ -36,19 +50,17 @@ class ExternFinder {
   std::vector<unsigned long>* getResult();
 
  private:
-  // int nextBuffer();
-  // int findPattern(String pattern, String text);
-  int nextBuffer();
+  void initializeQueues(unsigned int nBuffers);
+  int writeBuffers();
   static void printHelpAndExit();
 
-  RotatingReader* _rotReader;
-
-  char* _buffer;
   String _pattern;
   FILE* _fp;
 
-  std::queue<String> _bufferQueue;
-  std::mutex _queueMutex;
+  std::queue<String*> _readBufferQueue;
+  std::queue<String*> _writeBufferQueue;
+  std::mutex _readMutex;
+  std::mutex _writeMutex;
 
   unsigned long _bufferPosition;
   std::vector<unsigned long> _bytePositions;
