@@ -60,7 +60,7 @@ class String {
    * @param shift   -> start at _content[shift]
    * @return int    -> number of matches
    */
-  int findCaseSensitive(String pattern, unsigned int shift = 0);
+  int findCaseSensitive(const String& pattern, unsigned int shift = 0);
   
   /**
    * @brief 
@@ -70,7 +70,7 @@ class String {
    * @param shift   -> start at _content[shift]
    * @return int    -> number of matches
    */
-  int findCaseInsensitive(String pattern, unsigned int shift = 0);
+  int findCaseInsensitive(const String& pattern, unsigned int shift = 0);
 
   /**
    * @brief case sensitive search for pattern in _content. After finding a match, jump to next line ('\n')
@@ -78,7 +78,7 @@ class String {
    * @param pattern                    -> searching pattern
    * @return std::vector<unsigned int> -> byte position of matches relative to _content
    */
-  std::vector<unsigned int> findPerLineCaseSensitive(String pattern);
+  std::vector<unsigned int> findPerLineCaseSensitive(const String& pattern);
 
   /**
    * @brief case insensitive search for pattern in _content. After finding a match, jump to next line ('\n')
@@ -86,7 +86,7 @@ class String {
    * @param pattern                    -> searching pattern
    * @return std::vector<unsigned int> -> byte position of matches relative to _content
    */
-  std::vector<unsigned int> findPerLineCaseInsensitive(String Pattern);
+  std::vector<unsigned int> findPerLineCaseInsensitive(const String& Pattern);
 
   /**
    * @brief get c like string (char*)
@@ -112,6 +112,7 @@ class String {
   unsigned _len;
 
   FRIEND_TEST(StringTest, Constructor);
+  FRIEND_TEST(StringTest, findPerLineCaseSensitive);
 };
 
 #endif  // SRC_STRING_H_

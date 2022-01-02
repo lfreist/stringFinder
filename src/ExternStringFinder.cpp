@@ -15,12 +15,11 @@ ExternStringFinder::ExternStringFinder(unsigned int nBuffers) {
   _silent = false;
   _count = false;
   _fp = nullptr;
-  _pattern = nullptr;
   _bufferPosition = 0;
   initializeQueues(nBuffers);
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 ExternStringFinder::ExternStringFinder(unsigned int nBuffers, String file, String pattern, bool performance,
                                        bool silent, bool count) {
   _performance = performance;
@@ -32,12 +31,21 @@ ExternStringFinder::ExternStringFinder(unsigned int nBuffers, String file, Strin
   initializeQueues(nBuffers);
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 ExternStringFinder::~ExternStringFinder() {
   fclose(_fp);
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
+void ExternStringFinder::initializeQueues(unsigned int nBuffers) {
+  String* str = nullptr;
+  for (unsigned int i = 0; i < nBuffers; i++) {
+    str = new String(MAX_BUFFER_SIZE);
+    _readQueue.push(str);
+  }
+}
+
+// _____________________________________________________________________________________________________________________
 void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
   struct option options[] = {
     {"help", 0, nullptr, 'h'},
@@ -65,7 +73,7 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
     std::cout << "Missing input file or pattern" << std::endl;
     printHelpAndExit();
   }
-  _pattern = argv[optind++];
+  _pattern.set(argv[optind++]);
   if (optind >= argc) {
     _fp = stdin;
   } else {
@@ -77,7 +85,7 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
   }
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 void ExternStringFinder::printHelpAndExit() {
   std::cout
     << "StringFinder - ExternStringFinder - Leon Freist <freist@informatik.uni-freibur.de>" << std::endl
@@ -96,61 +104,81 @@ void ExternStringFinder::printHelpAndExit() {
   exit(0);
 }
 
-// ____________________________________________________________________________________________________________________
-void ExternStringFinder::initializeQueues(unsigned int nBuffers) {
-  String* str = nullptr;
-  for (unsigned int i = 0; i < nBuffers; i++) {
-    str = new String(MAX_BUFFER_SIZE);
-    _writeBufferQueue.push(str);
-  }
-}
-
-// ____________________________________________________________________________________________________________________
-int ExternStringFinder::writeBuffers() {
+// _____________________________________________________________________________________________________________________
+void ExternStringFinder::readBuffers() {
+  String* currentBuffer;
+  int bytesRead;
   while (true) {
-    if (_writeBufferQueue.size() > 0) {
-
+    currentBuffer = _readQueue.pop();
+    bytesRead = currentBuffer->readToNewLine(_fp, MIN_BUFFER_SIZE);
+    if (bytesRead < 1) {
+      _searchQueue.push(nullptr);
+      break;
     }
+    _searchQueue.push(currentBuffer);
+    _totalNumberBytesRead += bytesRead;
   }
-  return str->read(_fp);
 }
 
-// ____________________________________________________________________________________________________________________
-int ExternStringFinder::find() {
-  _bufferPosition = 0;
-  _bytePositions.clear();
-  int bytes_read;
-  int match_counter = 0;
-  Buffer* readBuffer;
+std::vector<unsigned long> ExternStringFinder::searchBuffers() {
+  String* currentBuffer = nullptr;
+  int numMatches = 0;
+  std::vector<unsigned long> matchBytePositions;
 
+  while (true) {
+    currentBuffer = _searchQueue.pop();
+    if (currentBuffer == nullptr) {
+      break;
+    }
+    std::vector<unsigned int> matches = currentBuffer->findPerLineCaseSensitive(_pattern);
+    _readQueue.push(currentBuffer);
+    matchBytePositions.insert(matchBytePositions.end(), matches.begin(), matches.end());
+  }
+  if (_count) {
+    std::cout << "Found " << matchBytePositions.size() << " matches" << std::endl;
+  }
+  return matchBytePositions;
+}
+
+// _____________________________________________________________________________________________________________________
+void ExternStringFinder::find() {
   if (_performance) {
     _timer.start(true);
   }
-  while (true) {
-    bytes_read = nextBuffer();
-    _totalNumberBytesRead += bytes_read;
-    if (bytes_read < 0) {
-      puts("Error loading new buffer\n");
-      exit(1);
-    } else if (bytes_read == 0) {
+
+  std::thread readBuffers(&ExternStringFinder::readBuffers, this);
+  std::thread processBuffers(&ExternStringFinder::searchBuffers, this);
+
+  readBuffers.join();
+  processBuffers.join();
+
+  /*
+  while(!_readQueue.empty()) {
+    String* currentBuffer = _readQueue.pop();
+    int bytesRead = currentBuffer->readToNewLine(_fp, MIN_BUFFER_SIZE);
+    if (bytesRead < 1) {
+      _searchQueue.push(nullptr);
       break;
     }
-    readBuffer = _rotReader->getNextReadBuffer();
-    match_counter += readBuffer->read()->findPerLineCaseSensitive(_pattern).size();
-    _bufferPosition += bytes_read;
+    _searchQueue.push(currentBuffer);
+    _totalNumberBytesRead += bytesRead;
   }
-  if (_count) {
-    std::cout << "Found " << match_counter << " Matches" << std::endl;
+
+  while(!_searchQueue.empty()) {
+    String* b = _searchQueue.pop();
+    if (b == nullptr) { break; }
+    std::cout << b->findPerLineCaseSensitive(_pattern).size() << std::endl;
   }
+  */
+
   if (_performance) {
     _timer.stop();
     std::cout << "Time: " << _timer.elapsedSeconds() << " s" << std:: endl;
   }
   printf("Bytes: %ld\n", _totalNumberBytesRead);
-  return match_counter;
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 void ExternStringFinder::setFile(String filepath) {
 
   FILE *fp = fopen(filepath.cstring(), "r");
@@ -160,9 +188,4 @@ void ExternStringFinder::setFile(String filepath) {
   } else {
     _fp = fp;
   }
-}
-
-// ____________________________________________________________________________________________________________________
-std::vector<unsigned long> *ExternStringFinder::getResult() {
-  return &_bytePositions;
 }

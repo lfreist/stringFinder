@@ -4,7 +4,7 @@
 #include "src/ExternStringFinder.h"
 
 int main(int argc, char **argv) {
-  ExternFinder ef(3);
+  ExternStringFinder ef(10);
   ef.parseCommandLineArguments(argc, argv);
   ef.find();
   return 0;

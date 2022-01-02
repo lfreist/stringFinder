@@ -20,13 +20,15 @@ add_library(String
         String.h String.cpp
 )
 
-#add_library(ExternStringFinder
-#        ExternStringFinder.h ExternStringFinder.cpp
-#        String.h String.cpp
-#        Timer.h Timer.cpp
-#)
-
 add_library(TSQueue
         ThreadSafeQueue.h ThreadSafeQueue.cpp
         String.h String.cpp
+        )
+
+add_library(ExternStringFinder
+        ExternStringFinder.h ExternStringFinder.cpp
+        String.h String.cpp
+        Timer.h Timer.cpp
+        ThreadSafeQueue.h ThreadSafeQueue.cpp
 )
+target_link_libraries(ExternStringFinder PUBLIC pthread)

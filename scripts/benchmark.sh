@@ -11,20 +11,20 @@ function run_benchmark() {
     touch "$out"
   fi
   header="#"
-  m_grep="grep"
-  m_esf="esf"
+  m_a="$_a"
+  m_b="$_b"
   for file in $dir; do
     if [ -f "$file" ] && [[ "$file" == *.gz ]]; then
       files_processed=$(("$files_processed" + 1))
       progress $(("$files_processed"))
       header="$header\t$(basename "$file")"
-      m_esf="$m_esf\t$(TIMEFORMAT='%R'; { time zstdcat "$file" | $_esf "$keyword" --count --silent > /dev/null; } 2>&1)"
-      m_grep="$m_grep\t$(TIMEFORMAT='%R'; { time zstdcat "$file" | $_grep "$keyword" > /dev/null; } 2>&1)"
+      m_a="$m_a\t$(TIMEFORMAT='%R'; { time zstdcat "$file" | $_a "$keyword" > /dev/null; } 2>&1)"
+      m_b="$m_b\t$(TIMEFORMAT='%R'; { time zstdcat "$file" | $_b "$keyword" > /dev/null; } 2>&1)"
     fi
   done;
   echo -e "$header" > "$out"
-  echo -e "$m_esf" | tr , . >> "$out"
-  echo -e "$m_grep" | tr , . >> "$out"
+  echo -e "$m_a" | tr , . >> "$out"
+  echo -e "$m_b" | tr , . >> "$out"
 }
 
 function writeGnuPlotScript() {
@@ -44,11 +44,12 @@ function writeGnuPlotScript() {
     fi
     counter=$(("$counter" + 1))
   done
+  echo -e "set title \"$_a vs $_b\"\n\n" >> "plot_time.gnuplot"
   echo "$plot" >> "plot_time.gnuplot"
 }
 
 if [ ! $# -eq 4 ]; then
-  echo "Usage: benchmark.sh /dir/with/compressed/files 'keyword' /path/to/grep /path/to/esf"
+  echo "Usage: benchmark.sh /dir/with/compressed/files 'keyword' /path/to/a /path/to/b"
   exit 1
 else
   if [[ "$1" == */ ]]; then
@@ -57,8 +58,8 @@ else
     dir="$1/*"
   fi
   keyword="$2"
-  _grep="$3"
-  _esf="$4"
+  _a="$3"
+  _b="$4"
 fi
 
 run_benchmark

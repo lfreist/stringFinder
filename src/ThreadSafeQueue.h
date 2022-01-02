@@ -9,8 +9,6 @@
 #include <queue>
 #include <mutex>
 
-#include "String.h"
-
 
 /**
  * @brief thread safe queue using std::queue
@@ -45,7 +43,14 @@ class TSQueue {
    * @return true  -> if _queue is empty
    * @return false -> if _queue is not empty
    */
-  bool empty();
+  bool empty() const;
+
+  /**
+   * @brief returns number of elements hold by the queue
+   *
+   * @return int
+   */
+  int size() const;
 
  private:
   std::queue<T> _queue;

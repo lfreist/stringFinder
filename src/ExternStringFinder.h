@@ -7,17 +7,15 @@
 #include <cstdio>
 #include <vector>
 #include <thread>
-#include <mutex>
-#include <queue>
 
 #include "Timer.h"
 #include "String.h"
-#include "RotatingReader.h"
+#include "ThreadSafeQueue.h"
 
 
-#define INIT_BUFFER_SIZE ((2 << 15)+1)
+#define MIN_BUFFER_SIZE (2 << 16)
 #define BUFFER_OVERFLOW (2 << 11)
-#define MAX_BUFFER_SIZE (INIT_BUFFER_SIZE + BUFFER_OVERFLOW)
+#define MAX_BUFFER_SIZE (MIN_BUFFER_SIZE + BUFFER_OVERFLOW)
 
 /**
  * @brief ExternStringFinder class should be run using ExternStringFinderMain.
@@ -43,27 +41,23 @@ class ExternStringFinder {
    */
   void parseCommandLineArguments(int argc, char** argv);
 
-  int find();
+  void find();
 
   void setFile(String filepath);
 
-  std::vector<unsigned long>* getResult();
-
  private:
   void initializeQueues(unsigned int nBuffers);
-  int writeBuffers();
+  void readBuffers();
+  std::vector<unsigned long> searchBuffers();
   static void printHelpAndExit();
 
   String _pattern;
   FILE* _fp;
 
-  std::queue<String*> _readBufferQueue;
-  std::queue<String*> _writeBufferQueue;
-  std::mutex _readMutex;
-  std::mutex _writeMutex;
+  TSQueue<String*> _searchQueue;
+  TSQueue<String*> _readQueue;
 
   unsigned long _bufferPosition;
-  std::vector<unsigned long> _bytePositions;
 
   unsigned long _totalNumberBytesRead;
 

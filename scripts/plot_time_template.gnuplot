@@ -7,5 +7,4 @@ set boxwidth 0.9
 set xtics format ""
 set grid ytics
 
-set title "GNU grep vs ESF"
 
