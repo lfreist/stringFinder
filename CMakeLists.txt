@@ -33,7 +33,6 @@ target_link_libraries(BenchmarkMain PUBLIC Benchmark)
 # add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
 # target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer)
 
-
 configure_file(test/data.test test/data.test)
 configure_file(test/externFinderTest.txt test/externFinderTest.txt)
 
@@ -44,4 +43,4 @@ add_test(StringFinderTest test/StringFinderTest)
 add_test(WallTimerTest test/WallTimerTest)
 # add_test(ExternStringFinderTest test/ExternStringFinderTest)
 add_test(StringTest test/StringTest)
-add_test(RotatingReaderTest test/RotatingReaderTest)
+add_test(TSQTest test/TSQTest)

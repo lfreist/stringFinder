@@ -1,11 +1,16 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
+
 #include "ThreadSafeQueue.h"
+#include "String.h"
+
+template class TSQueue<int>;
+template class TSQueue<String*>;
 
 // ____________________________________________________________________________________________________________________
 template <class T>
-TSQueue<T>::TSQueue(): _queue(), _queueMutex(), _condVar() {}
+TSQueue<T>::TSQueue() {}
 
 // ____________________________________________________________________________________________________________________
 template <class T>

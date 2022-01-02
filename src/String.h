@@ -51,7 +51,7 @@ class String {
    * @param minNumBytes -> minimum number of bytes to be read (must be less than _len)
    * @return int        -> number of bytes actually read
    */
-  int readToNewLine(FILE* fp, int minNumBytes);
+  int readToNewLine(FILE* fp, unsigned int minNumBytes);
 
   /**
    * @brief case sensitive search for pattern in _content starting at _content[shift]

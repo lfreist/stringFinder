@@ -55,12 +55,12 @@ int String::read(FILE* fp) {
 }
 
 // ____________________________________________________________________________________________________________________
-int String::readToNewLine(FILE* fp, int minNumBytes) {
+int String::readToNewLine(FILE* fp, unsigned int minNumBytes) {
 	assert(minNumBytes <= _len);
 	char additional_char;
   size_t bytes_read = fread(_content, sizeof(char), minNumBytes, fp);
   if (bytes_read == 0) { return 0; }
-  for (int i = (int) bytes_read; i < _len; i++) {
+  for (unsigned int i = (unsigned int) bytes_read; i < _len; i++) {
     if ((additional_char = (char) fgetc(fp)) == EOF) {
       _content[i] = '\0';
       return i;

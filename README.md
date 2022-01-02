@@ -14,6 +14,8 @@ mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)
 ```
+> Note: When compiling on MacOS, install g++ using brew and add ```-DCMAKE_CXX_COMPILER=/usr/local/bin/c++-11``` to the cmake call
+
 ### Docker
 ```
 docker build -t leon-freist-bachelorprojekt .

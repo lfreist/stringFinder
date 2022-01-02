@@ -9,6 +9,8 @@
 #include <queue>
 #include <mutex>
 
+#include "String.h"
+
 
 /**
  * @brief thread safe queue using std::queue

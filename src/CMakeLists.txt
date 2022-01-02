@@ -26,6 +26,7 @@ add_library(String
 #        Timer.h Timer.cpp
 #)
 
-add_library(ThreadSafeQueue
+add_library(TSQueue
         ThreadSafeQueue.h ThreadSafeQueue.cpp
+        String.h String.cpp
 )
