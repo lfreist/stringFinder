@@ -20,11 +20,11 @@ class String {
   // default constructor
   String();
   // constructor setting _len and creating a char* of _len
-  String(unsigned int len);
+  explicit String(unsigned int len);
   // copy constructor
   String(const String& str);
   // constructor setting _content to str
-  String(const char* str);
+  explicit String(const char* str);
   // destructor
   ~String();
 
@@ -78,7 +78,7 @@ class String {
    * @param pattern                    -> searching pattern
    * @return std::vector<unsigned int> -> byte position of matches relative to _content
    */
-  std::vector<unsigned int> findPerLineCaseSensitive(const String& pattern);
+  std::vector<unsigned int> findPerLineCaseSensitive(const String& pattern, unsigned int bytePositionShift = 0);
 
   /**
    * @brief case insensitive search for pattern in _content. After finding a match, jump to next line ('\n')
@@ -86,7 +86,7 @@ class String {
    * @param pattern                    -> searching pattern
    * @return std::vector<unsigned int> -> byte position of matches relative to _content
    */
-  std::vector<unsigned int> findPerLineCaseInsensitive(const String& Pattern);
+  std::vector<unsigned int> findPerLineCaseInsensitive(const String& Pattern, unsigned int bytePositionShift = 0);
 
   /**
    * @brief get c like string (char*)
@@ -109,7 +109,7 @@ class String {
   int findNewLine(unsigned int shift);
 
   char* _content;
-  unsigned _len;
+  unsigned int _len;
 
   FRIEND_TEST(StringTest, Constructor);
   FRIEND_TEST(StringTest, findPerLineCaseSensitive);

@@ -1,6 +1,6 @@
-*.o
 cmake-build-debug/*
 .idea
 reminders
 build/*
 /scripts/f19g.txt
+files/*

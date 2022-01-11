@@ -42,7 +42,8 @@ def create_test_file():
 			while (min_line_length > 0):
 				word = WORDS[randint(0, len(WORDS)-1)]
 				line.append(word)
-				min_line_length -= len(word)
+				# +1 because of the new line character in the end of a line
+				min_line_length -= len(word)+1
 			line_str = " ".join(line)
 			print(line_str, file=f)
 			bytes_wrote += len(line_str)

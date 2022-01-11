@@ -133,6 +133,7 @@ std::vector<unsigned long> ExternStringFinder::searchBuffers() {
     std::vector<unsigned int> matches = currentBuffer->findPerLineCaseSensitive(_pattern);
     _readQueue.push(currentBuffer);
     matchBytePositions.insert(matchBytePositions.end(), matches.begin(), matches.end());
+    _bufferPosition += strlen(currentBuffer->cstring());
   }
   if (_count) {
     std::cout << "Found " << matchBytePositions.size() << " matches" << std::endl;
@@ -151,25 +152,6 @@ void ExternStringFinder::find() {
 
   readBuffers.join();
   processBuffers.join();
-
-  /*
-  while(!_readQueue.empty()) {
-    String* currentBuffer = _readQueue.pop();
-    int bytesRead = currentBuffer->readToNewLine(_fp, MIN_BUFFER_SIZE);
-    if (bytesRead < 1) {
-      _searchQueue.push(nullptr);
-      break;
-    }
-    _searchQueue.push(currentBuffer);
-    _totalNumberBytesRead += bytesRead;
-  }
-
-  while(!_searchQueue.empty()) {
-    String* b = _searchQueue.pop();
-    if (b == nullptr) { break; }
-    std::cout << b->findPerLineCaseSensitive(_pattern).size() << std::endl;
-  }
-  */
 
   if (_performance) {
     _timer.stop();

@@ -51,7 +51,9 @@ void String::set(const char* str) {
 
 // ____________________________________________________________________________________________________________________
 int String::read(FILE* fp) {
-  return (int) fread(_content, sizeof(char), _len, fp);
+  size_t bytes_read = fread(_content, sizeof(char), _len, fp);
+  _content[bytes_read] = '\0';
+  return (int) bytes_read;
 }
 
 // ____________________________________________________________________________________________________________________
@@ -96,7 +98,7 @@ int String::findCaseInsensitive(const String& pattern, unsigned int shift) {
 }
 
 // ____________________________________________________________________________________________________________________
-std::vector<unsigned int> String::findPerLineCaseSensitive(const String& pattern) {
+std::vector<unsigned int> String::findPerLineCaseSensitive(const String& pattern, unsigned int bytePositionShift) {
   std::vector<unsigned int> matches;
   int matchPosition = 0;
   int newLinePosition;
@@ -105,7 +107,7 @@ std::vector<unsigned int> String::findPerLineCaseSensitive(const String& pattern
     if (matchPosition < 0) {
       break;
     }
-    matches.push_back(matchPosition);
+    matches.push_back(matchPosition+bytePositionShift);
     newLinePosition = findNewLine(matchPosition);
     if (newLinePosition < 0) {
       break;
@@ -116,7 +118,7 @@ std::vector<unsigned int> String::findPerLineCaseSensitive(const String& pattern
 }
 
 // ____________________________________________________________________________________________________________________
-std::vector<unsigned int> String::findPerLineCaseInsensitive(const String& pattern) {
+std::vector<unsigned int> String::findPerLineCaseInsensitive(const String& pattern, unsigned int bytePositionShift) {
   std::vector<unsigned int> matches;
   int matchPosition = 0;
   int newLinePosition;
@@ -125,7 +127,7 @@ std::vector<unsigned int> String::findPerLineCaseInsensitive(const String& patte
     if (matchPosition < 0) {
       break;
     }
-    matches.push_back(matchPosition);
+    matches.push_back(matchPosition+bytePositionShift);
     newLinePosition = findNewLine(matchPosition);
     if (newLinePosition < 0) {
       break;
