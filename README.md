@@ -79,12 +79,11 @@ When FILE is not provided read standard input
 
 #### Benchmarking ESF vs grep
 From within the `./scripts` directory run these tasks:
-```bash 
-./compress.sh [FILE]
-# where [FILE]    is the path to the file that should be compressed.
-
-./benchmark.sh comp [KEYWORD] [GREP] [ESF]
-# where [KEYWORD] is a single word to be searched during the benchmarks,
+```
+python3 benchmark.py [FILE] [KEYWORD] --programs [GREP] [ESF] [...] --iterations [X]
+# where [FILE]    is a zstd compressed file
+#       [KEYWORD] is a single word to be searched during the benchmarks,
 #       [GREP]    is the path to grep (e.g. /bin/grep)
 #       [ESF]     is the path to ESF (e.g. ../build/ExternStringFinderMain)
+#       [X]       is the number of runs per program
 ```
