@@ -6,44 +6,44 @@
 #include <thread>
 
 #include "../src/ThreadSafeQueue.h"
-#include "../src/String.h"
+#include "../src/Buffer.h"
 
 // ____________________________________________________________________________________________________________________
 TEST(TSQueueTest, Constructor) {
-	TSQueue<String*> tsq;
+	TSQueue<Buffer*> tsq;
 	ASSERT_TRUE(tsq._queue.empty());
 }
 
 // ____________________________________________________________________________________________________________________
 TEST(TSQueueTest, methodsTest) {
   {
-    String str1("hello");
-    String str2("bye");
-    TSQueue<String*> tsq;
+    Buffer str1("hello");
+    Buffer str2("bye");
+    TSQueue<Buffer*> tsq;
     tsq.push(&str1);
     ASSERT_FALSE(tsq.empty());
     ASSERT_EQ(tsq._queue.size(), 1);
     tsq.push(&str2);
     ASSERT_EQ(tsq._queue.size(), 2);
-    String* fst = tsq.pop();
+    Buffer* fst = tsq.pop();
     ASSERT_EQ(tsq._queue.size(), 1);
-    String* snd = tsq.pop();
+    Buffer* snd = tsq.pop();
     ASSERT_TRUE(tsq.empty());
     ASSERT_TRUE(*fst == str1);
     ASSERT_TRUE(*snd == str2);
   }
   {
-    auto pushIntoQueue = [](TSQueue<String*>* q, String* elem) {
+    auto pushIntoQueue = [](TSQueue<Buffer*>* q, Buffer* elem) {
       sleep(10);
       q->push(elem);
     };
-    auto popFromQueue = [](TSQueue<String*>* q, String* expectElem) {
+    auto popFromQueue = [](TSQueue<Buffer*>* q, Buffer* expectElem) {
       ASSERT_TRUE(q->empty());
-      String* elem = q->pop();
+      Buffer* elem = q->pop();
       ASSERT_EQ(elem, expectElem);
     };
-    TSQueue<String*> tsq;
-    String str("element");
+    TSQueue<Buffer*> tsq;
+    Buffer str("element");
     std::thread push(pushIntoQueue, &tsq, &str);
     std::thread pop(popFromQueue, &tsq, &str);
     push.join();

@@ -10,8 +10,8 @@ target_link_libraries(WallTimerTest Benchmark gtest_main)
 #add_executable(ExternStringFinderTest ExternStringFinderTest.cpp)
 #target_link_libraries(ExternStringFinderTest ExternStringFinder gtest_main)
 
-add_executable(StringTest StringTest.cpp)
-target_link_libraries(StringTest String gtest_main)
+#add_executable(StringTest StringTest.cpp)
+#target_link_libraries(StringTest String gtest_main)
 
 add_executable(TSQTest ThreadSafeQueueTest.cpp)
-target_link_libraries(TSQTest TSQueue String gtest_main)
+target_link_libraries(TSQTest TSQueue Buffer gtest_main)

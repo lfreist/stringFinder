@@ -3,10 +3,10 @@
 
 
 #include "ThreadSafeQueue.h"
-#include "String.h"
+#include "Buffer.h"
 
 template class TSQueue<int>;
-template class TSQueue<String*>;
+template class TSQueue<Buffer*>;
 
 // _____________________________________________________________________________________________________________________
 template <class T>

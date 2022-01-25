@@ -9,7 +9,7 @@
 #include <thread>
 
 #include "Timer.h"
-#include "String.h"
+#include "Buffer.h"
 #include "ThreadSafeQueue.h"
 
 
@@ -29,7 +29,7 @@ class ExternStringFinder {
   ExternStringFinder(unsigned int nBuffers = 1);
   // Constructor taking all mandatory properties.
   //  No need to run parseCommandLineArguments afterwards.
-  ExternStringFinder(unsigned int nBuffers, String file, String pattern, bool performance, bool silent, bool count);
+  ExternStringFinder(unsigned int nBuffers, char* file, char* pattern, bool performance, bool silent, bool count);
   // Destructor
   ~ExternStringFinder();
 
@@ -43,7 +43,7 @@ class ExternStringFinder {
 
   void find();
 
-  void setFile(String filepath);
+  void setFile(char* filepath);
 
  private:
   void initializeQueues(unsigned int nBuffers);
@@ -51,11 +51,11 @@ class ExternStringFinder {
   std::vector<unsigned long> searchBuffers();
   static void printHelpAndExit();
 
-  String _pattern;
+  char* _pattern;
   FILE* _fp;
 
-  TSQueue<String*> _searchQueue;
-  TSQueue<String*> _readQueue;
+  TSQueue<Buffer*> _searchQueue;
+  TSQueue<Buffer*> _readQueue;
 
   unsigned long _bufferPosition;
 

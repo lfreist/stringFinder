@@ -20,12 +20,12 @@ ExternStringFinder::ExternStringFinder(unsigned int nBuffers) {
 }
 
 // _____________________________________________________________________________________________________________________
-ExternStringFinder::ExternStringFinder(unsigned int nBuffers, String file, String pattern, bool performance,
+ExternStringFinder::ExternStringFinder(unsigned int nBuffers, char* file, char* pattern, bool performance,
                                        bool silent, bool count) {
   _performance = performance;
   _silent = silent;
   _count = count;
-  _fp = fopen(file.cstring(), "r");
+  _fp = fopen(file, "r");
   _pattern = pattern;
   _bufferPosition = 0;
   initializeQueues(nBuffers);
@@ -38,9 +38,9 @@ ExternStringFinder::~ExternStringFinder() {
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::initializeQueues(unsigned int nBuffers) {
-  String* str = nullptr;
+  Buffer* str = nullptr;
   for (unsigned int i = 0; i < nBuffers; i++) {
-    str = new String(MAX_BUFFER_SIZE);
+    str = new Buffer(MAX_BUFFER_SIZE);
     _readQueue.push(str);
   }
 }
@@ -73,7 +73,7 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
     std::cout << "Missing input file or pattern" << std::endl;
     printHelpAndExit();
   }
-  _pattern.set(argv[optind++]);
+  _pattern = argv[optind++];
   if (optind >= argc) {
     _fp = stdin;
   } else {
@@ -106,11 +106,11 @@ void ExternStringFinder::printHelpAndExit() {
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::readBuffers() {
-  String* currentBuffer;
+  Buffer* currentBuffer;
   int bytesRead;
   while (true) {
     currentBuffer = _readQueue.pop();
-    bytesRead = currentBuffer->readToNewLine(_fp, MIN_BUFFER_SIZE);
+    bytesRead = currentBuffer->setContentFromFile(_fp, MIN_BUFFER_SIZE, true);
     if (bytesRead < 1) {
       _searchQueue.push(nullptr);
       break;
@@ -121,7 +121,7 @@ void ExternStringFinder::readBuffers() {
 }
 
 std::vector<unsigned long> ExternStringFinder::searchBuffers() {
-  String* currentBuffer = nullptr;
+  Buffer* currentBuffer = nullptr;
   int numMatches = 0;
   std::vector<unsigned long> matchBytePositions;
 
@@ -130,7 +130,7 @@ std::vector<unsigned long> ExternStringFinder::searchBuffers() {
     if (currentBuffer == nullptr) {
       break;
     }
-    std::vector<unsigned int> matches = currentBuffer->findPerLineCaseSensitive(_pattern);
+    std::vector<unsigned int> matches = currentBuffer->findPerLine(_pattern);
     _readQueue.push(currentBuffer);
     matchBytePositions.insert(matchBytePositions.end(), matches.begin(), matches.end());
     _bufferPosition += strlen(currentBuffer->cstring());
@@ -161,11 +161,11 @@ void ExternStringFinder::find() {
 }
 
 // _____________________________________________________________________________________________________________________
-void ExternStringFinder::setFile(String filepath) {
+void ExternStringFinder::setFile(char* filepath) {
 
-  FILE *fp = fopen(filepath.cstring(), "r");
+  FILE *fp = fopen(filepath, "r");
   if (fp == nullptr) {
-    printf("Could not open file '%s'\n", filepath.cstring());
+    printf("Could not open file '%s'\n", filepath);
     puts("Keeping current file pointer");
   } else {
     _fp = fp;

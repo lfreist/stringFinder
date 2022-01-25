@@ -16,18 +16,18 @@ add_library(Benchmark
 )
 target_link_libraries(Benchmark PUBLIC OpenMP::OpenMP_CXX)
 
-add_library(String
-        String.h String.cpp
+add_library(Buffer
+        Buffer.h Buffer.cpp
 )
 
 add_library(TSQueue
         ThreadSafeQueue.h ThreadSafeQueue.cpp
-        String.h String.cpp
+        Buffer.h Buffer.cpp
         )
 
 add_library(ExternStringFinder
         ExternStringFinder.h ExternStringFinder.cpp
-        String.h String.cpp
+        Buffer.h Buffer.cpp
         Timer.h Timer.cpp
         ThreadSafeQueue.h ThreadSafeQueue.cpp
 )
