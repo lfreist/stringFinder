@@ -9,7 +9,7 @@
 #include <algorithm>
 
 #include "StringFinder.h"
-#include "Timer.h"
+#include "./utils/Timer.h"
 
 using std::vector;
 using std::string;

@@ -5,8 +5,8 @@
 
 #include <thread>
 
-#include "../src/ThreadSafeQueue.h"
-#include "../src/Buffer.h"
+#include "../src/utils/ThreadSafeQueue.h"
+#include "../src/utils/Buffer.h"
 
 // ____________________________________________________________________________________________________________________
 TEST(TSQueueTest, Constructor) {

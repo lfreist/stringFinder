@@ -8,9 +8,9 @@
 #include <vector>
 #include <thread>
 
-#include "Timer.h"
-#include "Buffer.h"
-#include "ThreadSafeQueue.h"
+#include "./utils/Timer.h"
+#include "./utils/Buffer.h"
+#include "./utils/ThreadSafeQueue.h"
 
 
 #define MIN_BUFFER_SIZE (2 << 16)
