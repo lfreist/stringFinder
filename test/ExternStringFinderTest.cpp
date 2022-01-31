@@ -4,7 +4,7 @@
 
 // ____________________________________________________________________________
 TEST(ExternStringFinder, find1) {
-  char filename[26] = "test/externFinderTest.txt";
+  char filename[26] = "test/_externFinderTest";
   char pattern[8] = "keyword";
   ExternFinder ef;
   ef.setFile(filename);

@@ -6,7 +6,6 @@
 #include <thread>
 
 #include "ExternStringFinder.h"
-#include "./utils/Timer.h"
 
 
 // ____________________________________________________________________________________________________________________
@@ -28,6 +27,7 @@ ExternStringFinder::ExternStringFinder(unsigned int nBuffers, char* file, char* 
   _fp = fopen(file, "r");
   _pattern = pattern;
   _bufferPosition = 0;
+  _totalNumberBytesRead = 0;
   initializeQueues(nBuffers);
 }
 
@@ -132,6 +132,7 @@ std::vector<unsigned long> ExternStringFinder::searchBuffers() {
     }
     std::vector<unsigned int> matches = currentBuffer->findPerLine(_pattern);
     _readQueue.push(currentBuffer);
+    // TODO: make multithreadable
     matchBytePositions.insert(matchBytePositions.end(), matches.begin(), matches.end());
     _bufferPosition += strlen(currentBuffer->cstring());
   }

@@ -33,8 +33,12 @@ target_link_libraries(BenchmarkMain PUBLIC Benchmark)
 add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
 target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer)
 
-configure_file(test/data.test test/data.test)
-configure_file(test/externFinderTest.txt test/externFinderTest.txt)
+add_executable(ESFCompressorMain ESFCompressorMain.cpp)
+target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor)
+
+configure_file(test/_stringFinderTest test/_stringFinderTest)
+configure_file(test/_externFinderTest test/_externFinderTest)
+configure_file(test/_bufferTest test/_bufferTest)
 
 add_subdirectory(test)
 include(CTest)

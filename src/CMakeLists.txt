@@ -10,7 +10,6 @@ add_library(ExternStringFinder
 )
 target_link_libraries(ExternStringFinder PUBLIC pthread Timer TSQueue Buffer)
 
-
 add_library(StringFinder
         InteractiveFinder.h InteractiveFinder.cpp
         StringFinder.h StringFinder.cpp

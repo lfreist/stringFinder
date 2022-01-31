@@ -3,13 +3,15 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cassert>
 #include <vector>
 
-#include <cassert>
-
 #include "Buffer.h"
+#include "ZstdWrapper.h"
 
-// ____________________________________________________________________________________________________________________
+#include <iostream>
+
+// _____________________________________________________________________________________________________________________
 Buffer::Buffer() {
   _len = 0;
   _bufferSize = 1;
@@ -17,7 +19,7 @@ Buffer::Buffer() {
   _content[0] = '\0';
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 Buffer::Buffer(unsigned int bufferSize) {
   _len = bufferSize-1;
   _bufferSize = bufferSize;
@@ -25,7 +27,7 @@ Buffer::Buffer(unsigned int bufferSize) {
   _content[_bufferSize-1] = '\0';
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 Buffer::Buffer(const Buffer& buffer) {
   _len = buffer._len;
   _bufferSize = buffer._bufferSize;
@@ -33,7 +35,7 @@ Buffer::Buffer(const Buffer& buffer) {
   strcpy(_content, buffer._content);
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 Buffer::Buffer(const char* str) {
   _len = strlen(str);
   _bufferSize = _len+1;
@@ -41,12 +43,12 @@ Buffer::Buffer(const char* str) {
   strcpy(_content, str);
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 Buffer::~Buffer() {
   delete[] _content;
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 void Buffer::setContent(const char* content) {
   delete[] _content;
   _len = strlen(content);
@@ -55,36 +57,57 @@ void Buffer::setContent(const char* content) {
   strcpy(_content, content);
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 int Buffer::setContentFromFile(FILE* fp, unsigned int minNumBytes, bool toNewLine) {
   assert(minNumBytes <= _len);
   if (toNewLine) {
     char additional_char;
     size_t bytes_read = fread(_content, sizeof(char), minNumBytes, fp);
-    if (bytes_read == 0) { return 0; }
-    for (auto i = (unsigned int) bytes_read; i < _len; i++) {
-      if ((additional_char = (char) fgetc(fp)) == EOF) {
-        _content[i] = '\0';
-        _len = i;
-        return i;
-      }
-      if (additional_char == '\n') {
+    if (bytes_read == 0) {
+      _content[0] = '\0';
+      _len = 0;
+      return 0;
+    } else if (bytes_read < minNumBytes) {
+      bytes_read--;
+      _content[bytes_read] = '\0';
+      _len = bytes_read;
+      return (int) bytes_read;
+    } else if (_content[bytes_read-1] == '\n') {
+      _content[bytes_read] = '\0';
+      _len = bytes_read;
+      return (int) bytes_read;
+    }
+    // read until new line
+    for (auto i = (unsigned int) bytes_read; i < _bufferSize; i++) {
+      _len = i+1;
+      additional_char = (char) fgetc(fp);
+      if (additional_char == '\n' || additional_char == EOF) {
+        // TODO: Question: additional_char is never EOF. At the end of the file a nl-char is read (out of nowhere?)
         _content[i] = additional_char;
         _content[i+1] = '\0';
-        _len = i;
-        return i;
+        return (int) i;
       }
       _content[i] = additional_char;
     }
+    // overflow: Buffer is full and still no new line found
+    std::cout << _content << std::endl;
+    _content[_bufferSize-1] = '\0';
     return -1;
   }
-  size_t bytes_read = fread(_content, sizeof(char), _len, fp);
+  size_t bytes_read = fread(_content, sizeof(char), minNumBytes, fp);
+  if (bytes_read == 0) {
+    _content[0] = '\0';
+    _len = 0;
+    return 0;
+  } else if (bytes_read < minNumBytes) {  // skip EOF (new line - see TODO described in 84)
+    bytes_read--;
+  }
   _content[bytes_read] = '\0';
   _len = bytes_read;
   return (int) bytes_read;
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 int Buffer::find(const char* pattern, unsigned int shift, bool caseSensitive) {
   assert(shift <= _len);
   char* match;
@@ -99,7 +122,7 @@ int Buffer::find(const char* pattern, unsigned int shift, bool caseSensitive) {
   return _len - strlen(match);
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 std::vector<unsigned int> Buffer::findPerLine(const char* pattern, unsigned int bytePositionShift,
                                               bool caseSensitive) {
   std::vector<unsigned int> matches;
@@ -120,7 +143,7 @@ std::vector<unsigned int> Buffer::findPerLine(const char* pattern, unsigned int 
   return matches;
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 int Buffer::findNewLine(unsigned int shift) {
   assert(shift <= _len);
   char* match = strchr(_content+shift, '\n');
@@ -130,13 +153,13 @@ int Buffer::findNewLine(unsigned int shift) {
   return strlen(_content+shift) - strlen(match);
 }
 
-// ____________________________________________________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 const char* Buffer::cstring() {
   return _content;
 }
 
-// ____________________________________________________________________________________________________________________
-bool Buffer::operator==(Buffer compStr) {
+// _____________________________________________________________________________________________________________________
+bool Buffer::operator==(const Buffer& compStr) {
 	if (_len != compStr._len) {
       return false;
 	}
@@ -148,7 +171,35 @@ bool Buffer::operator==(Buffer compStr) {
 	return true;
 }
 
-// ____________________________________________________________________________________________________________________
-bool Buffer::operator!=(Buffer compStr) {
+// _____________________________________________________________________________________________________________________
+bool Buffer::operator!=(const Buffer& compStr) {
   return !(operator==(compStr));
+}
+
+// _____________________________________________________________________________________________________________________
+unsigned int Buffer::length() const {
+  return _len;
+}
+
+// _____________________________________________________________________________________________________________________
+size_t Buffer::compress(int compressionLevel) {
+  std::vector<char> comp = ZstdWrapper::compress(_content, _len, compressionLevel);
+  setContent(reinterpret_cast<char*>(comp.data()));
+  return _len;
+}
+
+// _____________________________________________________________________________________________________________________
+size_t Buffer::decompress(size_t originalSize) {
+  std::vector<char> decomp = ZstdWrapper::decompress<char>(_content, _len, originalSize);
+  setContent(reinterpret_cast<char*>(decomp.data()));
+  return _len;
+}
+
+// TODO: implement if needed or delete
+size_t Buffer::compressToBuffer(int compressionLevel, Buffer& buffer) {
+  return 0;
+}
+
+size_t Buffer::decompressBuffer(size_t originalSize, Buffer& buffer) {
+  return 0;
 }

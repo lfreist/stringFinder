@@ -19,14 +19,14 @@
 
 /**
  * @brief ExternStringFinder class should be run using ExternStringFinderMain.
- * See printHelpAndExit() fro more informations
+ * See printHelpAndExit() for more information
  * 
  */
 class ExternStringFinder {
  public:
   // Constructor taking number of buffers to be initialized.
-  //  Run parseCommandLineAruments afterwards to set fp, pattern etc.
-  ExternStringFinder(unsigned int nBuffers = 1);
+  //  Run parseCommandLineArguments afterwards to set fp, pattern etc.
+  explicit ExternStringFinder(unsigned int nBuffers = 1);
   // Constructor taking all mandatory properties.
   //  No need to run parseCommandLineArguments afterwards.
   ExternStringFinder(unsigned int nBuffers, char* file, char* pattern, bool performance, bool silent, bool count);

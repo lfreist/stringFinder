@@ -1,8 +1,8 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef SRC_BUFFER_H_
-#define SRC_BUFFER_H_
+#ifndef SRC_UTILS_BUFFER_H_
+#define SRC_UTILS_BUFFER_H_
 
 #include <gtest/gtest.h>
 
@@ -71,8 +71,16 @@ class Buffer {
    */
   const char* cstring();
 
-  bool operator==(Buffer compStr);
-  bool operator!=(Buffer compStr);
+  unsigned int length() const;
+
+  size_t compress(int compressionLevel);
+  size_t decompress(size_t originalSize);
+
+  static size_t compressToBuffer(int compressionLevel, Buffer& buffer);
+  static size_t decompressBuffer(size_t originalSize, Buffer& buf);
+
+  bool operator==(const Buffer& compStr);
+  bool operator!=(const Buffer& compStr);
 
  private:
 
@@ -89,7 +97,8 @@ class Buffer {
   unsigned int _len;
 
   FRIEND_TEST(BufferTest, Constructor);
+  FRIEND_TEST(BufferTest, setContentFromFile);
   FRIEND_TEST(BufferTest, findPerLine);
 };
 
-#endif  // SRC_Buffer_H_
+#endif  // SRC_UTILS_Buffer_H_

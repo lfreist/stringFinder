@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 LABEL maintainer="Leon Freist <freist@informatik.uni-freiburg.de>"
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update > /dev/null && apt-get install -y apt-utils build-essential git make vim cmake zstd > /dev/null
+RUN apt-get update > /dev/null && apt-get install -y apt-utils build-essential git make vim cmake zstd libzstd-dev > /dev/null
 RUN rm -rf /var/lib/apt/lists/*
 COPY . leon-freist-bachelorprojekt
 WORKDIR "leon-freist-bachelorprojekt"

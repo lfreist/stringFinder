@@ -1,8 +1,8 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef SRC_THREADSAFEQUEUE_H_
-#define SRC_THREADSAFEQUEUE_H_
+#ifndef SRC_UTILS_THREADSAFEQUEUE_H_
+#define SRC_UTILS_THREADSAFEQUEUE_H_
 
 #include <gtest/gtest.h>
 
@@ -61,4 +61,4 @@ class TSQueue {
   FRIEND_TEST(TSQueueTest, methodsTest);
 };
 
-#endif  // SRC_THREADSAFEQUEUE_H_
+#endif  // SRC_UTILS_THREADSAFEQUEUE_H_
