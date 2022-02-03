@@ -27,25 +27,29 @@ class ESFCompress {
       return false;
     }
     FILE *meta =  metaFile.empty() ?
-                  fopen((outFile + std::string(".meta")).c_str(), "w") : fopen(metaFile.c_str(), "w");
+                  fopen((outFile + std::string(".meta")).c_str(), "w") :
+                  fopen(metaFile.c_str(), "w");
     if (meta == nullptr) {
       std::cerr << "Could not write meta file..." << std::endl;
       return false;
     }
 
-    int prevBytePosition = 0;
+    // write the max uncompressed buffer size to the top of the meta file
+    std::string maxChunkSizeStr = std::to_string(minChunkSize + chunkOverflowSize) + "\n";
+    fwrite(maxChunkSizeStr.c_str(), maxChunkSizeStr.size(), 1, meta);
+    // read whole file and compress chunks
     for (int counter = 1; ; counter++) {
       Buffer chunk(minChunkSize + chunkOverflowSize);
-      int bytes_read = chunk.setContentFromFile(src, minChunkSize, true);
-      if (bytes_read == 0) { break; } else if (bytes_read < 0) {
+      int uncompressed_bytes_read = chunk.setContentFromFile(src, minChunkSize, true);
+      if (uncompressed_bytes_read == 0) { break; } else if (uncompressed_bytes_read < 0) {
         std::cerr << "Error reading chunk: Did not found a new line. Increase chunkOverflowSize." << std::endl;
         return false;
       }
+      // actual compression
       std::vector<char> comp = ZstdWrapper::compress((char*) chunk.cstring(), chunk.length(), compressionLevel);
       fwrite(comp.data(), comp.size(), 1, out);
-      std::string metaStr = std::string(
-          std::to_string(prevBytePosition) + " " + std::to_string(prevBytePosition + comp.size()) + "\n"
-      );
+      // write the actual uncompressed buffer size and the compressed size to the meta file: 'orig_size comp_size'
+      std::string metaStr = std::to_string(uncompressed_bytes_read) + " " + std::to_string(comp.size()) + "\n";
       fwrite(metaStr.c_str(), metaStr.size(), 1, meta);
     }
     fclose(src);

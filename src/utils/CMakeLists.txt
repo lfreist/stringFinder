@@ -16,3 +16,7 @@ add_library(ESFCompressor
         ESFCompressor.h
         )
 target_link_libraries(ESFCompressor zstd Buffer)
+
+add_library(ESFMetaFile
+        ESFMetaFile.h ESFMetaFile.cpp
+        )

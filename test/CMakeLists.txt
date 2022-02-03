@@ -15,3 +15,6 @@ target_link_libraries(BufferTest Buffer gtest_main)
 
 add_executable(TSQTest ThreadSafeQueueTest.cpp)
 target_link_libraries(TSQTest TSQueue Buffer gtest_main)
+
+add_executable(ESFMetaFileTest ESFMetaFileTest.cpp)
+target_link_libraries(ESFMetaFileTest gtest_main ESFMetaFile)

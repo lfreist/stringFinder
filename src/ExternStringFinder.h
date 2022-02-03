@@ -7,15 +7,13 @@
 #include <cstdio>
 #include <vector>
 #include <thread>
+#include <string>
 
 #include "./utils/Timer.h"
 #include "./utils/Buffer.h"
 #include "./utils/ThreadSafeQueue.h"
+#include "./utils/ESFMetaFile.h"
 
-
-#define MIN_BUFFER_SIZE (2 << 16)
-#define BUFFER_OVERFLOW (2 << 11)
-#define MAX_BUFFER_SIZE (MIN_BUFFER_SIZE + BUFFER_OVERFLOW)
 
 /**
  * @brief ExternStringFinder class should be run using ExternStringFinderMain.
@@ -29,7 +27,9 @@ class ExternStringFinder {
   explicit ExternStringFinder(unsigned int nBuffers = 1);
   // Constructor taking all mandatory properties.
   //  No need to run parseCommandLineArguments afterwards.
-  ExternStringFinder(unsigned int nBuffers, char* file, char* pattern, bool performance, bool silent, bool count);
+  ExternStringFinder(unsigned int nBuffers, char* file, char* pattern, bool performance, bool silent, bool count,
+                     char* metaFile = nullptr, unsigned int minBufferSize = (2 << 20),
+                     unsigned int bufferOverflowSize = (2 << 11));
   // Destructor
   ~ExternStringFinder();
 
@@ -46,16 +46,22 @@ class ExternStringFinder {
   void setFile(char* filepath);
 
  private:
-  void initializeQueues(unsigned int nBuffers);
+  void initializeQueues();
   void readBuffers();
+  void decompressBuffers();
   std::vector<unsigned long> searchBuffers();
   static void printHelpAndExit();
 
   char* _pattern;
-  FILE* _fp;
+  FILE* _searchFile;
+  ESFMetaFile* _metaFile;
 
+  unsigned int _nBuffers;
+  unsigned int _maxBufferSize;
+  unsigned int _minBufferSize;
   TSQueue<Buffer*> _searchQueue;
   TSQueue<Buffer*> _readQueue;
+  TSQueue<Buffer*> _decompressQueue;
 
   unsigned long _bufferPosition;
 

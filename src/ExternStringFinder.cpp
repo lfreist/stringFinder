@@ -6,6 +6,7 @@
 #include <thread>
 
 #include "ExternStringFinder.h"
+#include "./utils/ESFMetaFile.h"
 
 
 // ____________________________________________________________________________________________________________________
@@ -13,34 +14,44 @@ ExternStringFinder::ExternStringFinder(unsigned int nBuffers) {
   _performance = false;
   _silent = false;
   _count = false;
-  _fp = nullptr;
+  _searchFile = nullptr;
+  _metaFile = nullptr;
   _bufferPosition = 0;
-  initializeQueues(nBuffers);
+  _nBuffers = nBuffers;
+  _minBufferSize = (2 << 20);
+  _maxBufferSize = _minBufferSize + (2 << 11);
 }
 
 // _____________________________________________________________________________________________________________________
-ExternStringFinder::ExternStringFinder(unsigned int nBuffers, char* file, char* pattern, bool performance,
-                                       bool silent, bool count) {
+ExternStringFinder::ExternStringFinder(unsigned int nBuffers, char* file, char* pattern, bool performance, bool silent,
+                                       bool count, char* metaFile, unsigned int minBufferSize,
+                                       unsigned int bufferOverflowSize) {
   _performance = performance;
   _silent = silent;
   _count = count;
-  _fp = fopen(file, "r");
+  _searchFile = fopen(file, "r");
+  _metaFile = metaFile == nullptr ? nullptr : new ESFMetaFile(std::string(metaFile));
   _pattern = pattern;
   _bufferPosition = 0;
   _totalNumberBytesRead = 0;
-  initializeQueues(nBuffers);
+  _nBuffers = nBuffers;
+  _minBufferSize = minBufferSize;
+  _maxBufferSize = minBufferSize + bufferOverflowSize;
+  initializeQueues();
 }
 
 // _____________________________________________________________________________________________________________________
 ExternStringFinder::~ExternStringFinder() {
-  fclose(_fp);
+  if (_searchFile != nullptr) {
+    fclose(_searchFile);
+  }
+  delete _metaFile;
 }
 
 // _____________________________________________________________________________________________________________________
-void ExternStringFinder::initializeQueues(unsigned int nBuffers) {
-  Buffer* str = nullptr;
-  for (unsigned int i = 0; i < nBuffers; i++) {
-    str = new Buffer(MAX_BUFFER_SIZE);
+void ExternStringFinder::initializeQueues() {
+  for (unsigned int i = 0; i < _nBuffers; i++) {
+    auto* str = new Buffer(_maxBufferSize);
     _readQueue.push(str);
   }
 }
@@ -52,11 +63,12 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
     {"performance", 0, nullptr, 'p'},
     {"silent", 0, nullptr, 's'},
     {"count", 0, nullptr, 'c'},
+    {"meta", 1, nullptr, 'm'},
     {nullptr, 0, nullptr, 0}
   };
   optind = 1;
   while (true) {
-    int c = getopt_long(argc, argv, "h:p:s:c", options, nullptr);
+    int c = getopt_long(argc, argv, "h:p:s:c:m:", options, nullptr);
     if (c == -1) { break; }
     switch (c) {
       case 'h': printHelpAndExit(); break;
@@ -66,6 +78,7 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
         break;
       case 's': _silent = true; break;
       case 'c': _count = true; break;
+      case 'm': _metaFile = new ESFMetaFile(std::string(optarg));
       default: break;
     }
   }
@@ -75,14 +88,21 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
   }
   _pattern = argv[optind++];
   if (optind >= argc) {
-    _fp = stdin;
+    _searchFile = stdin;
+  } else if (strcmp(argv[optind], "-") == 0) {
+      _searchFile = stdin;
   } else {
-    _fp = fopen(argv[optind], "r");
+    _searchFile = fopen(argv[optind], "r");
   }
-  if (_fp == nullptr) {
+  if (_searchFile == nullptr) {
     printf("Could not open file '%s'\n", argv[optind]);
     exit(1);
   }
+  if (_metaFile != nullptr) {
+    _maxBufferSize = _metaFile->getMaxChunkSize();
+    _minBufferSize = _maxBufferSize;  // TODO: this is never used when a metafile is provided...
+  }
+  initializeQueues();
 }
 
 // _____________________________________________________________________________________________________________________
@@ -91,13 +111,15 @@ void ExternStringFinder::printHelpAndExit() {
     << "StringFinder - ExternStringFinder - Leon Freist <freist@informatik.uni-freibur.de>" << std::endl
     << "Usage: ./ExternStringFinderMain [PATTERN] [FILE] [OPTION]..." << std::endl
     << " Search for a PATTERN in a FILE." << std::endl
-    << " Example: ./ExternStringFinderMain 'hello world' main.c"
+    << " Example: ./ExternStringFinderMain 'hello world' main.c" << std::endl
+    << "If you provide a (zstd-)compressed file as input, also set a meta file using the --meta flag." << std::endl
     << std::endl
     << "  OPTIONS:" << std::endl
     << "  --help         -h  print this guide and exit." << std::endl
     << "  --performance  -p  measure wall time on find and print result." << std::endl
     << "  --silent       -s  dont print matching lines." << std::endl
     << "  --count        -c  print number of matching lines." << std::endl
+    << "  --meta [FILE]  -m  set meta file." << std::endl
     << std::endl
     << "When FILE is not provided read standard input" << std::endl
     << " Example: cat main.c | ./ExternStringFinderMain 'hello world'" << std::endl;
@@ -106,27 +128,49 @@ void ExternStringFinder::printHelpAndExit() {
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::readBuffers() {
-  Buffer* currentBuffer;
-  int bytesRead;
-  while (true) {
-    currentBuffer = _readQueue.pop();
-    bytesRead = currentBuffer->setContentFromFile(_fp, MIN_BUFFER_SIZE, true);
-    if (bytesRead < 1) {
-      _searchQueue.push(nullptr);
-      break;
+  if (_metaFile == nullptr) {
+    while (true) {
+      Buffer* currentBuffer = _readQueue.pop();
+      int bytesRead = currentBuffer->setContentFromFile(_searchFile, _minBufferSize, true);
+      if (bytesRead < 1) {
+        _searchQueue.push(nullptr);
+        return;
+      }
+      _searchQueue.push(currentBuffer);
+      _totalNumberBytesRead += bytesRead;
     }
+  } else {
+    while (true) {
+      Buffer* currentBuffer = _readQueue.pop();
+      std::pair<unsigned int, unsigned int> currentPair = _metaFile->nextChunkPair();
+      int bytesRead = currentBuffer->setContentFromFile(_searchFile, currentPair.second, false);
+      currentBuffer->setOriginalSize(currentPair.second);
+      if (bytesRead < 1) {
+        _decompressQueue.push(nullptr);
+        return;
+      }
+      _decompressQueue.push(currentBuffer);
+      _totalNumberBytesRead += bytesRead;
+    }
+  }
+}
+
+void ExternStringFinder::decompressBuffers() {
+  while (true) {
+    Buffer* currentBuffer = _decompressQueue.pop();
+    if (currentBuffer == nullptr) {
+      _searchQueue.push(nullptr);
+      return;
+    }
+    currentBuffer->decompress(currentBuffer->getOriginalSize());
     _searchQueue.push(currentBuffer);
-    _totalNumberBytesRead += bytesRead;
   }
 }
 
 std::vector<unsigned long> ExternStringFinder::searchBuffers() {
-  Buffer* currentBuffer = nullptr;
-  int numMatches = 0;
   std::vector<unsigned long> matchBytePositions;
-
   while (true) {
-    currentBuffer = _searchQueue.pop();
+    Buffer* currentBuffer = _searchQueue.pop();
     if (currentBuffer == nullptr) {
       break;
     }
@@ -148,11 +192,21 @@ void ExternStringFinder::find() {
     _timer.start(true);
   }
 
-  std::thread readBuffers(&ExternStringFinder::readBuffers, this);
-  std::thread processBuffers(&ExternStringFinder::searchBuffers, this);
+  if (_metaFile == nullptr) {
+    std::thread readBuffers(&ExternStringFinder::readBuffers, this);
+    std::thread processBuffers(&ExternStringFinder::searchBuffers, this);
 
-  readBuffers.join();
-  processBuffers.join();
+    readBuffers.join();
+    processBuffers.join();
+  } else {
+    std::thread readBuffers(&ExternStringFinder::readBuffers, this);
+    std::thread decompressBuffers(&ExternStringFinder::decompressBuffers, this);
+    std::thread processBuffers(&ExternStringFinder::searchBuffers, this);
+
+    readBuffers.join();
+    decompressBuffers.join();
+    processBuffers.join();
+  }
 
   if (_performance) {
     _timer.stop();
@@ -169,6 +223,6 @@ void ExternStringFinder::setFile(char* filepath) {
     printf("Could not open file '%s'\n", filepath);
     puts("Keeping current file pointer");
   } else {
-    _fp = fp;
+    _searchFile = fp;
   }
 }

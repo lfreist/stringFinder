@@ -34,11 +34,12 @@ add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
 target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer)
 
 add_executable(ESFCompressorMain ESFCompressorMain.cpp)
-target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor)
+target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor ESFMetaFile)
 
 configure_file(test/_stringFinderTest test/_stringFinderTest)
 configure_file(test/_externFinderTest test/_externFinderTest)
 configure_file(test/_bufferTest test/_bufferTest)
+configure_file(test/_esfMetaFileTest test/_esfMetaFileTest)
 
 add_subdirectory(test)
 include(CTest)

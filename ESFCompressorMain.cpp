@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     dest = std::string(argv[2]);
     meta = std::string(argv[3]);
   } else {
-    std::cout << "Usage: ESFCompressor src_file out_file [meta_file]";
+    std::cout << "Usage: ESFCompressor src_file out_file [meta_file]" << std::endl;
     return 2;
   }
   bool result = ESFCompress::compress(src, dest, meta);

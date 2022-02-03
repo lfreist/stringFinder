@@ -59,7 +59,7 @@ void Buffer::setContent(const char* content) {
 
 // _____________________________________________________________________________________________________________________
 int Buffer::setContentFromFile(FILE* fp, unsigned int minNumBytes, bool toNewLine) {
-  assert(minNumBytes <= _len);
+  assert(minNumBytes <= _bufferSize);
   if (toNewLine) {
     char additional_char;
     size_t bytes_read = fread(_content, sizeof(char), minNumBytes, fp);
@@ -184,6 +184,7 @@ unsigned int Buffer::length() const {
 // _____________________________________________________________________________________________________________________
 size_t Buffer::compress(int compressionLevel) {
   std::vector<char> comp = ZstdWrapper::compress(_content, _len, compressionLevel);
+  _originalSize = _len;
   setContent(reinterpret_cast<char*>(comp.data()));
   return _len;
 }
@@ -191,7 +192,13 @@ size_t Buffer::compress(int compressionLevel) {
 // _____________________________________________________________________________________________________________________
 size_t Buffer::decompress(size_t originalSize) {
   std::vector<char> decomp = ZstdWrapper::decompress<char>(_content, _len, originalSize);
-  setContent(reinterpret_cast<char*>(decomp.data()));
+  if (_bufferSize < originalSize) {
+    _bufferSize = originalSize;
+    delete[] _content;
+    _content = new char [_bufferSize];
+  }
+  strcpy(_content, reinterpret_cast<char*>(decomp.data()));
+  _len = originalSize;
   return _len;
 }
 
@@ -202,4 +209,14 @@ size_t Buffer::compressToBuffer(int compressionLevel, Buffer& buffer) {
 
 size_t Buffer::decompressBuffer(size_t originalSize, Buffer& buffer) {
   return 0;
+}
+
+// _____________________________________________________________________________________________________________________
+void Buffer::setOriginalSize(unsigned int origSize) {
+  _originalSize = origSize;
+}
+
+// _____________________________________________________________________________________________________________________
+unsigned int Buffer::getOriginalSize() const {
+  return _originalSize;
 }

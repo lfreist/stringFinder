@@ -8,7 +8,7 @@ target_link_libraries(Benchmark PUBLIC StringFinder OpenMP::OpenMP_CXX Timer)
 add_library(ExternStringFinder
         ExternStringFinder.h ExternStringFinder.cpp
 )
-target_link_libraries(ExternStringFinder PUBLIC pthread Timer TSQueue Buffer)
+target_link_libraries(ExternStringFinder PUBLIC pthread Timer TSQueue Buffer ESFMetaFile)
 
 add_library(StringFinder
         InteractiveFinder.h InteractiveFinder.cpp

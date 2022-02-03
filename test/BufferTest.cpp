@@ -1,8 +1,6 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-// TODO(lfreist): write tests for read() and readToNewLine()
-
 #include <gtest/gtest.h>
 
 #include <cstdio>

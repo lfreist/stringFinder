@@ -9,8 +9,6 @@
 #include <vector>
 
 
-#define eof '\1';
-
 /**
  * @brief representing a buffer using intern c like string (char*)
  * 
@@ -36,7 +34,7 @@ class Buffer {
   void setContent(const char* str);
 
   /**
-   * @brief read _len bytes from fp into _content
+   * @brief read minNumBytes bytes from fp into _content
    * 
    * @param fp   -> file pointer
    * @return int -> number of bytes actually read
@@ -79,6 +77,9 @@ class Buffer {
   static size_t compressToBuffer(int compressionLevel, Buffer& buffer);
   static size_t decompressBuffer(size_t originalSize, Buffer& buf);
 
+  void setOriginalSize(unsigned int origSize);
+  unsigned int getOriginalSize() const;
+
   bool operator==(const Buffer& compStr);
   bool operator!=(const Buffer& compStr);
 
@@ -95,6 +96,7 @@ class Buffer {
   char* _content;
   unsigned int _bufferSize;
   unsigned int _len;
+  unsigned int _originalSize;  // in case buffer is compressed
 
   FRIEND_TEST(BufferTest, Constructor);
   FRIEND_TEST(BufferTest, setContentFromFile);
