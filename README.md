@@ -1,5 +1,7 @@
 # bachelorprojekt
-Search file for substrings.
+Search a file for a keyword.
+
+> Benchmarks: [BENCHMARKS.md](BENCHMARKS.md)
 
 ## 1. Build:
 ```bash
