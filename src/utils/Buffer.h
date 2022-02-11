@@ -8,7 +8,6 @@
 
 #include <vector>
 
-
 /**
  * @brief representing a buffer using intern c like string (char*)
  * 
@@ -20,9 +19,9 @@ class Buffer {
   // constructor setting _len and creating a char* of _len
   explicit Buffer(unsigned int bufferSize);
   // copy constructor
-  Buffer(const Buffer& str);
+  Buffer(const Buffer &str);
   // constructor setting _content to str
-  explicit Buffer(const char* str);
+  explicit Buffer(const char *str);
   // destructor
   ~Buffer();
 
@@ -31,7 +30,7 @@ class Buffer {
    * 
    * @param str
    */
-  void setContent(const char* str);
+  void setContent(const char *str);
 
   /**
    * @brief read minNumBytes bytes from fp into _content
@@ -39,7 +38,13 @@ class Buffer {
    * @param fp   -> file pointer
    * @return int -> number of bytes actually read
    */
-  int setContentFromFile(FILE* fp, unsigned int minNumBytes = 0, bool toNewLine = true);
+  int setContentFromFile(
+      FILE *fp,
+      unsigned int minNumBytes = 0,
+      bool toNewLine = true,
+      bool zstdCompressed = false,
+      size_t originalSize = 0
+  );
 
   /**
    * @brief search for pattern in _content starting at _content[shift]
@@ -49,7 +54,7 @@ class Buffer {
    * @param caseSensitive -> true for case sensitive search, else false
    * @return int          -> number of matches
    */
-  int find(const char* pattern, unsigned int shift = 0, bool caseSensitive = true);
+  int find(const char *pattern, unsigned int shift = 0, bool caseSensitive = true);
 
   /**
    * @brief search for pattern in _content. After finding a match, jump to next line ('\n')
@@ -59,29 +64,25 @@ class Buffer {
    * @param caseSensitive              -> true for case sensitive search, else false
    * @return std::vector<unsigned int> -> byte position of matches relative to _content
    */
-  std::vector<unsigned int> findPerLine(const char* pattern, unsigned int bytePositionShift = 0,
-                                        bool caseSensitive = true);
+  std::vector<unsigned> findPerLine(const char *pattern, unsigned bytePositionShift = 0, bool caseSensitive = true);
 
   /**
    * @brief get c like string (char*)
    * 
    * @return const char* 
    */
-  const char* cstring();
+  const char *cstring();
 
-  unsigned int length() const;
+  unsigned length() const;
 
   size_t compress(int compressionLevel);
-  size_t decompress(size_t originalSize);
+  size_t decompress();
 
-  static size_t compressToBuffer(int compressionLevel, Buffer& buffer);
-  static size_t decompressBuffer(size_t originalSize, Buffer& buf);
-
-  void setOriginalSize(unsigned int origSize);
+  void setOriginalSize(unsigned origSize);
   unsigned int getOriginalSize() const;
 
-  bool operator==(const Buffer& compStr);
-  bool operator!=(const Buffer& compStr);
+  bool operator==(const Buffer &compStr);
+  bool operator!=(const Buffer &compStr);
 
  private:
 
@@ -93,14 +94,16 @@ class Buffer {
    */
   int findNewLine(unsigned int shift);
 
-  char* _content;
-  unsigned int _bufferSize;
-  unsigned int _len;
-  unsigned int _originalSize;  // in case buffer is compressed
+  char *_content;
+  unsigned _bufferSize;
+  unsigned _len;
+  size_t _originalSize;  // in case buffer is compressed
+  std::vector<char> _compressedContent;
 
   FRIEND_TEST(BufferTest, Constructor);
   FRIEND_TEST(BufferTest, setContentFromFile);
   FRIEND_TEST(BufferTest, findPerLine);
+  FRIEND_TEST(BufferTest, compressDecompress);
 };
 
 #endif  // SRC_UTILS_Buffer_H_

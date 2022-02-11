@@ -130,7 +130,6 @@ TEST(BufferTest, setContentFromFile) {
     ASSERT_EQ(buf._content[60], '\0');
     // second chunk (131 bytes)
     bytes_read = buf.setContentFromFile(_bufferTest, 50, true);
-    std::cout << buf._content << std::endl;
     ASSERT_EQ(bytes_read, 131);
     ASSERT_EQ(buf._len, 132);
     ASSERT_EQ(buf._bufferSize, 140);
@@ -176,7 +175,7 @@ TEST(BufferTest, setContentFromFile) {
 }
 
 // ____________________________________________________________________________________________________________________
-TEST(StringTest, operators) {
+TEST(BufferTest, operators) {
   {
     Buffer buf1("some string");
     Buffer buf2("some string");
@@ -188,6 +187,46 @@ TEST(StringTest, operators) {
     buf1.setContent("some longer string");
     ASSERT_FALSE(buf1 == buf2);
     ASSERT_TRUE(buf1 != buf2);
+  }
+}
+
+// ____________________________________________________________________________________________________________________
+TEST(BufferTest, compressDecompress) {
+  FILE* uncompressedFile = fopen("test/_bufferCompressTest", "r");
+  if (uncompressedFile == nullptr) {
+    std::cout << "Error reading file." << std::endl;
+    exit(6);
+  }
+  Buffer buf(10037000);
+  buf.setContentFromFile(uncompressedFile, 10037000);
+  Buffer originalBuffer(buf);
+  {  // check, if file is read correctly
+    ASSERT_EQ(buf.cstring()[0], 's');
+    ASSERT_EQ(buf.cstring()[1], 'o');
+    ASSERT_EQ(buf.cstring()[2], 'm');
+    ASSERT_EQ(buf.cstring()[buf.length() - 1], 'd');
+    ASSERT_EQ(buf.cstring()[buf.length() - 2], 'e');
+    ASSERT_EQ(buf.cstring()[buf.length() - 3], 'n');
+    ASSERT_EQ(buf.length(), 10036057);
+    ASSERT_EQ(std::string(buf._content), std::string(originalBuffer._content));
+  }
+  {  // compress buffer
+    auto compressedSize = buf.compress(3);
+    ASSERT_EQ(buf._originalSize, originalBuffer.length());
+    ASSERT_EQ(std::string(buf._content), std::string(originalBuffer._content));
+    ASSERT_EQ(buf._compressedContent.size(), compressedSize);
+    // overwrite _content to make sure decompress() does not just return the already existing _content as result
+    buf.setContent("not the original content");
+    ASSERT_EQ(buf._len, 24);
+    auto decompressedSize = buf.decompress();
+    ASSERT_EQ(buf._len, decompressedSize);
+    ASSERT_EQ(strlen(buf._content), strlen(originalBuffer._content));
+    ASSERT_EQ(buf._content[0], 's');
+    ASSERT_EQ(buf._content[1], 'o');
+    ASSERT_EQ(buf._content[2], 'm');
+    ASSERT_EQ(buf._content[buf.length() - 1], 'd');
+    ASSERT_EQ(buf._content[buf.length() - 2], 'e');
+    ASSERT_EQ(buf._content[buf.length() - 3], 'n');
   }
 }
 

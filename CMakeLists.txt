@@ -40,6 +40,7 @@ configure_file(test/_stringFinderTest test/_stringFinderTest)
 configure_file(test/_externFinderTest test/_externFinderTest)
 configure_file(test/_bufferTest test/_bufferTest)
 configure_file(test/_esfMetaFileTest test/_esfMetaFileTest)
+configure_file(test/_bufferCompressTest test/_bufferCompressTest)
 
 add_subdirectory(test)
 include(CTest)

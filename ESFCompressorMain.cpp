@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     std::cout << "Usage: ESFCompressor src_file out_file [meta_file]" << std::endl;
     return 2;
   }
-  bool result = ESFCompress::compress(src, dest, meta);
+  bool result = ESFCompress::compress(src, dest, meta, 3, (2 << 29));
   if (result) {
     return 0;
   }

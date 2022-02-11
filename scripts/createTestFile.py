@@ -17,7 +17,7 @@ def parse_command_line_arguments():
     parser = argparse.ArgumentParser(prog="createTestFile.py",
                                      description="Create a test file of a given size for StringFinder.")
     parser.add_argument("words_file", metavar="WORDS_FILE", type=str, help="File which holds possible words")
-    parser.add_argument("--size", "-s", metavar="GiB", type=int, default="5", help="Size of the test file in GiB")
+    parser.add_argument("--size", "-s", metavar="GiB", type=float, default="5", help="Size of the test file in GiB")
     parser.add_argument("--output", "-o", metavar="OUTPUT_FILE", type=str, default="sf-test.txt",
                         help="Path to output file")
     parser.add_argument("--progress", "-p", default=0, action="count", help="Display progress")
