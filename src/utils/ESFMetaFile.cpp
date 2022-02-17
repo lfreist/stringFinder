@@ -8,30 +8,46 @@
 #include "ESFMetaFile.h"
 
 
-ESFMetaFile::ESFMetaFile(const std::string& filePath) {
-  _metaFile.open(filePath, std::ios::in);
+// _____________________________________________________________________________________________________________________
+ESFMetaFile::ESFMetaFile(const std::string& filePath, std::ios::openmode mode) {
+  _mode = mode | std::ios::binary;
+  _metaFile.open(filePath, _mode);
+  _maxOriginalSize = 0;
   if (!_metaFile.is_open()) {
     throw std::invalid_argument("Cannot open file");
   }
-  std::string maxChunkSizeStr;
-  getline(_metaFile, maxChunkSizeStr);
-  _maxChunkSize = atoi(maxChunkSizeStr.c_str());
+  if (_mode == (std::ios::in | std::ios::binary)) {
+    _metaFile.read(reinterpret_cast<char*>(&_maxOriginalSize), sizeof(unsigned));
+  }
 }
 
+// _____________________________________________________________________________________________________________________
 ESFMetaFile::~ESFMetaFile() {
   _metaFile.close();
 }
 
-std::pair<unsigned int, unsigned int> ESFMetaFile::nextChunkPair() {
-  std::string orig_size;
-  std::string comp_size;
-  if (getline(_metaFile, orig_size, ' ')) {
-    if (getline(_metaFile, comp_size)) {
-      return std::make_pair(atoi(orig_size.c_str()), atoi(comp_size.c_str()));
-    }
+// _____________________________________________________________________________________________________________________
+chunkSize ESFMetaFile::nextChunkSize() {
+  _metaFile.read(reinterpret_cast<char*>(&_chunkSize), sizeof(_chunkSize));
+  if (_metaFile.eof()) {
+    return _endOfFileChunkSize;
   }
-  return std::make_pair(0, 0);
+  return _chunkSize;
 }
-unsigned int ESFMetaFile::getMaxChunkSize() const {
-  return _maxChunkSize;
+
+// _____________________________________________________________________________________________________________________
+unsigned ESFMetaFile::getMaxOriginalSize() const {
+  return _maxOriginalSize;
+}
+
+// _____________________________________________________________________________________________________________________
+void ESFMetaFile::writeMaxOriginalSize(unsigned maxOriginalSize) {
+  assert(_mode == (std::ios::out | std::ios::binary));
+  _metaFile.write(reinterpret_cast<char*>(&maxOriginalSize), sizeof(unsigned));
+}
+
+// _____________________________________________________________________________________________________________________
+void ESFMetaFile::writeChunkSize(chunkSize chunk) {
+  assert(_mode == (std::ios::out | std::ios::binary));
+  _metaFile.write(reinterpret_cast<char*>(&chunk), sizeof(chunkSize));
 }

@@ -93,7 +93,6 @@ int Buffer::setContentFromFile(FILE *fp, unsigned int minNumBytes, bool toNewLin
       _len = i + 1;
       additional_char = (char) fgetc(fp);
       if (additional_char == '\n' || additional_char == EOF) {
-        // TODO: Question: additional_char is never EOF. At the end of the file a nl-char is read (out of nowhere?)
         _content[i] = additional_char;
         _content[i + 1] = '\0';
         return (int) i;
@@ -109,7 +108,7 @@ int Buffer::setContentFromFile(FILE *fp, unsigned int minNumBytes, bool toNewLin
     _content[0] = '\0';
     _len = 0;
     return 0;
-  } else if (bytes_read < minNumBytes) {  // skip EOF (new line - see TODO described in 84)
+  } else if (bytes_read < minNumBytes) {
     bytes_read--;
   }
   _content[bytes_read] = '\0';

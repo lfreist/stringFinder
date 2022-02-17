@@ -6,25 +6,46 @@
 #include <string>
 #include <ostream>
 
-int main(int argc, char **argv) {
-  std::string src;
-  std::string dest;
-  std::string meta;
-  if (argc == 3) {
-    src = std::string(argv[1]);
-    dest = std::string(argv[2]);
-  } else if (argc == 4) {
-    src = std::string(argv[1]);
-    dest = std::string(argv[2]);
-    meta = std::string(argv[3]);
-  } else {
-    std::cout << "Usage: ESFCompressor src_file out_file [meta_file]" << std::endl;
-    return 2;
+#include <getopt.h>
+
+std::string sourceFile;
+std::string outputFile;
+std::string metaFile;
+int compressionLevel = 3;
+int chunkSize = (2 << 23);
+
+void parseCommandLineArgs(int argc, char **argv) {
+  struct option options[] = {
+      {"help", 0, nullptr, 'h'},
+      {"meta", 1, nullptr, 'm'},
+      {"chunk-size", 1, nullptr, 's'},
+      {"compression-level", 1, nullptr, 'c'},
+      {nullptr, 0, nullptr, 0}
+  };
+  optind = 1;
+  while (true) {
+    int c = getopt_long(argc, argv, "h:m:s:c:", options, nullptr);
+    if (c == -1) { break; }
+    switch (c) {
+      case 'h': break;
+      case 'm': metaFile.assign(optarg);
+        break;
+      case 's': chunkSize = atoi(optarg);
+        break;
+      case 'c': compressionLevel = atoi(optarg);
+        break;
+      default: break;
+    }
   }
-  bool result = ESFCompress::compress(src, dest, meta, 3, (2 << 29));
+  sourceFile.assign(argv[optind++]);
+  outputFile.assign(argv[optind]);
+}
+
+int main(int argc, char **argv) {
+  bool result = ESFCompress::compress(sourceFile, outputFile, metaFile, compressionLevel, chunkSize);
   if (result) {
     return 0;
   }
-  std::cerr << "Error compressing '" << src << "' to '" << dest << "'" << std::endl;
+  std::cerr << "Error compressing '" << sourceFile << "' to '" << outputFile << "'" << std::endl;
   return 1;
 }

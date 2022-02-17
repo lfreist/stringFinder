@@ -9,6 +9,7 @@
 Timer::Timer() {
   _running = false;
   _started = false;
+  _duration = 0;
 }
 
 // ____________________________________________________________________________
@@ -31,18 +32,15 @@ void Timer::stop() {
   }
   _stop = std::chrono::steady_clock::now();
   _running = false;
+  _duration += std::chrono::duration_cast<std::chrono::duration<double>>(_stop - _start).count();
 }
 
 // ____________________________________________________________________________
 double Timer::elapsedSeconds() {
-  if (!_started) {
+  if (!_started || _running) {
     return -1;
   }
-  if (_running) {
-    _stop = std::chrono::steady_clock::now();
-  }
-  return std::chrono::duration_cast<std::chrono::duration<double>>(
-      _stop - _start).count();
+  return _duration;
 }
 
 // ____________________________________________________________________________

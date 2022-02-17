@@ -30,6 +30,8 @@ class Timer {
   // stores if timer was started overall
   bool _started;
 
+  double _duration;
+
   FRIEND_TEST(WallTimerTest, wallTimerStartStop);
 };
 

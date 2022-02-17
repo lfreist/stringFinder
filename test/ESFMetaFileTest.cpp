@@ -8,31 +8,32 @@
 #include "../src/utils/ESFMetaFile.h"
 
 TEST(ESFMetaFileTest, constructor) {
-  ESFMetaFile m(std::string("test/_esfMetaFileTest"));
-  ASSERT_EQ(m._maxChunkSize, 3478563);
+  {  // open metafile for read
+    ESFMetaFile metaFile(std::string("test/_esfMetaFileTest"), std::ios::in);
+  }
 }
 
-TEST(ESFMetaFileTest, nextChunkSize) {
-  ESFMetaFile m(std::string("test/_esfMetaFileTest"));
-  std::pair<unsigned, unsigned> pair;
-  pair = m.nextChunkPair();
-  ASSERT_EQ(pair.first, 435235);
-  ASSERT_EQ(pair.second, 23421);
-  pair = m.nextChunkPair();
-  ASSERT_EQ(pair.first, 435245);
-  ASSERT_EQ(pair.second, 12345);
-  pair = m.nextChunkPair();
-  ASSERT_EQ(pair.first, 3452342);
-  ASSERT_EQ(pair.second, 12316);
-  pair = m.nextChunkPair();
-  ASSERT_EQ(pair.first, 534322);
-  ASSERT_EQ(pair.second, 6546);
-  pair = m.nextChunkPair();
-  ASSERT_EQ(pair.first, 1354456);
-  ASSERT_EQ(pair.second, 45745);
-  pair = m.nextChunkPair();
-  ASSERT_EQ(pair.first, 0);
-  ASSERT_EQ(pair.second, 0);
+TEST(ESFMetaFileTest, writeAndRead) {
+  unsigned mos = 234872354;
+  chunkSize firstChunk{832562, 125341};
+  chunkSize secondChunk{34572234, 1234124};
+  chunkSize thirdChunk{7469543, 643534};
+  chunkSize eofChunk{0, 0};
+  {  // write to file
+    ESFMetaFile metaFile(std::string("test/_tmpEsfMetaFile"), std::ios::out);
+    metaFile.writeMaxOriginalSize(mos);
+    metaFile.writeChunkSize(firstChunk);
+    metaFile.writeChunkSize(secondChunk);
+    metaFile.writeChunkSize(thirdChunk);
+  }
+  {  // read from file
+    ESFMetaFile metaFile(std::string("test/_tmpEsfMetaFile"), std::ios::in);
+    ASSERT_EQ(metaFile.getMaxOriginalSize(), mos);
+    ASSERT_EQ(metaFile.nextChunkSize(), firstChunk);
+    ASSERT_EQ(metaFile.nextChunkSize(), secondChunk);
+    ASSERT_EQ(metaFile.nextChunkSize(), thirdChunk);
+    ASSERT_EQ(metaFile.nextChunkSize(), eofChunk);
+  }
 }
 
 int main(int argc, char **argv) {

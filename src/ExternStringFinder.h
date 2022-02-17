@@ -52,7 +52,7 @@ class ExternStringFinder {
   std::vector<unsigned long> searchBuffers();
   static void printHelpAndExit();
 
-  char* _pattern;
+  char* _pattern{};
   FILE* _searchFile;
   ESFMetaFile* _metaFile;
 
@@ -65,11 +65,12 @@ class ExternStringFinder {
 
   unsigned long _bufferPosition;
 
-  unsigned long _totalNumberBytesRead;
+  unsigned long _totalNumberBytesRead{};
 
   bool _performance;
   bool _silent;
   bool _count;
+  bool _debug;
   Timer _timer;
 };
 

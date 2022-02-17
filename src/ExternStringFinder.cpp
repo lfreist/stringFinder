@@ -12,6 +12,7 @@
 ExternStringFinder::ExternStringFinder(unsigned int nBuffers) {
   _performance = false;
   _silent = false;
+  _debug = false;
   _count = false;
   _searchFile = nullptr;
   _metaFile = nullptr;
@@ -27,9 +28,10 @@ ExternStringFinder::ExternStringFinder(unsigned int nBuffers, char *file, char *
                                        unsigned int bufferOverflowSize) {
   _performance = performance;
   _silent = silent;
+  _debug = false;
   _count = count;
   _searchFile = fopen(file, "r");
-  _metaFile = metaFile == nullptr ? nullptr : new ESFMetaFile(std::string(metaFile));
+  _metaFile = metaFile == nullptr ? nullptr : new ESFMetaFile(std::string(metaFile), std::ios::in);
   _pattern = pattern;
   _bufferPosition = 0;
   _totalNumberBytesRead = 0;
@@ -49,7 +51,7 @@ ExternStringFinder::~ExternStringFinder() {
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::initializeQueues() {
-  for (unsigned int i = 0; i < _nBuffers; i++) {
+  for (unsigned int i = 0; i <= _nBuffers; i++) {
     auto *str = new Buffer(_maxBufferSize);
     _readQueue.push(str);
   }
@@ -60,6 +62,7 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
   struct option options[] = {
       {"help", 0, nullptr, 'h'},
       {"performance", 0, nullptr, 'p'},
+      {"debug", 0, nullptr, 'd'},
       {"silent", 0, nullptr, 's'},
       {"count", 0, nullptr, 'c'},
       {"meta", 1, nullptr, 'm'},
@@ -67,19 +70,23 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
   };
   optind = 1;
   while (true) {
-    int c = getopt_long(argc, argv, "h:p:s:c:m:", options, nullptr);
+    int c = getopt_long(argc, argv, "h:p:s:c:m:d:", options, nullptr);
     if (c == -1) { break; }
     switch (c) {
       case 'h': printHelpAndExit();
         break;
-      case 'p':_performance = true;
+      case 'p': _performance = true;
         _silent = true;
+        break;
+      case 'd': _performance = true;
+        _silent = true;
+        _debug = true;
         break;
       case 's': _silent = true;
         break;
       case 'c': _count = true;
         break;
-      case 'm': _metaFile = new ESFMetaFile(std::string(optarg));
+      case 'm': _metaFile = new ESFMetaFile(std::string(optarg), std::ios::in);
       default: break;
     }
   }
@@ -100,7 +107,7 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
     exit(1);
   }
   if (_metaFile != nullptr) {
-    _maxBufferSize = _metaFile->getMaxChunkSize();
+    _maxBufferSize = _metaFile->getMaxOriginalSize();
     _minBufferSize = _maxBufferSize;  // TODO: this is never used when a metafile is provided...
   }
   initializeQueues();
@@ -110,6 +117,7 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
 void ExternStringFinder::printHelpAndExit() {
   std::cout
       << "StringFinder - ExternStringFinder - Leon Freist <freist@informatik.uni-freibur.de>" << std::endl
+      << std::endl
       << "Usage: ./ExternStringFinderMain [PATTERN] [FILE] [OPTION]..." << std::endl
       << " Search for a PATTERN in a FILE." << std::endl
       << " Example: ./ExternStringFinderMain 'hello world' main.c" << std::endl
@@ -117,7 +125,8 @@ void ExternStringFinder::printHelpAndExit() {
       << std::endl
       << "  OPTIONS:" << std::endl
       << "  --help         -h  print this guide and exit." << std::endl
-      << "  --performance  -p  measure wall time on find and print result." << std::endl
+      << "  --performance  -p  measure wall time and print result." << std::endl
+      << "  --debug        -d  performance plus waiting time of threads." << std::endl
       << "  --silent       -s  dont print matching lines." << std::endl
       << "  --count        -c  print number of matching lines." << std::endl
       << "  --meta [FILE]  -m  set meta file." << std::endl
@@ -129,12 +138,18 @@ void ExternStringFinder::printHelpAndExit() {
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::readBuffers() {
+  Timer waitTimer;
   if (_metaFile == nullptr) {
     while (true) {
+      if (_debug) { waitTimer.start(false); }
       Buffer *currentBuffer = _readQueue.pop();
+      if (_debug) { waitTimer.stop(); }
       int bytesRead = currentBuffer->setContentFromFile(_searchFile, _minBufferSize, true);
       if (bytesRead < 1) {
         _searchQueue.push(nullptr);
+        if (_debug) {
+          std::cout << "ReadBuffer waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
+        }
         return;
       }
       _searchQueue.push(currentBuffer);
@@ -142,17 +157,23 @@ void ExternStringFinder::readBuffers() {
     }
   } else {
     while (true) {
+      if (_debug) { waitTimer.start(false); }
       Buffer *currentBuffer = _readQueue.pop();
-      auto currentPair = _metaFile->nextChunkPair();
+      if (_debug) { waitTimer.stop(); }
+      auto currentChunkSize = _metaFile->nextChunkSize();
       int bytesRead = currentBuffer->setContentFromFile(
           _searchFile,
-          currentPair.second,
+          currentChunkSize.compressedSize,
           false,
           true,
-          currentPair.first
+          currentChunkSize.originalSize
       );
-      if (bytesRead < 1) {
+      if (bytesRead < 1 || currentChunkSize.originalSize == 0) {
         _decompressQueue.push(nullptr);
+        _decompressQueue.push(nullptr);
+        if (_debug) {
+          std::cout << "Reading was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
+        }
         return;
       }
       _decompressQueue.push(currentBuffer);
@@ -162,10 +183,16 @@ void ExternStringFinder::readBuffers() {
 }
 
 void ExternStringFinder::decompressBuffers() {
+  Timer waitTimer;
   while (true) {
+    if (_debug) { waitTimer.start(false); }
     Buffer *currentBuffer = _decompressQueue.pop();
+    if (_debug) { waitTimer.stop(); }
     if (currentBuffer == nullptr) {
       _searchQueue.push(nullptr);
+      if (_debug) {
+        std::cout << "Decompression was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
+      }
       return;
     }
     currentBuffer->decompress();
@@ -174,17 +201,29 @@ void ExternStringFinder::decompressBuffers() {
 }
 
 std::vector<unsigned long> ExternStringFinder::searchBuffers() {
+  Timer waitTimer;
   std::vector<unsigned long> matchBytePositions;
+  int nuls = 0;
   while (true) {
+    if (_debug) { waitTimer.start(false); }
     Buffer *currentBuffer = _searchQueue.pop();
+    if (_debug) { waitTimer.stop(); }
     if (currentBuffer == nullptr) {
-      break;
+      nuls++;
+      if (nuls == 1) {
+        break;
+      } else {
+        continue;
+      }
     }
     std::vector<unsigned int> matches = currentBuffer->findPerLine(_pattern);
     _readQueue.push(currentBuffer);
     // TODO: make multithreadable
     matchBytePositions.insert(matchBytePositions.end(), matches.begin(), matches.end());
     _bufferPosition += strlen(currentBuffer->cstring());
+  }
+  if (_debug) {
+    std::cout << "Searching was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
   }
   if (_count) {
     std::cout << "Found " << matchBytePositions.size() << " matches" << std::endl;
@@ -207,10 +246,12 @@ void ExternStringFinder::find() {
   } else {
     std::thread readBuffers(&ExternStringFinder::readBuffers, this);
     std::thread decompressBuffers(&ExternStringFinder::decompressBuffers, this);
+    // std::thread decompressBuffers2(&ExternStringFinder::decompressBuffers, this);
     std::thread processBuffers(&ExternStringFinder::searchBuffers, this);
 
     readBuffers.join();
     decompressBuffers.join();
+    // decompressBuffers2.join();
     processBuffers.join();
   }
 
@@ -218,7 +259,9 @@ void ExternStringFinder::find() {
     _timer.stop();
     std::cout << "Time: " << _timer.elapsedSeconds() << " s" << std::endl;
   }
-  printf("Bytes: %ld\n", _totalNumberBytesRead);
+  if (_debug) {
+    std::cout << "Total number of bytes read: " << _totalNumberBytesRead << std::endl;
+  }
 }
 
 // _____________________________________________________________________________________________________________________

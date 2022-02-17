@@ -6,14 +6,14 @@
 TEST(ExternStringFinder, find1) {
   char filename[26] = "test/_externFinderTest";
   char pattern[8] = "keyword";
-  ExternFinder ef;
+  ExternStringFinder esf;
   ef.setFile(filename);
   {
-    int count = ef.find(pattern);
+    int count = esf.find(pattern);
     ASSERT_EQ(count, 2);
-    ASSERT_EQ(ef.getResult()->size(), 2);
-    ASSERT_EQ(ef.getResult()->at(0), 15639);
-    ASSERT_EQ(ef.getResult()->at(1), 28350);
+    ASSERT_EQ(esf.getResult()->size(), 2);
+    ASSERT_EQ(esf.getResult()->at(0), 15639);
+    ASSERT_EQ(esf.getResult()->at(1), 28350);
   }
 }
 
