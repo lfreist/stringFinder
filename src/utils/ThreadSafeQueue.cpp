@@ -21,7 +21,7 @@ TSQueue<T>::TSQueue() {
 
 // _____________________________________________________________________________________________________________________
 template<class T>
-TSQueue<T>::TSQueue(unsigned char numberOfWriteThreads) {
+TSQueue<T>::TSQueue(int numberOfWriteThreads) {
   _numberOfWriteThreads = numberOfWriteThreads;
   _closed = _numberOfWriteThreads == 0;
 }

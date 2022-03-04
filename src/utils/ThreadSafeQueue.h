@@ -19,7 +19,7 @@ class TSQueue {
  public:
   // default constructor
   TSQueue();
-  explicit TSQueue(unsigned char numberOfWriteThreads);
+  explicit TSQueue(int numberOfWriteThreads);
   // destructor
   ~TSQueue();
 
