@@ -9,7 +9,7 @@
 #include <iostream>
 
 #include "ZstdWrapper.h"
-#include "Buffer.h"
+#include "FileChunk.h"
 #include "ESFMetaFile.h"
 
 
@@ -33,7 +33,7 @@ class ESFCompress {
     meta.writeMaxOriginalSize(static_cast<unsigned long>(minChunkSize + chunkOverflowSize));
     // read whole file and compress chunks
     for (int counter = 1; ; counter++) {
-      Buffer chunk(minChunkSize + chunkOverflowSize);
+      FileChunk chunk(minChunkSize + chunkOverflowSize);
       long uncompressed_bytes_read = chunk.setContentFromFile(src, minChunkSize, true);
       if (uncompressed_bytes_read == 0) { break; } else if (uncompressed_bytes_read < 0) {
         std::cerr << "Error reading chunk: Did not found a new line. Increase chunkOverflowSize." << std::endl;
@@ -75,7 +75,7 @@ class ESFCompress {
   }
 
   // TODO: implement if needed or delete
-  static int decompress(const Buffer& compressed, Buffer* uncompressed, int startPosition, int endPosition) {
+  static int decompress(const FileChunk& compressed, FileChunk* uncompressed, int startPosition, int endPosition) {
     return 0;
   }
 };

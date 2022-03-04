@@ -42,6 +42,7 @@ void parseCommandLineArgs(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
+  parseCommandLineArgs(argc, argv);
   bool result = ESFCompress::compress(sourceFile, outputFile, metaFile, compressionLevel, chunkSize);
   if (result) {
     return 0;

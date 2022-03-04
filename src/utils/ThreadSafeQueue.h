@@ -19,6 +19,7 @@ class TSQueue {
  public:
   // default constructor
   TSQueue();
+  explicit TSQueue(unsigned char numberOfWriteThreads);
   // destructor
   ~TSQueue();
 
@@ -37,6 +38,8 @@ class TSQueue {
    */
   T pop();
 
+  T pop(T defaultReturn);
+
   /**
    * @brief returns, whether the Queue is empty or not
    * 
@@ -52,10 +55,21 @@ class TSQueue {
    */
   int size() const;
 
+  void setNumberOfWriteThreads(int numberOfWriteThreads);
+  void close();
+
+  bool isClosed();
+
  private:
   std::queue<T> _queue;
   mutable std::mutex _queueMutex;
+  mutable std::mutex _numWriteThreadsMutex;
+  mutable std::mutex _closedMutex;
   std::condition_variable _condVar;
+
+  bool _closed;
+
+  int _numberOfWriteThreads;
 
   FRIEND_TEST(TSQueueTest, Constructor);
   FRIEND_TEST(TSQueueTest, methodsTest);

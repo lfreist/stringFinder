@@ -12,18 +12,18 @@
  * @brief representing a buffer using intern c like string (char*)
  * 
  */
-class Buffer {
+class FileChunk {
  public:
   // default constructor
-  Buffer();
+  FileChunk();
   // constructor setting _len and creating a char* of _len
-  explicit Buffer(unsigned int bufferSize);
+  explicit FileChunk(unsigned int bufferSize);
   // copy constructor
-  Buffer(const Buffer &str);
+  FileChunk(const FileChunk &str);
   // constructor setting _content to str
-  explicit Buffer(const char *str);
+  explicit FileChunk(const char *str);
   // destructor
-  ~Buffer();
+  ~FileChunk();
 
   /**
    * @brief set _content to str
@@ -43,7 +43,8 @@ class Buffer {
       unsigned int minNumBytes = 0,
       bool toNewLine = true,
       bool zstdCompressed = false,
-      size_t originalSize = 0
+      size_t originalSize = 0,
+      unsigned startPosition = 0
   );
 
   /**
@@ -81,8 +82,8 @@ class Buffer {
   void setOriginalSize(unsigned origSize);
   unsigned int getOriginalSize() const;
 
-  bool operator==(const Buffer &compStr);
-  bool operator!=(const Buffer &compStr);
+  bool operator==(const FileChunk &compStr);
+  bool operator!=(const FileChunk &compStr);
 
  private:
 
@@ -97,6 +98,7 @@ class Buffer {
   char *_content;
   unsigned _bufferSize;
   unsigned _len;
+  unsigned _startPosition;
   size_t _originalSize;  // in case buffer is compressed
   std::vector<char> _compressedContent;
 
