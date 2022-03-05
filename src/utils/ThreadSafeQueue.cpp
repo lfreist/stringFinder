@@ -2,8 +2,6 @@
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
 
-#include "chrono"
-
 #include "ThreadSafeQueue.h"
 #include "FileChunk.h"
 
@@ -75,8 +73,8 @@ void TSQueue<T>::close() {
   if (_numberOfWriteThreads <= 0) {
     _numberOfWriteThreads = 0;
     std::unique_lock<std::mutex> closedLock(_closedMutex);
-    _condVar.notify_one();
     _closed = true;
+    _condVar.notify_one();
   }
 }
 
@@ -102,7 +100,6 @@ T TSQueue<T>::pop(T defaultReturn) {
     if (isClosed()) {
       return defaultReturn;
     }
-    // auto timeout = std::chrono::now() + std::chrono::seconds(1);
     _condVar.wait(queueLock);
   }
   T element = _queue.front();
