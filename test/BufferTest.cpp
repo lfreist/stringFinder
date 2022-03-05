@@ -5,25 +5,25 @@
 
 #include <cstdio>
 
-#include "../src/utils/Buffer.h"
+#include "../src/utils/FileChunk.h"
 
 // ____________________________________________________________________________________________________________________
 TEST(BufferTest, Constructor) {
   {
-    Buffer buf;
+    FileChunk buf;
     ASSERT_EQ(buf._len, 0);
     ASSERT_EQ(buf._bufferSize, 1);
     ASSERT_EQ(buf._content[0], '\0');
   }
   {
-    Buffer buf(5);
+    FileChunk buf(5);
     ASSERT_EQ(buf._len, 4);
     ASSERT_EQ(buf._bufferSize, 5);
     ASSERT_EQ(buf._content[4], '\0');
   }
   {
-    Buffer buf1("test");
-    Buffer buf2(buf1);
+    FileChunk buf1("test");
+    FileChunk buf2(buf1);
     ASSERT_EQ(buf2._len, 4);
     ASSERT_EQ(buf2._bufferSize, 5);
     ASSERT_EQ(buf2._content[0], 't');
@@ -33,7 +33,7 @@ TEST(BufferTest, Constructor) {
     ASSERT_EQ(buf2._content[4], '\0');
   }
   {
-    Buffer buf("test");
+    FileChunk buf("test");
     ASSERT_EQ(buf._len, 4);
     ASSERT_EQ(buf._bufferSize, 5);
     ASSERT_EQ(buf._content[0], 't');
@@ -49,7 +49,7 @@ TEST(BufferTest, setContentFromFile) {
   // read exactly 50 bytes per chunk
   {
     FILE* _bufferTest = fopen("test/_bufferTest", "r");
-    Buffer buf(51);
+    FileChunk buf(51);
     // read first 50 bytes
     int bytes_read = buf.setContentFromFile(_bufferTest, 50, false);
     ASSERT_EQ(bytes_read, 50);
@@ -118,7 +118,7 @@ TEST(BufferTest, setContentFromFile) {
   // read (50 + x) bytes to new line char per chunk
   {
     FILE* _bufferTest = fopen("test/_bufferTest", "r");
-    Buffer buf(140);
+    FileChunk buf(140);
     // read first chunk (59 bytes)
     int bytes_read = buf.setContentFromFile(_bufferTest, 50, true);
     ASSERT_EQ(bytes_read, 59);
@@ -160,7 +160,7 @@ TEST(BufferTest, setContentFromFile) {
   // setContentFromFile will fail and return -1 here
   {
     FILE* _bufferTest = fopen("test/_bufferTest", "r");
-    Buffer buf(20);
+    FileChunk buf(20);
     // read first chunk (60 bytes)
     int bytes_read = buf.setContentFromFile(_bufferTest, 10, true);
     ASSERT_EQ(bytes_read, -1);
@@ -177,8 +177,8 @@ TEST(BufferTest, setContentFromFile) {
 // ____________________________________________________________________________________________________________________
 TEST(BufferTest, operators) {
   {
-    Buffer buf1("some string");
-    Buffer buf2("some string");
+    FileChunk buf1("some string");
+    FileChunk buf2("some string");
     ASSERT_TRUE(buf1 == buf2);
     ASSERT_FALSE(buf1 != buf2);
     buf2.setContent("some String");
@@ -197,9 +197,9 @@ TEST(BufferTest, compressDecompress) {
     std::cout << "Error reading file." << std::endl;
     exit(6);
   }
-  Buffer buf(10037000);
+  FileChunk buf(10037000);
   buf.setContentFromFile(uncompressedFile, 10037000);
-  Buffer originalBuffer(buf);
+  FileChunk originalBuffer(buf);
   {  // check, if file is read correctly
     ASSERT_EQ(buf.cstring()[0], 's');
     ASSERT_EQ(buf.cstring()[1], 'o');

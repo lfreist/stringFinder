@@ -52,7 +52,7 @@ ExternStringFinder::~ExternStringFinder() {
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::initializeQueues() {
   for (unsigned int i = 0; i <= _nBuffers; i++) {
-    auto *str = new Buffer(_maxBufferSize);
+    auto *str = new FileChunk(_maxBufferSize);
     _readQueue.push(str);
   }
 }
@@ -139,14 +139,15 @@ void ExternStringFinder::printHelpAndExit() {
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::readBuffers() {
   Timer waitTimer;
+  _totalNumberBytesRead = 0;
   if (_metaFile == nullptr) {
     while (true) {
       if (_debug) { waitTimer.start(false); }
-      Buffer *currentBuffer = _readQueue.pop();
+      FileChunk *currentBuffer = _readQueue.pop();
       if (_debug) { waitTimer.stop(); }
       int bytesRead = currentBuffer->setContentFromFile(_searchFile, _minBufferSize, true);
       if (bytesRead < 1) {
-        _searchQueue.push(nullptr);
+        _decompressQueue.close();
         if (_debug) {
           std::cout << "ReadBuffer waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
         }
@@ -158,7 +159,7 @@ void ExternStringFinder::readBuffers() {
   } else {
     while (true) {
       if (_debug) { waitTimer.start(false); }
-      Buffer *currentBuffer = _readQueue.pop();
+      FileChunk *currentBuffer = _readQueue.pop();
       if (_debug) { waitTimer.stop(); }
       auto currentChunkSize = _metaFile->nextChunkSize();
       int bytesRead = currentBuffer->setContentFromFile(
@@ -169,8 +170,7 @@ void ExternStringFinder::readBuffers() {
           currentChunkSize.originalSize
       );
       if (bytesRead < 1 || currentChunkSize.originalSize == 0) {
-        _decompressQueue.push(nullptr);
-        _decompressQueue.push(nullptr);
+        _decompressQueue.close();
         if (_debug) {
           std::cout << "Reading was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
         }
@@ -186,10 +186,10 @@ void ExternStringFinder::decompressBuffers() {
   Timer waitTimer;
   while (true) {
     if (_debug) { waitTimer.start(false); }
-    Buffer *currentBuffer = _decompressQueue.pop();
+    FileChunk *currentBuffer = _decompressQueue.pop(nullptr);
     if (_debug) { waitTimer.stop(); }
     if (currentBuffer == nullptr) {
-      _searchQueue.push(nullptr);
+      _searchQueue.close();
       if (_debug) {
         std::cout << "Decompression was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
       }
@@ -200,41 +200,31 @@ void ExternStringFinder::decompressBuffers() {
   }
 }
 
-std::vector<unsigned long> ExternStringFinder::searchBuffers() {
+void ExternStringFinder::searchBuffers() {
   Timer waitTimer;
-  std::vector<unsigned long> matchBytePositions;
-  int nuls = 0;
   while (true) {
     if (_debug) { waitTimer.start(false); }
-    Buffer *currentBuffer = _searchQueue.pop();
+    FileChunk *currentBuffer = _searchQueue.pop(nullptr);
     if (_debug) { waitTimer.stop(); }
     if (currentBuffer == nullptr) {
-      nuls++;
-      if (nuls == 1) {
-        break;
-      } else {
-        continue;
-      }
+      _partialResultsQueue.close();
+      break;
     }
-    std::vector<unsigned int> matches = currentBuffer->findPerLine(_pattern);
+    auto matches = currentBuffer->findPerLine(_pattern);
     _readQueue.push(currentBuffer);
-    // TODO: make multithreadable
-    matchBytePositions.insert(matchBytePositions.end(), matches.begin(), matches.end());
-    _bufferPosition += strlen(currentBuffer->cstring());
+    _partialResultsQueue.push(matches.size());
+    // _bufferPosition += strlen(currentBuffer->cstring());
   }
   if (_debug) {
     std::cout << "Searching was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
   }
-  if (_count) {
-    std::cout << "Found " << matchBytePositions.size() << " matches" << std::endl;
-  }
-  return matchBytePositions;
 }
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::find() {
+  Timer timer;
   if (_performance) {
-    _timer.start(true);
+    timer.start(true);
   }
 
   if (_metaFile == nullptr) {
@@ -244,34 +234,60 @@ void ExternStringFinder::find() {
     readBuffers.join();
     processBuffers.join();
   } else {
+    buildThreads();
+
     std::thread readBuffers(&ExternStringFinder::readBuffers, this);
-    std::thread decompressBuffers(&ExternStringFinder::decompressBuffers, this);
-    // std::thread decompressBuffers2(&ExternStringFinder::decompressBuffers, this);
-    std::thread processBuffers(&ExternStringFinder::searchBuffers, this);
 
     readBuffers.join();
-    decompressBuffers.join();
-    // decompressBuffers2.join();
-    processBuffers.join();
+
+    for (auto &decompressionThread: _decompressionThreads) {
+      decompressionThread.join();
+    }
+    for (auto &searchThread: _searchThreads) {
+      searchThread.join();
+    }
   }
 
-  if (_performance) {
-    _timer.stop();
-    std::cout << "Time: " << _timer.elapsedSeconds() << " s" << std::endl;
+  unsigned res = 0;
+
+  while (true) {
+    auto elem = _partialResultsQueue.pop(-1);
+    if (elem == -1) {
+      break;
+    }
+    res += elem;
+  }
+
+  if (_performance || _debug) {
+    timer.stop();
+    std::cout << "Time: " << timer.elapsedSeconds() << " s" << std::endl;
   }
   if (_debug) {
     std::cout << "Total number of bytes read: " << _totalNumberBytesRead << std::endl;
   }
+  if (_count) {
+    std::cout << "Found " << res << " matches" << std::endl;
+  }
 }
 
 // _____________________________________________________________________________________________________________________
-void ExternStringFinder::setFile(char *filepath) {
-
-  FILE *fp = fopen(filepath, "r");
-  if (fp == nullptr) {
-    printf("Could not open file '%s'\n", filepath);
-    puts("Keeping current file pointer");
+void ExternStringFinder::buildThreads() {
+  _decompressQueue.setNumberOfWriteThreads(1);
+  if (_readQueue.size() > 1) {
+    int numDecompressionThreads = 4;
+    int numSearchThreads = 3;
+    for (int i = 0; i < numDecompressionThreads; i++) {
+      _decompressionThreads.emplace_back(&ExternStringFinder::decompressBuffers, this);
+    }
+    _searchQueue.setNumberOfWriteThreads(numDecompressionThreads);
+    for (int i = 0; i < numSearchThreads; i++) {
+      _searchThreads.emplace_back(&ExternStringFinder::searchBuffers, this);
+    }
+    _partialResultsQueue.setNumberOfWriteThreads(numSearchThreads);
   } else {
-    _searchFile = fp;
+    _decompressionThreads.emplace_back(&ExternStringFinder::decompressBuffers, this);
+    _searchThreads.emplace_back(&ExternStringFinder::searchBuffers, this);
+    _searchQueue.setNumberOfWriteThreads(1);
+    _partialResultsQueue.setNumberOfWriteThreads(1);
   }
 }

@@ -10,7 +10,7 @@
 #include <string>
 
 #include "./utils/Timer.h"
-#include "./utils/Buffer.h"
+#include "./utils/FileChunk.h"
 #include "./utils/ThreadSafeQueue.h"
 #include "./utils/ESFMetaFile.h"
 
@@ -22,14 +22,31 @@
  */
 class ExternStringFinder {
  public:
-  // Constructor taking number of buffers to be initialized.
-  //  Run parseCommandLineArguments afterwards to set fp, pattern etc.
+
+  /**
+   * Constructor taking number of buffers to be initialized.
+   *  Run parseCommandLineArguments afterwards to set fp, pattern etc.
+   * @param nBuffers number of rotating buffers
+   */
   explicit ExternStringFinder(unsigned int nBuffers = 1);
-  // Constructor taking all mandatory properties.
-  //  No need to run parseCommandLineArguments afterwards.
+
+  /**
+   * Constructor taking all mandatory properties.
+   *  No need to run parseCommandLineArguments afterwards.
+   * @param nBuffers
+   * @param file
+   * @param pattern
+   * @param performance
+   * @param silent
+   * @param count
+   * @param metaFile
+   * @param minBufferSize
+   * @param bufferOverflowSize
+   */
   ExternStringFinder(unsigned int nBuffers, char* file, char* pattern, bool performance, bool silent, bool count,
                      char* metaFile = nullptr, unsigned int minBufferSize = (2 << 20),
                      unsigned int bufferOverflowSize = (2 << 11));
+
   // Destructor
   ~ExternStringFinder();
 
@@ -41,37 +58,45 @@ class ExternStringFinder {
    */
   void parseCommandLineArguments(int argc, char** argv);
 
+  /**
+   * @brief find _pattern in _searchFile
+   */
   void find();
 
-  void setFile(char* filepath);
-
  private:
+  static void printHelpAndExit();
+
   void initializeQueues();
+
+  void buildThreads();
+
   void readBuffers();
   void decompressBuffers();
-  std::vector<unsigned long> searchBuffers();
-  static void printHelpAndExit();
+  void searchBuffers();
+
+  TSQueue<FileChunk*> _readQueue;
+  TSQueue<FileChunk*> _searchQueue;
+  TSQueue<FileChunk*> _decompressQueue;
+  TSQueue<int> _partialResultsQueue;
+
+  std::vector<std::thread> _decompressionThreads;
+  std::vector<std::thread> _searchThreads;
+
+  unsigned _bufferPosition;
+  unsigned long _totalNumberBytesRead;
 
   char* _pattern{};
   FILE* _searchFile;
   ESFMetaFile* _metaFile;
 
-  unsigned int _nBuffers;
-  unsigned int _maxBufferSize;
-  unsigned int _minBufferSize;
-  TSQueue<Buffer*> _searchQueue;
-  TSQueue<Buffer*> _readQueue;
-  TSQueue<Buffer*> _decompressQueue;
-
-  unsigned long _bufferPosition;
-
-  unsigned long _totalNumberBytesRead{};
+  unsigned _nBuffers;
+  unsigned _maxBufferSize;
+  unsigned _minBufferSize;
 
   bool _performance;
   bool _silent;
   bool _count;
   bool _debug;
-  Timer _timer;
 };
 
 #endif  // SRC_EXTERNSTRINGFINDER_H_

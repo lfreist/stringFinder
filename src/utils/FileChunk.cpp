@@ -6,50 +6,54 @@
 #include <cassert>
 #include <vector>
 
-#include "Buffer.h"
+#include "FileChunk.h"
 #include "ZstdWrapper.h"
 
 #include <iostream>
 
 // _____________________________________________________________________________________________________________________
-Buffer::Buffer() {
+FileChunk::FileChunk() {
   _len = 0;
   _bufferSize = 1;
   _content = new char[_bufferSize];
   _content[0] = '\0';
+  _startPosition = 0;
 }
 
 // _____________________________________________________________________________________________________________________
-Buffer::Buffer(unsigned int bufferSize) {
+FileChunk::FileChunk(unsigned int bufferSize) {
   _len = bufferSize - 1;
   _bufferSize = bufferSize;
   _content = new char[_bufferSize];
   _content[_bufferSize - 1] = '\0';
+  _startPosition = 0;
 }
 
 // _____________________________________________________________________________________________________________________
-Buffer::Buffer(const Buffer &buffer) {
+FileChunk::FileChunk(const FileChunk &buffer) {
   _len = buffer._len;
   _bufferSize = buffer._bufferSize;
+  _startPosition = buffer._startPosition;
   _content = new char[_bufferSize];
   strcpy(_content, buffer._content);
 }
 
 // _____________________________________________________________________________________________________________________
-Buffer::Buffer(const char *str) {
+FileChunk::FileChunk(const char *str) {
   _len = strlen(str);
   _bufferSize = _len + 1;
   _content = new char[_bufferSize];
   strcpy(_content, str);
+  _startPosition = 0;
 }
 
 // _____________________________________________________________________________________________________________________
-Buffer::~Buffer() {
+FileChunk::~FileChunk() {
   delete[] _content;
 }
 
 // _____________________________________________________________________________________________________________________
-void Buffer::setContent(const char *content) {
+void FileChunk::setContent(const char *content) {
   delete[] _content;
   _len = strlen(content);
   _bufferSize = _len + 1;
@@ -58,9 +62,10 @@ void Buffer::setContent(const char *content) {
 }
 
 // _____________________________________________________________________________________________________________________
-int Buffer::setContentFromFile(FILE *fp, unsigned int minNumBytes, bool toNewLine, bool zstdCompressed,
-                               size_t originalSize) {
+int FileChunk::setContentFromFile(FILE *fp, unsigned int minNumBytes, bool toNewLine, bool zstdCompressed,
+                               size_t originalSize, unsigned startPosition) {
   assert(minNumBytes <= _bufferSize);
+  _startPosition = startPosition;
   if (minNumBytes == 0) {
     return 0;
   }
@@ -117,7 +122,7 @@ int Buffer::setContentFromFile(FILE *fp, unsigned int minNumBytes, bool toNewLin
 }
 
 // _____________________________________________________________________________________________________________________
-int Buffer::find(const char *pattern, unsigned shift, bool caseSensitive) {
+int FileChunk::find(const char *pattern, unsigned shift, bool caseSensitive) {
   assert(shift <= _len);
   char *match;
   if (caseSensitive) {
@@ -132,7 +137,7 @@ int Buffer::find(const char *pattern, unsigned shift, bool caseSensitive) {
 }
 
 // _____________________________________________________________________________________________________________________
-std::vector<unsigned> Buffer::findPerLine(const char *pattern, unsigned bytePositionShift, bool caseSensitive) {
+std::vector<unsigned> FileChunk::findPerLine(const char *pattern, unsigned bytePositionShift, bool caseSensitive) {
   std::vector<unsigned> matches;
   int matchPosition = 0;
   int newLinePosition;
@@ -152,7 +157,7 @@ std::vector<unsigned> Buffer::findPerLine(const char *pattern, unsigned bytePosi
 }
 
 // _____________________________________________________________________________________________________________________
-int Buffer::findNewLine(unsigned shift) {
+int FileChunk::findNewLine(unsigned shift) {
   assert(shift <= _len);
   char *match = strchr(_content + shift, '\n');
   if (match == nullptr) {
@@ -162,12 +167,12 @@ int Buffer::findNewLine(unsigned shift) {
 }
 
 // _____________________________________________________________________________________________________________________
-const char *Buffer::cstring() {
+const char *FileChunk::cstring() {
   return _content;
 }
 
 // _____________________________________________________________________________________________________________________
-bool Buffer::operator==(const Buffer &compStr) {
+bool FileChunk::operator==(const FileChunk &compStr) {
   if (_len != compStr._len) {
     return false;
   }
@@ -180,24 +185,24 @@ bool Buffer::operator==(const Buffer &compStr) {
 }
 
 // _____________________________________________________________________________________________________________________
-bool Buffer::operator!=(const Buffer &compStr) {
+bool FileChunk::operator!=(const FileChunk &compStr) {
   return !(operator==(compStr));
 }
 
 // _____________________________________________________________________________________________________________________
-unsigned Buffer::length() const {
+unsigned FileChunk::length() const {
   return _len;
 }
 
 // _____________________________________________________________________________________________________________________
-size_t Buffer::compress(int compressionLevel) {
+size_t FileChunk::compress(int compressionLevel) {
   _compressedContent = ZstdWrapper::compress(_content, _len, compressionLevel);
   _originalSize = _len;
   return _compressedContent.size();
 }
 
 // _____________________________________________________________________________________________________________________
-size_t Buffer::decompress() {
+size_t FileChunk::decompress() {
   if (_bufferSize < _originalSize + 1) {
     _bufferSize = _originalSize + 1;
     delete[] _content;
@@ -215,11 +220,11 @@ size_t Buffer::decompress() {
 }
 
 // _____________________________________________________________________________________________________________________
-void Buffer::setOriginalSize(unsigned origSize) {
+void FileChunk::setOriginalSize(unsigned origSize) {
   _originalSize = origSize;
 }
 
 // _____________________________________________________________________________________________________________________
-unsigned int Buffer::getOriginalSize() const {
+unsigned int FileChunk::getOriginalSize() const {
   return _originalSize;
 }

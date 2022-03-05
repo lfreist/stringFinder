@@ -6,44 +6,44 @@
 #include <thread>
 
 #include "../src/utils/ThreadSafeQueue.h"
-#include "../src/utils/Buffer.h"
+#include "../src/utils/FileChunk.h"
 
 // ____________________________________________________________________________________________________________________
 TEST(TSQueueTest, Constructor) {
-	TSQueue<Buffer*> tsq;
+	TSQueue<FileChunk*> tsq;
 	ASSERT_TRUE(tsq._queue.empty());
 }
 
 // ____________________________________________________________________________________________________________________
 TEST(TSQueueTest, methodsTest) {
   {
-    Buffer str1("hello");
-    Buffer str2("bye");
-    TSQueue<Buffer*> tsq;
+    FileChunk str1("hello");
+    FileChunk str2("bye");
+    TSQueue<FileChunk*> tsq;
     tsq.push(&str1);
     ASSERT_FALSE(tsq.empty());
     ASSERT_EQ(tsq._queue.size(), 1);
     tsq.push(&str2);
     ASSERT_EQ(tsq._queue.size(), 2);
-    Buffer* fst = tsq.pop();
+    FileChunk* fst = tsq.pop();
     ASSERT_EQ(tsq._queue.size(), 1);
-    Buffer* snd = tsq.pop();
+    FileChunk* snd = tsq.pop();
     ASSERT_TRUE(tsq.empty());
     ASSERT_TRUE(*fst == str1);
     ASSERT_TRUE(*snd == str2);
   }
   {
-    auto pushIntoQueue = [](TSQueue<Buffer*>* q, Buffer* elem) {
+    auto pushIntoQueue = [](TSQueue<FileChunk*>* q, FileChunk* elem) {
       sleep(10);
       q->push(elem);
     };
-    auto popFromQueue = [](TSQueue<Buffer*>* q, Buffer* expectElem) {
+    auto popFromQueue = [](TSQueue<FileChunk*>* q, FileChunk* expectElem) {
       ASSERT_TRUE(q->empty());
-      Buffer* elem = q->pop();
+      FileChunk* elem = q->pop();
       ASSERT_EQ(elem, expectElem);
     };
-    TSQueue<Buffer*> tsq;
-    Buffer str("element");
+    TSQueue<FileChunk*> tsq;
+    FileChunk str("element");
     std::thread push(pushIntoQueue, &tsq, &str);
     std::thread pop(popFromQueue, &tsq, &str);
     push.join();

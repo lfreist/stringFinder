@@ -3,13 +3,13 @@ add_library(Timer
 )
 
 add_library(Buffer
-        Buffer.h Buffer.cpp
+        FileChunk.h FileChunk.cpp
 )
 target_link_libraries(Buffer zstd)
 
 add_library(TSQueue
         ThreadSafeQueue.h ThreadSafeQueue.cpp
-        Buffer.h Buffer.cpp
+        FileChunk.h FileChunk.cpp
         )
 
 add_library(ESFCompressor
