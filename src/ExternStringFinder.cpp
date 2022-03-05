@@ -4,7 +4,6 @@
 #include <getopt.h>
 #include <iostream>
 #include <thread>
-#include <numeric>
 
 #include "ExternStringFinder.h"
 #include "./utils/ESFMetaFile.h"
@@ -235,34 +234,18 @@ void ExternStringFinder::find() {
     readBuffers.join();
     processBuffers.join();
   } else {
-    // buildThreads();
-
-    _readQueue.setNumberOfWriteThreads(100);
-    _decompressQueue.setNumberOfWriteThreads(1);
-    _searchQueue.setNumberOfWriteThreads(3);
+    buildThreads();
 
     std::thread readBuffers(&ExternStringFinder::readBuffers, this);
 
-    std::thread processBuffers1(&ExternStringFinder::decompressBuffers, this);
-    std::thread processBuffers2(&ExternStringFinder::decompressBuffers, this);
-    std::thread processBuffers3(&ExternStringFinder::decompressBuffers, this);
-
-    std::thread searchBuffers(&ExternStringFinder::searchBuffers, this);
-
     readBuffers.join();
-    processBuffers1.join();
-    processBuffers2.join();
-    processBuffers3.join();
-    searchBuffers.join();
 
-    /*
     for (auto &decompressionThread: _decompressionThreads) {
       decompressionThread.join();
     }
     for (auto &searchThread: _searchThreads) {
       searchThread.join();
     }
-     */
   }
 
   unsigned res = 0;
@@ -291,8 +274,8 @@ void ExternStringFinder::find() {
 void ExternStringFinder::buildThreads() {
   _decompressQueue.setNumberOfWriteThreads(1);
   if (_readQueue.size() > 1) {
-    int numDecompressionThreads = 3;
-    int numSearchThreads = 1;
+    int numDecompressionThreads = 4;
+    int numSearchThreads = 3;
     for (int i = 0; i < numDecompressionThreads; i++) {
       _decompressionThreads.emplace_back(&ExternStringFinder::decompressBuffers, this);
     }
