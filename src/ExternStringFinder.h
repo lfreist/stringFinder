@@ -8,6 +8,7 @@
 #include <vector>
 #include <thread>
 #include <string>
+#include <mutex>
 
 #include "./utils/Timer.h"
 #include "./utils/FileChunk.h"
@@ -81,6 +82,8 @@ class ExternStringFinder {
 
   std::vector<std::thread> _decompressionThreads;
   std::vector<std::thread> _searchThreads;
+
+  mutable std::mutex _printMutex;
 
   unsigned _bufferPosition;
   unsigned long _totalNumberBytesRead;
