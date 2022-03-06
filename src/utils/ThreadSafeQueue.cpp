@@ -103,7 +103,7 @@ T TSQueue<T>::pop(T defaultReturn) {
       return defaultReturn;
     }
     // _condVar.wait_for(queueLock, std::chrono::seconds(1));
-    _condVar.wait_for(queueLock);
+    _condVar.wait(queueLock);
   }
   T element = _queue.front();
   _queue.pop();
