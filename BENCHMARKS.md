@@ -40,3 +40,20 @@ real  0m29,046s
 user  0m43,214s
 sys   0m3,764s
 ```
+
+## amur:
+```
+freist@amur:.$ time grep -c badminton wikidata.20210610.vocabulary
+9824
+
+real    4m58.910s
+user    0m7.128s
+sys     0m6.825s
+
+freist@amur:.$ time ./ExternStringFinderMain badminton wikidata.20210610.vocabulary-l3-cs23.zst --meta wikidata.20210610.vocabulary-l3-cs23.zst.meta --count
+Found 9824 matches
+
+real    0m46.546s
+user    0m26.191s
+sys     0m2.204s
+```

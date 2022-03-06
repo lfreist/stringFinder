@@ -149,6 +149,7 @@ void ExternStringFinder::readBuffers() {
       if (bytesRead < 1) {
         _decompressQueue.close();
         if (_debug) {
+          std::unique_lock<std::mutex> printLock(_printMutex);
           std::cout << "ReadBuffer waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
         }
         return;
@@ -172,6 +173,7 @@ void ExternStringFinder::readBuffers() {
       if (bytesRead < 1 || currentChunkSize.originalSize == 0) {
         _decompressQueue.close();
         if (_debug) {
+          std::unique_lock<std::mutex> printLock(_printMutex);
           std::cout << "Reading was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
         }
         return;
@@ -191,6 +193,7 @@ void ExternStringFinder::decompressBuffers() {
     if (currentBuffer == nullptr) {
       _searchQueue.close();
       if (_debug) {
+        std::unique_lock<std::mutex> printLock(_printMutex);
         std::cout << "Decompression was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
       }
       return;
@@ -216,6 +219,7 @@ void ExternStringFinder::searchBuffers() {
     // _bufferPosition += strlen(currentBuffer->cstring());
   }
   if (_debug) {
+    std::unique_lock<std::mutex> printLock(_printMutex);
     std::cout << "Searching was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
   }
 }
