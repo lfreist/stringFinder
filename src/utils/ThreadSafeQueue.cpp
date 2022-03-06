@@ -1,6 +1,7 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
+#include <chrono>
 
 #include "ThreadSafeQueue.h"
 #include "FileChunk.h"
@@ -100,7 +101,7 @@ T TSQueue<T>::pop(T defaultReturn) {
     if (isClosed()) {
       return defaultReturn;
     }
-    _condVar.wait(queueLock);
+    _condVar.wait_for(queueLock, std::chrono::seconds(1));
   }
   T element = _queue.front();
   _queue.pop();
