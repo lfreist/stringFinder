@@ -45,8 +45,8 @@ class ExternStringFinder {
    * @param bufferOverflowSize
    */
   ExternStringFinder(unsigned int nBuffers, char* file, char* pattern, bool performance, bool silent, bool count,
-                     char* metaFile = nullptr, unsigned int minBufferSize = (2 << 20),
-                     unsigned int bufferOverflowSize = (2 << 11));
+                     char* metaFile = nullptr, unsigned int minBufferSize = (1 << 22),
+                     unsigned int bufferOverflowSize = (1 << 13));
 
   // Destructor
   ~ExternStringFinder();

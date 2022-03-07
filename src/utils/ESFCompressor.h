@@ -43,7 +43,7 @@ class ESFCompress {
       std::vector<char> comp = ZstdWrapper::compress((char*) chunk.cstring(), chunk.length(), compressionLevel);
       fwrite(comp.data(), comp.size(), 1, out);
       // write the actual uncompressed buffer size and the compressed size to the meta file: 'orig_size comp_size'
-      chunkSize cs{static_cast<unsigned long>(uncompressed_bytes_read), comp.size()};
+      chunkSize cs{static_cast<unsigned>(uncompressed_bytes_read), static_cast<unsigned>(comp.size())};
       cs.originalSize = static_cast<unsigned long>(uncompressed_bytes_read);
       cs.compressedSize = static_cast<unsigned long>(comp.size());
       meta.writeChunkSize(cs);
@@ -51,32 +51,6 @@ class ESFCompress {
     fclose(src);
     fclose(out);
     return true;
-  }
-
-
-  static bool decompress(const std::string& srcFile, const std::string& outFile, const std::string& metaFile = "") {
-    FILE *src = fopen(srcFile.c_str(), "r");
-    if (src == nullptr) {
-      std::cerr << "Could not read source file '" << srcFile << "'..." << std::endl;
-      return false;
-    }
-    FILE *out = fopen(outFile.c_str(), "w");
-    if (out == nullptr) {
-      std::cerr << "Could not write out file '" << outFile << "'..." << std::endl;
-      return false;
-    }
-    FILE *meta =  metaFile.empty() ?
-                  fopen((outFile + std::string(".meta")).c_str(), "w") : fopen(metaFile.c_str(), "w");
-    if (meta == nullptr) {
-      std::cerr << "Could not write meta file..." << std::endl;
-      return false;
-    }
-    // TODO: implement if needed or delete
-  }
-
-  // TODO: implement if needed or delete
-  static int decompress(const FileChunk& compressed, FileChunk* uncompressed, int startPosition, int endPosition) {
-    return 0;
   }
 };
 

@@ -55,7 +55,7 @@ class FileChunk {
    * @param caseSensitive -> true for case sensitive search, else false
    * @return int          -> number of matches
    */
-  int find(const char *pattern, unsigned int shift = 0, bool caseSensitive = true);
+  int find(const char *pattern, unsigned shift, bool caseSensitive = true);
 
   /**
    * @brief search for pattern in _content. After finding a match, jump to next line ('\n')
@@ -65,7 +65,7 @@ class FileChunk {
    * @param caseSensitive              -> true for case sensitive search, else false
    * @return std::vector<unsigned int> -> byte position of matches relative to _content
    */
-  std::vector<unsigned> findPerLine(const char *pattern, unsigned bytePositionShift = 0, bool caseSensitive = true);
+  std::vector<unsigned> findPerLine(const char *pattern, bool caseSensitive = true);
 
   /**
    * @brief get c like string (char*)
@@ -98,7 +98,7 @@ class FileChunk {
   char *_content;
   unsigned _bufferSize;
   unsigned _len;
-  unsigned _startPosition;
+  unsigned _globalShift;
   size_t _originalSize;  // in case buffer is compressed
   std::vector<char> _compressedContent;
 
