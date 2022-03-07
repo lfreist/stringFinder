@@ -17,7 +17,7 @@ FileChunk::FileChunk() {
   _bufferSize = 1;
   _content = new char[_bufferSize];
   _content[0] = '\0';
-  _startPosition = 0;
+  _globalShift = 0;
 }
 
 // _____________________________________________________________________________________________________________________
@@ -26,14 +26,14 @@ FileChunk::FileChunk(unsigned int bufferSize) {
   _bufferSize = bufferSize;
   _content = new char[_bufferSize];
   _content[_bufferSize - 1] = '\0';
-  _startPosition = 0;
+  _globalShift = 0;
 }
 
 // _____________________________________________________________________________________________________________________
 FileChunk::FileChunk(const FileChunk &buffer) {
   _len = buffer._len;
   _bufferSize = buffer._bufferSize;
-  _startPosition = buffer._startPosition;
+  _globalShift = buffer._globalShift;
   _content = new char[_bufferSize];
   strcpy(_content, buffer._content);
 }
@@ -44,7 +44,7 @@ FileChunk::FileChunk(const char *str) {
   _bufferSize = _len + 1;
   _content = new char[_bufferSize];
   strcpy(_content, str);
-  _startPosition = 0;
+  _globalShift = 0;
 }
 
 // _____________________________________________________________________________________________________________________
@@ -63,9 +63,9 @@ void FileChunk::setContent(const char *content) {
 
 // _____________________________________________________________________________________________________________________
 int FileChunk::setContentFromFile(FILE *fp, unsigned int minNumBytes, bool toNewLine, bool zstdCompressed,
-                               size_t originalSize, unsigned startPosition) {
+                               size_t originalSize, unsigned globalShift) {
   assert(minNumBytes <= _bufferSize);
-  _startPosition = startPosition;
+  _globalShift = globalShift;
   if (minNumBytes == 0) {
     return 0;
   }
@@ -137,7 +137,7 @@ int FileChunk::find(const char *pattern, unsigned shift, bool caseSensitive) {
 }
 
 // _____________________________________________________________________________________________________________________
-std::vector<unsigned> FileChunk::findPerLine(const char *pattern, unsigned bytePositionShift, bool caseSensitive) {
+std::vector<unsigned> FileChunk::findPerLine(const char *pattern, bool caseSensitive) {
   std::vector<unsigned> matches;
   int matchPosition = 0;
   int newLinePosition;
@@ -146,7 +146,7 @@ std::vector<unsigned> FileChunk::findPerLine(const char *pattern, unsigned byteP
     if (matchPosition < 0) {
       break;
     }
-    matches.push_back(matchPosition + bytePositionShift);
+    matches.push_back(matchPosition + _globalShift);
     newLinePosition = findNewLine(matchPosition);
     if (newLinePosition < 0) {
       break;

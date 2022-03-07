@@ -278,8 +278,8 @@ void ExternStringFinder::find() {
 void ExternStringFinder::buildThreads() {
   _decompressQueue.setNumberOfWriteThreads(1);
   if (_readQueue.size() > 1) {
-    int numDecompressionThreads = 4;
-    int numSearchThreads = 3;
+    int numDecompressionThreads = 8;
+    int numSearchThreads = 1;
     for (int i = 0; i < numDecompressionThreads; i++) {
       _decompressionThreads.emplace_back(&ExternStringFinder::decompressBuffers, this);
     }
