@@ -47,13 +47,17 @@ ExternStringFinder::~ExternStringFinder() {
     fclose(_searchFile);
   }
   delete _metaFile;
+  for (auto chunk : _fileChunks) {
+    delete chunk;
+  }
 }
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::initializeQueues() {
-  for (unsigned int i = 0; i <= _nBuffers; i++) {
-    auto *str = new FileChunk(_maxBufferSize);
-    _readQueue.push(str);
+  for (unsigned i=0; i <= _nBuffers; ++i) {
+    auto *chunk = new FileChunk(_maxBufferSize);
+    _fileChunks.push_back(chunk);
+    _readQueue.push(chunk);
   }
 }
 
@@ -278,7 +282,7 @@ void ExternStringFinder::find() {
 void ExternStringFinder::buildThreads() {
   _decompressQueue.setNumberOfWriteThreads(1);
   if (_readQueue.size() > 1) {
-    int numDecompressionThreads = 8;
+    int numDecompressionThreads = 1;
     int numSearchThreads = 1;
     for (int i = 0; i < numDecompressionThreads; i++) {
       _decompressionThreads.emplace_back(&ExternStringFinder::decompressBuffers, this);

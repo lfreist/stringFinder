@@ -83,12 +83,14 @@ class ExternStringFinder {
   std::vector<std::thread> _decompressionThreads;
   std::vector<std::thread> _searchThreads;
 
+  std::vector<FileChunk*> _fileChunks;
+
   mutable std::mutex _printMutex;
 
   unsigned _bufferPosition;
   unsigned long _totalNumberBytesRead;
 
-  char* _pattern{};
+  char* _pattern;
   FILE* _searchFile;
   ESFMetaFile* _metaFile;
 
