@@ -20,12 +20,14 @@ ExternStringFinder::ExternStringFinder(unsigned int nBuffers) {
   _nBuffers = nBuffers;
   _minBufferSize = (2 << 20);
   _maxBufferSize = _minBufferSize + (2 << 11);
+  _nDecompressionThreads = 1;
+  _nSearchThreads = 1;
 }
 
 // _____________________________________________________________________________________________________________________
-ExternStringFinder::ExternStringFinder(unsigned int nBuffers, char *file, char *pattern, bool performance, bool silent,
-                                       bool count, char *metaFile, unsigned int minBufferSize,
-                                       unsigned int bufferOverflowSize) {
+ExternStringFinder::ExternStringFinder(unsigned nBuffers, char *file, char *pattern, bool performance, bool silent,
+                                       bool count, char *metaFile, unsigned minBufferSize, unsigned bufferOverflowSize,
+                                       unsigned nDecompressionThreads, unsigned nSearchThreads) {
   _performance = performance;
   _silent = silent;
   _debug = false;
@@ -47,14 +49,14 @@ ExternStringFinder::~ExternStringFinder() {
     fclose(_searchFile);
   }
   delete _metaFile;
-  for (auto chunk : _fileChunks) {
+  for (auto chunk: _fileChunks) {
     delete chunk;
   }
 }
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::initializeQueues() {
-  for (unsigned i=0; i <= _nBuffers; ++i) {
+  for (unsigned i = 0; i <= _nBuffers; ++i) {
     auto *chunk = new FileChunk(_maxBufferSize);
     _fileChunks.push_back(chunk);
     _readQueue.push(chunk);
@@ -70,11 +72,13 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
       {"silent", 0, nullptr, 's'},
       {"count", 0, nullptr, 'c'},
       {"meta", 1, nullptr, 'm'},
+      {"decompression-threads", 1, nullptr, 'j'},
+      {"search-threads", 1, nullptr, 'i'},
       {nullptr, 0, nullptr, 0}
   };
   optind = 1;
   while (true) {
-    int c = getopt_long(argc, argv, "h:p:s:c:m:d:", options, nullptr);
+    int c = getopt_long(argc, argv, "h:p:s:c:m:d:i:j:", options, nullptr);
     if (c == -1) { break; }
     switch (c) {
       case 'h': printHelpAndExit();
@@ -91,9 +95,13 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
       case 'c': _count = true;
         break;
       case 'm': _metaFile = new ESFMetaFile(std::string(optarg), std::ios::in);
+      case 'j': _nDecompressionThreads = atoi(optarg);
+      case 'i': _nSearchThreads = atoi(optarg);
       default: break;
     }
   }
+  if (_nDecompressionThreads < 1) _nDecompressionThreads = 1;
+  if (_nSearchThreads < 1) _nSearchThreads = 1;
   if (optind >= argc) {
     std::cout << "Missing input file or pattern" << std::endl;
     printHelpAndExit();
@@ -120,7 +128,7 @@ void ExternStringFinder::parseCommandLineArguments(int argc, char **argv) {
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::printHelpAndExit() {
   std::cout
-      << "StringFinder - ExternStringFinder - Leon Freist <freist@informatik.uni-freibur.de>" << std::endl
+      << "StringFinder - ExternStringFinder (ESF) - Leon Freist <freist@informatik.uni-freibur.de>" << std::endl
       << std::endl
       << "Usage: ./ExternStringFinderMain [PATTERN] [FILE] [OPTION]..." << std::endl
       << " Search for a PATTERN in a FILE." << std::endl
@@ -134,8 +142,13 @@ void ExternStringFinder::printHelpAndExit() {
       << "  --silent       -s  dont print matching lines." << std::endl
       << "  --count        -c  print number of matching lines." << std::endl
       << "  --meta [FILE]  -m  set meta file." << std::endl
+      << "  --decompression-threads [INT]"
+      << "                 -j  set number of threads used for decompression." << std::endl
+      << "  --search-threads [INT]"
+      << "                 -i  set number of threads used for search." << std::endl
+      << "  --meta [FILE]  -m  set meta file." << std::endl
       << std::endl
-      << "When FILE is not provided read standard input" << std::endl
+      << "When FILE is not provided, ESF reads the standard input" << std::endl
       << " Example: cat main.c | ./ExternStringFinderMain 'hello world'" << std::endl;
   exit(0);
 }
@@ -281,21 +294,12 @@ void ExternStringFinder::find() {
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::buildThreads() {
   _decompressQueue.setNumberOfWriteThreads(1);
-  if (_readQueue.size() > 1) {
-    int numDecompressionThreads = 1;
-    int numSearchThreads = 1;
-    for (int i = 0; i < numDecompressionThreads; i++) {
-      _decompressionThreads.emplace_back(&ExternStringFinder::decompressBuffers, this);
-    }
-    _searchQueue.setNumberOfWriteThreads(numDecompressionThreads);
-    for (int i = 0; i < numSearchThreads; i++) {
-      _searchThreads.emplace_back(&ExternStringFinder::searchBuffers, this);
-    }
-    _partialResultsQueue.setNumberOfWriteThreads(numSearchThreads);
-  } else {
+  for (unsigned i = 0; i < _nDecompressionThreads; ++i) {
     _decompressionThreads.emplace_back(&ExternStringFinder::decompressBuffers, this);
-    _searchThreads.emplace_back(&ExternStringFinder::searchBuffers, this);
-    _searchQueue.setNumberOfWriteThreads(1);
-    _partialResultsQueue.setNumberOfWriteThreads(1);
   }
+  _searchQueue.setNumberOfWriteThreads(static_cast<int>(_nDecompressionThreads));
+  for (unsigned i = 0; i < _nSearchThreads; ++i) {
+    _searchThreads.emplace_back(&ExternStringFinder::searchBuffers, this);
+  }
+  _partialResultsQueue.setNumberOfWriteThreads(static_cast<int>(_nSearchThreads));
 }
