@@ -44,9 +44,10 @@ class ExternStringFinder {
    * @param minBufferSize
    * @param bufferOverflowSize
    */
-  ExternStringFinder(unsigned int nBuffers, char* file, char* pattern, bool performance, bool silent, bool count,
-                     char* metaFile = nullptr, unsigned int minBufferSize = (1 << 22),
-                     unsigned int bufferOverflowSize = (1 << 13));
+  ExternStringFinder(unsigned nBuffers, char* file, char* pattern, bool performance, bool silent, bool count,
+                     char* metaFile = nullptr, unsigned minBufferSize = (1 << 22),
+                     unsigned bufferOverflowSize = (1 << 13), unsigned nDecompressionThreads = 1,
+                     unsigned nSearchThreads = 1);
 
   // Destructor
   ~ExternStringFinder();
@@ -97,6 +98,9 @@ class ExternStringFinder {
   unsigned _nBuffers;
   unsigned _maxBufferSize;
   unsigned _minBufferSize;
+
+  unsigned _nDecompressionThreads;
+  unsigned _nSearchThreads;
 
   bool _performance;
   bool _silent;
