@@ -9,8 +9,6 @@ RUN git submodule init > /dev/null && git submodule update > /dev/null
 RUN mkdir build
 WORKDIR "build"
 RUN cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)
-COPY bashrc bashrc
-CMD ["/bin/bash", "--rcfile", "bashrc"]
 
 # docker build -t leon-freist-bachelorprojekt .
 # docker run -it -v $(pwd)/files:/inputfiles/input:ro --name leon-freist-bachelorprojekt leon-freist-bachelorprojekt

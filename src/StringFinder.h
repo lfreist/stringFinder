@@ -18,23 +18,22 @@ void mergeArrays(vector<const string *> *out, vector<const string *> *in);
 // Class StringData
 class StringFinder {
  public:
-  StringFinder();
+  explicit StringFinder(const string& filepath, bool verbosity = false);
 
   ~StringFinder();
 
-  void parseCommandLineArguments(int argc, char **argv);
-
   void readFile(const string &path, bool append = false);
 
-  vector<const string *> find(string expression, bool matchCase = false) const;
+  [[nodiscard]] vector<const string *> find(string expression, bool matchCase = false) const;
 
-  void measurePerformance(const string &expression,
-                          bool matchCase = false) const;
+  void measurePerformance(const string &expression, bool matchCase = false) const;
 
-  int dataSize() const;
+  [[nodiscard]] unsigned long dataSize() const;
 
  private:
   vector<string> _data;
+  string _filepath;
+  bool _verbose;
 
   FRIEND_TEST(StringFinderTest, readFile);
 };
