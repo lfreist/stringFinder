@@ -70,7 +70,7 @@ vector<const string *> StringFinder::find(string expression, bool matchCase) con
   if (!matchCase) {
     transform(expression.begin(), expression.end(), expression.begin(), ::tolower);
   }
-#pragma omp parallel for reduction(merge: results)
+#pragma omp parallel for reduction(merge: results) num_threads(2)
   for (vector<string>::const_iterator it = _data.begin(); it != _data.end(); ++it) {
     if (!matchCase) {
       string newStr = *it;
