@@ -20,7 +20,6 @@ class InteractiveFinder {
 
   ~InteractiveFinder();
 
-  // only takes input file (optionally)
   void parseCommandLineArguments(int argc, char **argv);
 
   void run();

@@ -6,18 +6,13 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <algorithm>
 
 #include "StringFinder.h"
 #include "./utils/Timer.h"
 
 using std::vector;
 using std::string;
-using std::cout;
-using std::cerr;
-using std::endl;
 using std::ifstream;
-
 
 void mergeArrays(vector<const string *> *out, vector<const string *> *in) {
   vector<const string *> tmp(out->size() + in->size());
@@ -26,48 +21,22 @@ void mergeArrays(vector<const string *> *out, vector<const string *> *in) {
 }
 
 // ____________________________________________________________________________
-StringFinder::StringFinder() = default;
+StringFinder::StringFinder(const string &filepath, bool verbose) {
+  _filepath = filepath;
+  _verbose = verbose;
+  readFile(filepath);
+}
 
 // ____________________________________________________________________________
 StringFinder::~StringFinder() = default;
 
 // ____________________________________________________________________________
-void StringFinder::parseCommandLineArguments(int argc, char **argv) {
-  struct option options[] = {
-      {"performance", 1, nullptr, 'p'},
-      {nullptr, 0, nullptr, 0}
-  };
-  optind = 1;
-  string performanceExpression;
-  while (true) {
-    int c = getopt_long(argc, argv, "p", options, nullptr);
-    if (c == -1) {
-      break;
-    }
-    switch (c) {
-      case 'p': performanceExpression = string(optarg);
-        break;
-      default: break;
-    }
-  }
-  if (optind >= argc) {
-    cout << "Missing input file" << endl;
-    exit(1);
-  }
-  readFile(argv[optind]);
-  if (!performanceExpression.empty()) {
-    measurePerformance(performanceExpression, false);
-    measurePerformance(performanceExpression, true);
-  }
-}
-
-// ____________________________________________________________________________
 void StringFinder::readFile(const string &path, bool append) {
-  cout << "Reading file " << path << endl;
+  std::cout << "Reading file " << path << std::endl;
   string line;
   ifstream file(path.c_str());
   if (!file.is_open()) {
-    cerr << "Error: Cannot open file " << path << endl;
+    std::cerr << "Error: Cannot open file " << path << std::endl;
     return;
   }
   if (!append) {
@@ -81,16 +50,17 @@ void StringFinder::readFile(const string &path, bool append) {
       continue;
     }
     _data.push_back(line);
-    counter++;
-    if (counter == 100000) {
-      cout << "\r" << innerCounter * counter << " lines"
-           << std::flush;
-      counter = 0;
-      innerCounter++;
+    if (_verbose) {
+      counter++;
+      if (counter == 100000) {
+        std::cout << "\r" << innerCounter * counter << " lines" << std::flush;
+        counter = 0;
+        innerCounter++;
+      }
     }
   }
-  cout << "\r" << dataSize() << " lines" << endl;
-  cout << "done" << endl;
+  std::cout << "\r" << dataSize() << " lines" << std::endl;
+  std::cout << "done" << std::endl;
 }
 
 // ____________________________________________________________________________
@@ -101,10 +71,7 @@ vector<const string *> StringFinder::find(string expression, bool matchCase) con
     transform(expression.begin(), expression.end(), expression.begin(), ::tolower);
   }
 #pragma omp parallel for reduction(merge: results)
-  // #pragma omp parallel for
-  for (vector<string>::const_iterator it = _data.begin();
-       it != _data.end();
-       it++) {
+  for (vector<string>::const_iterator it = _data.begin(); it != _data.end(); ++it) {
     if (!matchCase) {
       string newStr = *it;
       transform(newStr.begin(), newStr.end(), newStr.begin(), ::tolower);
@@ -128,16 +95,15 @@ void StringFinder::measurePerformance(const string &expression, bool matchCase) 
   timer.start();
   vector<const string *> results = find(expression, matchCase);
   timer.stop();
-  cout << "Performance Report:" << endl;
-  cout << "StringFinder.measurePerformance(" << expression << ", "
-       << matchCase << "):" << endl;
-  cout << " total lines:\t" << _data.size() << endl;
-  cout << " total matches:\t" << results.size() << endl;
-  cout << " query time:\t" << timer.elapsedSeconds() << " s" << endl;
-  cout << " time / match:\t" << timer.elapsedSeconds() / results.size()
-       << " s" << endl;
+  string matchCaseStr = matchCase ? string("true") : string("false");
+  std::cout << "Performance Report for file: " << _filepath << std::endl;
+  std::cout << "StringFinder.find(expression=" << expression << ", matchCase=" << matchCaseStr << "):" << std::endl;
+  std::cout << " total lines:\t" << _data.size() << std::endl;
+  std::cout << " total matches:\t" << results.size() << std::endl;
+  std::cout << " query time:\t" << timer.elapsedSeconds() << " s" << std::endl;
+  std::cout << " time / match:\t" << timer.elapsedSeconds() / static_cast<double>(results.size()) << " s" << std::endl;
 }
 
-int StringFinder::dataSize() const {
+unsigned long StringFinder::dataSize() const {
   return _data.size();
 }
