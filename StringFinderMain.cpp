@@ -15,6 +15,8 @@ int main(int argc, char **argv) {
   bool matchCase;
   string searchPattern;
   string inputFile;
+  unsigned nThreads;
+  bool count;
 
   po::options_description options("Options for StringFinderMain");
   po::positional_options_description positional_options;
@@ -33,6 +35,8 @@ int main(int argc, char **argv) {
   add("performance,p", po::bool_switch(&performance), "measure performance.");
   add("verbose,v", po::bool_switch(&verbose), "toggle verbosity.");
   add("case,C", po::bool_switch(&matchCase), "match case.");
+  add("threads,j", po::value<unsigned>(&nThreads)->default_value(1), "number of threads used for search.");
+  add("count,c", po::bool_switch(&count), "only count the number of matching lines.");
 
   po::variables_map optionsMap;
 
@@ -57,5 +61,12 @@ int main(int argc, char **argv) {
     sf.measurePerformance(searchPattern, matchCase);
   } else {
     vector<const string*> res = sf.find(searchPattern, matchCase);
+    if (count) {
+      std::cout << res.size() << std::endl;
+    } else {
+      for (auto &str: res) {
+        std::cout << "(" << str << ")\t" << *str << std::endl;
+      }
+    }
   }
 }

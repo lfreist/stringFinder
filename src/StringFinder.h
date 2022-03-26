@@ -18,7 +18,7 @@ void mergeArrays(vector<const string *> *out, vector<const string *> *in);
 // Class StringData
 class StringFinder {
  public:
-  explicit StringFinder(const string& filepath, bool verbosity = false);
+  explicit StringFinder(const string& filepath, bool verbosity = false, unsigned nThreads = 1);
 
   ~StringFinder();
 
@@ -34,6 +34,7 @@ class StringFinder {
   vector<string> _data;
   string _filepath;
   bool _verbose;
+  unsigned _nThreads;
 
   FRIEND_TEST(StringFinderTest, readFile);
 };
