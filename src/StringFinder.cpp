@@ -21,9 +21,10 @@ void mergeArrays(vector<const string *> *out, vector<const string *> *in) {
 }
 
 // ____________________________________________________________________________
-StringFinder::StringFinder(const string &filepath, bool verbose) {
+StringFinder::StringFinder(const string &filepath, bool verbose, unsigned nThreads) {
   _filepath = filepath;
   _verbose = verbose;
+  _nThreads = nThreads;
   readFile(filepath);
 }
 
@@ -32,7 +33,9 @@ StringFinder::~StringFinder() = default;
 
 // ____________________________________________________________________________
 void StringFinder::readFile(const string &path, bool append) {
-  std::cout << "Reading file " << path << std::endl;
+  if (_verbose) {
+    std::cout << "Reading file " << path << std::endl;
+  }
   string line;
   ifstream file(path.c_str());
   if (!file.is_open()) {
@@ -59,8 +62,10 @@ void StringFinder::readFile(const string &path, bool append) {
       }
     }
   }
-  std::cout << "\r" << dataSize() << " lines" << std::endl;
-  std::cout << "done" << std::endl;
+  if (_verbose) {
+    std::cout << "\r" << dataSize() << " lines" << std::endl;
+    std::cout << "done" << std::endl;
+  }
 }
 
 // ____________________________________________________________________________
@@ -70,7 +75,7 @@ vector<const string *> StringFinder::find(string expression, bool matchCase) con
   if (!matchCase) {
     transform(expression.begin(), expression.end(), expression.begin(), ::tolower);
   }
-#pragma omp parallel for reduction(merge: results) num_threads(2)
+#pragma omp parallel for reduction(merge: results) num_threads(_nThreads)
   for (vector<string>::const_iterator it = _data.begin(); it != _data.end(); ++it) {
     if (!matchCase) {
       string newStr = *it;
