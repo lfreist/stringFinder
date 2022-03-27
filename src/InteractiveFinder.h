@@ -14,27 +14,17 @@
 using std::string;
 using std::vector;
 
-class InteractiveFinder {
+class InteractiveFinder : StringFinder {
  public:
-  InteractiveFinder();
-
-  ~InteractiveFinder();
-
-  void parseCommandLineArguments(int argc, char **argv);
-
+  InteractiveFinder(const string &filepath, bool verbose = false, unsigned nThreads = 1);
+  InteractiveFinder(bool verbose = false, unsigned nThreads = 1);
   void run();
 
  private:
-  StringFinder _sf;
-
   uint8_t parseInput();
-
   void usage() const;
-
-  void interactiveUsage() const;
-
-  void printUsageAndExit() const;
 };
+
 
 class Argument {
  public:
@@ -45,9 +35,7 @@ class Argument {
   ~Argument();
 
   int getValue() const;
-
   string *getName();
-
   void setValue(int value);
 
  private:
@@ -65,15 +53,10 @@ class Command {
   ~Command();
 
   char getName();
-
   void setObject(const string obj);
-
   string *getObject();
-
   vector<Argument> *getArguments();
-
   void addArgument(string argStr);
-
   void addValueToLastArg(int value);
 
  private:
@@ -91,13 +74,10 @@ class Command {
 class InputParser {
  public:
   InputParser();
-
   ~InputParser();
 
   Command *getCommand();
-
   void parse(const string &input);
-
   bool validInput();
 
  private:

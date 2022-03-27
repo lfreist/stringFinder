@@ -1,0 +1,5 @@
+LinE with uppEr casE E
+Line without upper case e
+Lin3 without that charact3r
+Line with word eureka in lower case
+LinE with word EurEka with uppEr casE E
