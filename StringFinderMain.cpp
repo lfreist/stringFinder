@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "src/StringFinder.h"
+#include "src/InteractiveFinder.h"
 
 namespace po = boost::program_options;
 
@@ -17,6 +18,7 @@ int main(int argc, char **argv) {
   string inputFile;
   unsigned nThreads;
   bool count;
+  bool interactive;
 
   po::options_description options("Options for StringFinderMain");
   po::positional_options_description positional_options;
@@ -34,9 +36,10 @@ int main(int argc, char **argv) {
   add("help,h", "Produces this help message.");
   add("performance,p", po::bool_switch(&performance), "measure performance.");
   add("verbose,v", po::bool_switch(&verbose), "toggle verbosity.");
-  add("case,C", po::bool_switch(&matchCase), "match case.");
+  add("matchCase,C", po::bool_switch(&matchCase), "match case.");
   add("threads,j", po::value<unsigned>(&nThreads)->default_value(1), "number of threads used for search.");
   add("count,c", po::bool_switch(&count), "only count the number of matching lines.");
+  add("interactive", po::bool_switch(&count), "run in interactive mode (ignores other optional parameters).");
 
   po::variables_map optionsMap;
 
@@ -56,16 +59,20 @@ int main(int argc, char **argv) {
     std::cerr << options << std::endl;
     return 1;
   }
-  StringFinder sf(inputFile, verbose);
-  if (performance) {
-    sf.measurePerformance(searchPattern, matchCase);
+  if (interactive) {
+
   } else {
-    vector<const string*> res = sf.find(searchPattern, matchCase);
-    if (count) {
-      std::cout << res.size() << std::endl;
+    StringFinder string_finder(inputFile, verbose, nThreads);
+    if (performance) {
+      string_finder.measurePerformance(searchPattern, matchCase);
     } else {
-      for (auto &str: res) {
-        std::cout << "(" << str << ")\t" << *str << std::endl;
+      vector<const string *> res = string_finder.find(searchPattern, matchCase);
+      if (count) {
+        std::cout << res.size() << std::endl;
+      } else {
+        for (auto &str: res) {
+          std::cout << "(" << str << ")\t" << *str << std::endl;
+        }
       }
     }
   }

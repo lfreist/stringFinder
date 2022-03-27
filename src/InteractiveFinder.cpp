@@ -18,13 +18,16 @@ using std::endl;
 using std::ifstream;
 using std::sort;
 
-// ____________________________________________________________________________
-InteractiveFinder::InteractiveFinder() = default;
+// _____________________________________________________________________________________________________________________
+InteractiveFinder::InteractiveFinder(const string &filepath, bool verbose = false, unsigned nThreads = 1) : StringFinder(filepath, verbose, nThreads);
 
-// ____________________________________________________________________________
+// _____________________________________________________________________________________________________________________
+InteractiveFinder::InteractiveFinder(bool verbose = false, unsigned nThreads = 1) : StringFinder(verbose, nThreads);
+
+// _____________________________________________________________________________________________________________________
 InteractiveFinder::~InteractiveFinder() = default;
 
-// ____________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 void InteractiveFinder::parseCommandLineArguments(int argc, char **argv) {
   if (argc == 2) {
     _sf.readFile(argv[optind]);
@@ -34,14 +37,14 @@ void InteractiveFinder::parseCommandLineArguments(int argc, char **argv) {
   }
 }
 
-// ____________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 void InteractiveFinder::usage() const {
   cout << "Usage: ./InteractiveFinder [FILE]" << endl;
   cout << " Initialize an interactive shell for 'StringFinder' searching "
           "on [FILE]" << endl;
 }
 
-// ____________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 void InteractiveFinder::interactiveUsage() const {
   cout << endl;
   cout << "Usage: [COMMAND] {OBJECT} {--ARGUMENT {INT}}s" << endl;
@@ -62,13 +65,13 @@ void InteractiveFinder::interactiveUsage() const {
   cout << endl;
 }
 
-// ____________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 void InteractiveFinder::printUsageAndExit() const {
   usage();
   exit(1);
 }
 
-// ____________________________________________________________________________
+// _____________________________________________________________________________________________________________________
 void InteractiveFinder::run() {
   InputParser ip;
   bool exit = false;
