@@ -1,5 +1,5 @@
-add_executable(InteractiveFinderTest InteractiveFinderTest.cpp)
-target_link_libraries(InteractiveFinderTest StringFinder gtest_main)
+#add_executable(InteractiveFinderTest InteractiveFinderTest.cpp)
+#target_link_libraries(InteractiveFinderTest StringFinder gtest_main)
 
 add_executable(StringFinderTest StringFinderTest.cpp)
 target_link_libraries(StringFinderTest StringFinder gtest_main)
@@ -18,3 +18,6 @@ target_link_libraries(TSQTest TSQueue Buffer gtest_main)
 
 add_executable(ESFMetaFileTest ESFMetaFileTest.cpp)
 target_link_libraries(ESFMetaFileTest gtest_main ESFMetaFile)
+
+add_executable(InputParserTest InputParserTest.cpp)
+target_link_libraries(InputParserTest gtest_main InputParser)

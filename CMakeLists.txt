@@ -20,7 +20,7 @@ find_package(OpenMP)
 ######################################
 # BOOST
 ######################################
-find_package(Boost 1.74 COMPONENTS iostreams program_options REQUIRED)
+find_package(Boost 1.74 REQUIRED COMPONENTS program_options)
 include_directories(${Boost_INCLUDE_DIR})
 
 ######################################
@@ -57,9 +57,10 @@ configure_file(test/_bufferCompressTest test/_bufferCompressTest)
 
 add_subdirectory(test)
 include(CTest)
-add_test(InteractiveFinderTest test/InteractiveFinderTest)
+# add_test(InteractiveFinderTest test/InteractiveFinderTest)
 add_test(StringFinderTest test/StringFinderTest)
 add_test(WallTimerTest test/WallTimerTest)
 # add_test(ExternStringFinderTest test/ExternStringFinderTest)
 add_test(StringTest test/BufferTest)
 add_test(TSQTest test/TSQTest)
+add_test(InputParserTest test/InputParserTest)

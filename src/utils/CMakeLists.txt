@@ -20,3 +20,6 @@ target_link_libraries(ESFCompressor zstd Buffer)
 add_library(ESFMetaFile
         ESFMetaFile.h ESFMetaFile.cpp
         )
+
+add_library(InputParser InputParser.h)
+set_target_properties(InputParser PROPERTIES LINKER_LANGUAGE CXX)
