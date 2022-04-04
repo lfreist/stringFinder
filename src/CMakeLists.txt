@@ -12,5 +12,6 @@ target_link_libraries(ExternStringFinder PUBLIC pthread Timer TSQueue Buffer ESF
 
 add_library(StringFinder
         StringFinder.h StringFinder.cpp
+        InteractiveStringFinder.h InteractiveStringFinder.cpp
 )
 target_link_libraries(StringFinder PUBLIC OpenMP::OpenMP_CXX Timer)

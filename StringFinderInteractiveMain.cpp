@@ -1,7 +1,7 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#include "src/InteractiveFinder.h"
+#include "src/InteractiveStringFinder.h"
 
 int main(int argc, char **argv) {
   InteractiveFinder finder;
