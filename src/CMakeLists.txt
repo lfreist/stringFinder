@@ -1,8 +1,8 @@
 add_subdirectory(utils)
 
-add_library(Benchmark
-        Benchmark.h Benchmark.cpp
-)
+#add_library(Benchmark
+#        Benchmark.h Benchmark.cpp
+#)
 target_link_libraries(Benchmark PUBLIC StringFinder OpenMP::OpenMP_CXX Timer)
 
 add_library(ExternStringFinder
