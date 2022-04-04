@@ -20,7 +20,7 @@ class Command {
  public:
   Command() = default;
   virtual ~Command() = default;
-  virtual string type() {};
+  virtual string type() {}
 };
 
 class SearchCommand : public Command {

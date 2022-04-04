@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "src/StringFinder.h"
-#include "src/InteractiveFinder.h"
+#include "src/InteractiveStringFinder.h"
 
 namespace po = boost::program_options;
 
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   add("matchCase,C", po::bool_switch(&matchCase), "match case.");
   add("threads,j", po::value<unsigned>(&nThreads)->default_value(1), "number of threads used for search.");
   add("count,c", po::bool_switch(&count), "only count the number of matching lines.");
-  add("interactive", po::bool_switch(&count), "run in interactive mode (ignores other optional parameters).");
+  add("interactive,i", po::bool_switch(&interactive), "run in interactive mode (ignores other optional parameters).");
 
   po::variables_map optionsMap;
 
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
       std::cout << options << std::endl;
       return 0;
     }
-    if (!optionsMap.count("search-pattern") || !optionsMap.count("input-file")) {
+    if (!(optionsMap.count("search-pattern") || optionsMap.count("input-file") || optionsMap.count("interactive"))) {
       std::cerr << "Error: You must provide a search-pattern and an input-file." << std::endl;
       return 1;
     }
@@ -60,7 +60,9 @@ int main(int argc, char **argv) {
     return 1;
   }
   if (interactive) {
-
+    InteractiveStringFinder interactive_string_finder = inputFile.empty() ?
+        InteractiveStringFinder(verbose, nThreads) : InteractiveStringFinder(inputFile, verbose, nThreads);
+    interactive_string_finder.run();
   } else {
     StringFinder string_finder(inputFile, verbose, nThreads);
     if (performance) {

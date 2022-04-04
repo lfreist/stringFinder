@@ -14,10 +14,10 @@
 using std::string;
 using std::vector;
 
-class InteractiveFinder : public StringFinder {
+class InteractiveStringFinder : public StringFinder {
  public:
-  explicit InteractiveFinder(const string &filepath, bool verbose = false, unsigned nThreads = 1);
-  explicit InteractiveFinder(bool verbose = false, unsigned nThreads = 1);
+  explicit InteractiveStringFinder(const string& filepath, bool verbose = false, unsigned nThreads = 1);
+  explicit InteractiveStringFinder(bool verbose = false, unsigned nThreads = 1);
   void run();
 
  private:
