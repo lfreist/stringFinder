@@ -43,7 +43,7 @@ add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
 target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer)
 
 add_executable(ESFCompressorMain ESFCompressorMain.cpp)
-target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor ESFMetaFile)
+target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor ESFMetaFile boost_program_options)
 
 add_executable(StringFinderMain StringFinderMain.cpp)
 target_link_libraries(StringFinderMain PUBLIC StringFinder boost_program_options)
