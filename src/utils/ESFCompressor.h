@@ -16,7 +16,7 @@
 class ESFCompress {
  public:
   static bool compress(const std::string& srcFile, const std::string& outFile, const std::string& metaFile = "",
-                int compressionLevel = 3, unsigned long minChunkSize = (2<<23), int chunkOverflowSize = (2<<10)) {
+                int compressionLevel = 3, unsigned long minChunkSize = (2<<23), int chunkOverflowSize = (2<<13)) {
     FILE *src = fopen(srcFile.c_str(), "r");
     if (src == nullptr) {
       std::cerr << "Could not read source file '" << srcFile << "'..." << std::endl;
