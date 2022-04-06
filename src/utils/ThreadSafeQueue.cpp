@@ -2,9 +2,12 @@
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
 #include <chrono>
+#include <vector>
 
 #include "ThreadSafeQueue.h"
 #include "FileChunk.h"
+
+using std::vector;
 
 template
 class TSQueue<int>;
@@ -12,6 +15,8 @@ template
 class TSQueue<FileChunk *>;
 template
 class TSQueue<unsigned>;
+template
+class TSQueue<vector<unsigned>>;
 
 // _____________________________________________________________________________________________________________________
 template<class T>

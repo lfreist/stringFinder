@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
   add("help,h", "Produces this help message.");
   add("performance,p", po::bool_switch(&performance), "measure performance.");
   add("verbose,v", po::bool_switch(&verbose), "toggle verbosity.");
-  add("matchCase,C", po::bool_switch(&matchCase), "match case.");
+  add("match-case,C", po::bool_switch(&matchCase), "match case.");
   add("threads,j", po::value<unsigned>(&nThreads)->default_value(1), "number of threads used for search.");
   add("count,c", po::bool_switch(&count), "only count the number of matching lines.");
   add("interactive,i", po::bool_switch(&interactive), "run in interactive mode (ignores other optional parameters).");
