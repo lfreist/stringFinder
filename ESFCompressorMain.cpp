@@ -33,8 +33,8 @@ int main(int argc, char **argv) {
   add("help,h", "Produces this help message.");
   add("input-file", po::value<string>(&sourceFile), "input-file.");
   add("output-file,o", po::value<string>(&outputFile)->default_value("<input-file>.esf.zst"), "output-file.");
-  add("meta-file,m", po::value<string>(&metaFile)->default_value("<output-vile>.meta"), "meta-file.");
-  add("compression-level,c", po::value<int>(&compressionLevel)->default_value(3), "zstd compression level.");
+  add("meta-file,m", po::value<string>(&metaFile)->default_value("<output-file>.meta"), "meta-file.");
+  add("compression-level,l", po::value<int>(&compressionLevel)->default_value(3), "zstd compression level.");
   add("block-size", po::value<int>(&blockSize)->default_value(2 << 23), "size of one block.");
 
   po::variables_map optionsMap;
@@ -57,6 +57,8 @@ int main(int argc, char **argv) {
   }
   outputFile = outputFile == "<input-file>.esf.zst" ? sourceFile + string(".esf.zst") : outputFile;
   metaFile = metaFile == "<input-file>.esf.zst.meta" ? metaFile = outputFile + string(".meta") : metaFile;
+  compressionLevel = compressionLevel > 19 ? 19 : compressionLevel;
+  compressionLevel = compressionLevel < 1 ? 1 : compressionLevel;
 
   std::cout << "Compressing (level " << compressionLevel << ") '" << sourceFile << "' to '" << outputFile << "' in "
   << blockSize << " blocks." << std::endl;

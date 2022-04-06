@@ -15,21 +15,12 @@
 #include "./utils/ThreadSafeQueue.h"
 #include "./utils/ESFMetaFile.h"
 
+using std::string;
+using std::vector;
 
-/**
- * @brief ExternStringFinder class should be run using ExternStringFinderMain.
- * See printHelpAndExit() for more information
- * 
- */
+
 class ExternStringFinder {
  public:
-
-  /**
-   * Constructor taking number of buffers to be initialized.
-   *  Run parseCommandLineArguments afterwards to set fp, pattern etc.
-   * @param nBuffers number of rotating buffers
-   */
-  explicit ExternStringFinder(unsigned int nBuffers = 1);
 
   /**
    * Constructor taking all mandatory properties.
@@ -44,29 +35,19 @@ class ExternStringFinder {
    * @param minBufferSize
    * @param bufferOverflowSize
    */
-  ExternStringFinder(unsigned nBuffers, char* file, char* pattern, bool performance, bool silent, bool count,
-                     char* metaFile = nullptr, unsigned minBufferSize = (1 << 22),
-                     unsigned bufferOverflowSize = (1 << 13), unsigned nDecompressionThreads = 1,
+  ExternStringFinder(const string& file, const string& pattern, const string& metaFile = "",
+                     bool verbose = false, bool performance = false, unsigned nBuffers = 10, unsigned minBufferSize = (1 << 22),
+                     unsigned bufferOverflowSize = (1 << 15), unsigned nDecompressionThreads = 1,
                      unsigned nSearchThreads = 1);
 
-  // Destructor
   ~ExternStringFinder();
-
-  /**
-   * @brief parsing command line arguments.
-   * 
-   * @param argc
-   * @param argv
-   */
-  void parseCommandLineArguments(int argc, char** argv);
 
   /**
    * @brief find _pattern in _searchFile
    */
-  void find();
+  vector<unsigned> find();
 
  private:
-  static void printHelpAndExit();
 
   void initializeQueues();
 
@@ -79,7 +60,7 @@ class ExternStringFinder {
   TSQueue<FileChunk*> _readQueue;
   TSQueue<FileChunk*> _searchQueue;
   TSQueue<FileChunk*> _decompressQueue;
-  TSQueue<int> _partialResultsQueue;
+  TSQueue<vector<unsigned>> _partialResultsQueue;
 
   std::vector<std::thread> _decompressionThreads;
   std::vector<std::thread> _searchThreads;
@@ -91,7 +72,7 @@ class ExternStringFinder {
   unsigned _bufferPosition;
   unsigned long _totalNumberBytesRead;
 
-  char* _pattern;
+  string _pattern;
   FILE* _searchFile;
   ESFMetaFile* _metaFile;
 
@@ -102,10 +83,8 @@ class ExternStringFinder {
   unsigned _nDecompressionThreads;
   unsigned _nSearchThreads;
 
+  bool _verbose;
   bool _performance;
-  bool _silent;
-  bool _count;
-  bool _debug;
 };
 
 #endif  // SRC_EXTERNSTRINGFINDER_H_

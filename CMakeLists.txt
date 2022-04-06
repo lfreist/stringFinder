@@ -40,7 +40,7 @@ add_subdirectory(src)
 #target_link_libraries(BenchmarkMain PUBLIC Benchmark)
 
 add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
-target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer)
+target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer boost_program_options)
 
 add_executable(ESFCompressorMain ESFCompressorMain.cpp)
 target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor ESFMetaFile boost_program_options)
