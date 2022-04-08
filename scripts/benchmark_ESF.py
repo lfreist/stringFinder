@@ -35,7 +35,7 @@ class Benchmark:
         return float(output.split(" ")[1])
 
     def bm_proc(self, data_file: str, meta_file: str = None):
-        return {pc: self.subprocess(data_file, meta_file, pc) for pc in range(1, 4)}
+        return {pc: self.subprocess(data_file, meta_file, pc) for pc in range(1, multiprocessing.cpu_count())}
 
     def run(self, bm_procs: bool = False):
         result = {}
