@@ -26,17 +26,16 @@ class Benchmark:
 
     def subprocess(self, data_file: str, meta_file: str = None, n_proc: int = 1):
         if meta_file:
-            cmd = f"{self.esf_path} {self.keyword} {data_file} -m {meta_file} -p -i {n_proc}"
+            cmd = f"{self.esf_path} {self.keyword} {data_file} -m {meta_file} -p -j {n_proc}"
         else:
-            cmd = f"{self.esf_path} {self.keyword} {data_file} -p -i {n_proc}"
+            cmd = f"{self.esf_path} {self.keyword} {data_file} -p -j {n_proc}"
         proc = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
         proc.wait()
         output = proc.stdout.read().decode()
         return float(output.split(" ")[1])
 
-    @staticmethod
-    def bm_proc(data_file: str, meta_file: str = None):
-        return {pc: subprocess(data_file, meta_file, pc) for pc in range(multiprocessing.cpu_count())}
+    def bm_proc(self, data_file: str, meta_file: str = None):
+        return {pc: self.subprocess(data_file, meta_file, pc) for pc in range(1, 4)}
 
     def run(self, bm_procs: bool = False):
         result = {}
@@ -49,13 +48,13 @@ class Benchmark:
                 block_size = -1
             print(f"Running benchmark on {self.src}...")
             if bm_procs:
-                self.results[self.src] = {
+                result[self.src] = {
                     "compression_level": compression_level,
                     "block_size": block_size,
                     "run_time": self.bm_proc(self.src, self.meta_file)
                 }
             else:
-                self.results[self.src] = {
+                result[self.src] = {
                     "compression_level": compression_level,
                     "block_size": block_size,
                     "run_time": self.subprocess(self.src, self.meta_file)
@@ -80,13 +79,13 @@ class Benchmark:
                     skipped.append(file)
                 else:
                     if bm_procs:
-                        self.results[file] = {
+                        result[file] = {
                             "compression_level": compression_level,
                             "block_size": block_size,
                             "run_time": self.bm_proc(data_file, meta_file)
                         }
                     else:
-                        self.results[file] = {
+                        result[file] = {
                             "compression_level": compression_level,
                             "block_size": block_size,
                             "run_time": self.subprocess(data_file, meta_file)
@@ -94,21 +93,23 @@ class Benchmark:
                 counter += 1
                 display_progress(counter, len(files))
                 print()
-                print(f"Done benchmarking files... Benchmarked {len(self.results)} files.")
-            return self.plot(result)
+                print(f"Done benchmarking files... Benchmarked {len(result)} files.")
+        return self.plot(result)
 
     @staticmethod
     def plot(result):
         fig, ax = plt.subplots()
         keys = []
+        proc = False
         for k, v in result.items():
             if type(v["run_time"]) == float:
                 keys.append(f"{v['compression_level']}|{v['block_size']}")
             else:
                 result = v["run_time"]
                 keys = v["run_time"].keys()
+                proc = True
                 break
-        if type(keys[0]) == float:
+        if not proc:
             ax.bar(keys, [result[k]["run_time"] for k in keys])
             ax.set_xlabel('Files')
             ax.set_ylabel(r'Wall time [s]')
@@ -140,6 +141,5 @@ if __name__ == "__main__":
     bm_proc = args.benchmark_procs
 
     bm = Benchmark(esf, keyword, src, meta)
-    bm.run(bm_proc)
-    plt = bm.plot()
+    plt = bm.run(bm_proc)
     plt.savefig(output)
