@@ -60,14 +60,14 @@ class Benchmark:
                     "run_time": self.subprocess(self.src, self.meta_file)
                 }
         else:
-            files = list(filter(lambda e: e.endswith(".zst"), os.listdir(self.files_dir)))
+            files = list(filter(lambda e: e.endswith(".zst"), os.listdir(self.src)))
             files.sort()
             counter = 0
             print(f"Benchmarking {len(files)} files...")
             for file in files:
                 display_progress(counter, len(files))
-                data_file = os.path.join(self.files_dir, file)
-                meta_file = os.path.join(self.files_dir, ".".join(file.split(".")[:-1]) + ".meta")
+                data_file = os.path.join(self.src, file)
+                meta_file = os.path.join(self.src, ".".join(file.split(".")[:-1]) + ".meta")
                 try:
                     compression_level = int(file.split("-")[1][1:])
                     block_size = int(file.split("-")[2].split(".")[0][2:])
@@ -91,9 +91,9 @@ class Benchmark:
                             "run_time": self.subprocess(data_file, meta_file)
                         }
                 counter += 1
-                display_progress(counter, len(files))
-                print()
-                print(f"Done benchmarking files... Benchmarked {len(result)} files.")
+            display_progress(counter, len(files))
+            print()
+            print(f"Done benchmarking files... Benchmarked {len(result)} files.")
         return self.plot(result)
 
     @staticmethod
@@ -101,9 +101,12 @@ class Benchmark:
         fig, ax = plt.subplots()
         keys = []
         proc = False
-        for k, v in result.items():
+        tmp = result.copy()
+        result = {}
+        for k, v in tmp.items():
             if type(v["run_time"]) == float:
                 keys.append(f"{v['compression_level']}|{v['block_size']}")
+                result[keys[-1]] = v
             else:
                 result = v["run_time"]
                 keys = v["run_time"].keys()
