@@ -65,8 +65,8 @@ int main(int argc, char **argv) {
       "number of buffers used for decompression and search.");
   add("match-case,C", po::bool_switch(&matchCase), "match case.");
   add("count,c", po::bool_switch(&count), "only count the number of matching lines.");
-  add("buffer-size", po::value(&minBufferSize)->default_value(1 << 22), "minimal size of one buffer.");
-  add("buffer-overflow-size", po::value(&bufferOverflowSize)->default_value(1 << 15), "maximal additional sized to buffer-size.");
+  add("buffer-size", po::value(&minBufferSize)->default_value(2 << 23), "minimal size of one buffer.");
+  add("buffer-overflow-size", po::value(&bufferOverflowSize)->default_value(2 << 15), "maximal additional sized to buffer-size.");
 
   po::variables_map optionsMap;
 

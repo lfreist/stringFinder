@@ -169,8 +169,8 @@ vector<unsigned> ExternStringFinder::find() {
   // TODO<lfreist>: this can run in a thread parallel to search as well...
   while (true) {
     auto elem = _partialResultsQueue.pop(vector<unsigned>(1, 0));
-    if (elem[0] == 0 && elem.size() == 1) {
-      break;
+    if (elem.size() == 1) {
+      if (elem[0] == 0) break;
     }
     count += elem.size();
     std::copy(elem.begin(), elem.end(), std::back_inserter(mergedResult));
