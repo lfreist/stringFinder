@@ -26,6 +26,7 @@ FileChunk::FileChunk(unsigned int bufferSize) {
   _bufferSize = bufferSize;
   _content = new char[_bufferSize];
   _content[_bufferSize - 1] = '\0';
+  _compressedContent.resize(1<<26);
   _globalShift = 0;
 }
 
@@ -63,7 +64,7 @@ void FileChunk::setContent(const char *content) {
 
 // _____________________________________________________________________________________________________________________
 int FileChunk::setContentFromFile(FILE *fp, unsigned int minNumBytes, bool toNewLine, bool zstdCompressed,
-                               size_t originalSize, unsigned globalShift) {
+                                  size_t originalSize, unsigned globalShift) {
   assert(minNumBytes <= _bufferSize);
   _globalShift = globalShift;
   if (minNumBytes == 0) {
@@ -72,8 +73,8 @@ int FileChunk::setContentFromFile(FILE *fp, unsigned int minNumBytes, bool toNew
   if (zstdCompressed) {
     assert(originalSize != 0);
     _originalSize = originalSize;
-    _compressedContent = std::vector<char>(minNumBytes);
     size_t bytes_read = fread(&_compressedContent[0], sizeof(char), minNumBytes, fp);
+    _compressedSize = minNumBytes;
     return (int) bytes_read;
   }
   if (toNewLine) {
@@ -210,7 +211,7 @@ size_t FileChunk::decompress() {
   }
   ZstdWrapper::decompressToBuffer(
       _compressedContent.data(),
-      _compressedContent.size(),
+      _compressedSize,
       _content,
       _bufferSize
   );

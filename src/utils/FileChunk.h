@@ -101,6 +101,7 @@ class FileChunk {
   unsigned _globalShift;
   size_t _originalSize;  // in case buffer is compressed
   std::vector<char> _compressedContent;
+  unsigned _compressedSize;
 
   FRIEND_TEST(BufferTest, Constructor);
   FRIEND_TEST(BufferTest, setContentFromFile);
