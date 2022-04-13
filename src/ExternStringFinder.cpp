@@ -97,6 +97,7 @@ void ExternStringFinder::readBuffers() {
 
 void ExternStringFinder::decompressBuffers() {
   Timer waitTimer;
+  Timer computeTimer;
   while (true) {
     if (_verbose && _performance) { waitTimer.start(false); }
     FileChunk *currentBuffer = _decompressQueue.pop(nullptr);
@@ -104,18 +105,23 @@ void ExternStringFinder::decompressBuffers() {
     if (currentBuffer == nullptr) {
       _searchQueue.close();
       if (_verbose && _performance) {
-        std::unique_lock<std::mutex> printLock(_printMutex);
-        std::cout << "Decompression was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
+        std::unique_lock printLock(_printMutex);
+        std::cout << "Decompression was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl
+        << "Decompression was computing for " << computeTimer.elapsedSeconds() << "s" << std::endl
+        << "Total: " << computeTimer.elapsedSeconds() + waitTimer.elapsedSeconds() << "s" << std::endl;
       }
       return;
     }
+    if (_verbose && _performance) { computeTimer.start(false); }
     currentBuffer->decompress();
+    if (_verbose && _performance) { computeTimer.stop(); }
     _searchQueue.push(currentBuffer);
   }
 }
 
 void ExternStringFinder::searchBuffers() {
   Timer waitTimer;
+  Timer computeTimer;
   while (true) {
     if (_verbose && _performance) { waitTimer.start(false); }
     FileChunk *currentBuffer = _searchQueue.pop(nullptr);
@@ -124,14 +130,18 @@ void ExternStringFinder::searchBuffers() {
       _partialResultsQueue.close();
       break;
     }
+    if (_verbose && _performance) { computeTimer.start(false); }
     auto matches = currentBuffer->findPerLine(_pattern.c_str());
+    if (_verbose && _performance) { computeTimer.stop(); }
     _readQueue.push(currentBuffer);
     _partialResultsQueue.push(matches);
     // _bufferPosition += strlen(currentBuffer->cstring());
   }
   if (_verbose && _performance) {
-    std::unique_lock<std::mutex> printLock(_printMutex);
-    std::cout << "Searching was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
+    std::unique_lock printLock(_printMutex);
+    std::cout << "Searching was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl
+    << "Searching was computing for "<< computeTimer.elapsedSeconds() << "s" << std::endl
+    << "Total: " << waitTimer.elapsedSeconds() + computeTimer.elapsedSeconds() << "s" << std::endl;
   }
 }
 
