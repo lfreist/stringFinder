@@ -15,12 +15,12 @@ namespace x3 = boost::spirit::x3;
 
 using std::string;
 
-
+// TODO: should be pure abstract
 class Command {
  public:
   Command() = default;
   virtual ~Command() = default;
-  virtual string type() {}
+  virtual string type() = 0;
 };
 
 class SearchCommand : public Command {
@@ -96,8 +96,7 @@ auto parse(Iterator begin, Iterator end, bool &success) {
   Command *cmd;
 
   if (!success) {
-    cmd = new Command();
-    return cmd;
+    return nullptr
   }
   if (search.empty()) {
     cmd = new LoadCommand(load, alias);
