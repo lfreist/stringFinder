@@ -50,6 +50,7 @@ void ExternStringFinder::initializeQueues() {
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::readBuffers() {
   Timer waitTimer;
+  Timer readingTimer;
   _totalNumberBytesRead = 0;
   if (_metaFile == nullptr) {
     while (true) {
@@ -73,6 +74,7 @@ void ExternStringFinder::readBuffers() {
       if (_verbose && _performance) { waitTimer.start(false); }
       FileChunk *currentBuffer = _readQueue.pop();
       if (_verbose && _performance) { waitTimer.stop(); }
+      if (_verbose && _performance) { readingTimer.start(false); }
       auto currentChunkSize = _metaFile->nextChunkSize();
       int bytesRead = currentBuffer->setContentFromFile(
           _searchFile,
@@ -81,11 +83,14 @@ void ExternStringFinder::readBuffers() {
           true,
           currentChunkSize.originalSize
       );
+      if (_verbose && _performance) { readingTimer.stop(); }
       if (bytesRead < 1 || currentChunkSize.originalSize == 0) {
         _decompressQueue.close();
         if (_verbose && _performance) {
-          std::unique_lock<std::mutex> printLock(_printMutex);
-          std::cout << "Reading was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl;
+          std::unique_lock printLock(_printMutex);
+          std::cout << "Reading was waiting for " << waitTimer.elapsedSeconds() << "s, Reading: "
+          << readingTimer.elapsedSeconds() << "s, Total: " << waitTimer.elapsedSeconds() + readingTimer.elapsedSeconds()
+          << "s" << std::endl;
         }
         return;
       }
@@ -106,9 +111,9 @@ void ExternStringFinder::decompressBuffers() {
       _searchQueue.close();
       if (_verbose && _performance) {
         std::unique_lock printLock(_printMutex);
-        std::cout << "Decompression was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl
-        << "Decompression was computing for " << computeTimer.elapsedSeconds() << "s" << std::endl
-        << "Total: " << computeTimer.elapsedSeconds() + waitTimer.elapsedSeconds() << "s" << std::endl;
+        std::cout << "Decompression was waiting for " << waitTimer.elapsedSeconds() << "s, computing: "
+        << computeTimer.elapsedSeconds() << "s, Total: " << computeTimer.elapsedSeconds() + waitTimer.elapsedSeconds()
+        << "s" << std::endl;
       }
       return;
     }
@@ -139,9 +144,9 @@ void ExternStringFinder::searchBuffers() {
   }
   if (_verbose && _performance) {
     std::unique_lock printLock(_printMutex);
-    std::cout << "Searching was waiting for " << waitTimer.elapsedSeconds() << "s" << std::endl
-    << "Searching was computing for "<< computeTimer.elapsedSeconds() << "s" << std::endl
-    << "Total: " << waitTimer.elapsedSeconds() + computeTimer.elapsedSeconds() << "s" << std::endl;
+    std::cout << "Searching was waiting for " << waitTimer.elapsedSeconds() << "s, computing: "
+    << computeTimer.elapsedSeconds() << "s, Total: " << waitTimer.elapsedSeconds() + computeTimer.elapsedSeconds()
+    << "s" << std::endl;
   }
 }
 
