@@ -26,9 +26,9 @@ class Benchmark:
 
     def subprocess(self, data_file: str, meta_file: str = None, n_proc: int = 1):
         if meta_file:
-            cmd = f"{self.esf_path} {self.keyword} {data_file} -m {meta_file} -p -j {n_proc}"
+            cmd = f"{self.esf_path} {self.keyword} {data_file} -m {meta_file} -p -j {n_proc} -b 30"
         else:
-            cmd = f"{self.esf_path} {self.keyword} {data_file} -p -j {n_proc}"
+            cmd = f"{self.esf_path} {self.keyword} {data_file} -p -j {n_proc} -b 30"
         proc = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
         proc.wait()
         output = proc.stdout.read().decode()
