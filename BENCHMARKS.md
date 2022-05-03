@@ -1,6 +1,22 @@
-# ExternStringFinder
+# Benchmarks
 
-## using compressed input
+## Algorithms
+
+### using strstr and strchr
+
+```
+$ ./cmake-build-debug/strstrSearchBenchmark files/1gb.test.txt --patterns keyword lkt
+algorithm                pattern                matches       time [s]
+----------------------------------------------------------------------
+strstr (per line)        keyword                    625        90.4014
+strstr (per line)        lkt                       1472        210.495
+strstr (all)             keyword                    625         45.011
+strstr (all)             lkt                       1473        103.904
+```
+
+## ExternStringFinder
+
+### using compressed input
 
 > test.txt has a size of about 25gb and was randomly generated using [createTestFile.py](scripts/createTestFile.py) with files/words.txt
 >
@@ -41,7 +57,7 @@ user  0m43,214s
 sys   0m3,764s
 ```
 
-## amur:
+#### amur:
 ```
 freist@amur:.$ time grep -c badminton wikidata.20210610.vocabulary
 9824

@@ -109,4 +109,4 @@ class FileChunk {
   FRIEND_TEST(BufferTest, compressDecompress);
 };
 
-#endif  // SRC_UTILS_Buffer_H_
+#endif  // SRC_UTILS_BUFFER_H_

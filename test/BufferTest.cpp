@@ -49,6 +49,9 @@ TEST(BufferTest, setContentFromFile) {
   // read exactly 50 bytes per chunk
   {
     FILE* _bufferTest = fopen("test/_bufferTest", "r");
+    if (_bufferTest == nullptr) {
+      exit(1);
+    }
     FileChunk buf(51);
     // read first 50 bytes
     int bytes_read = buf.setContentFromFile(_bufferTest, 50, false);
@@ -118,6 +121,9 @@ TEST(BufferTest, setContentFromFile) {
   // read (50 + x) bytes to new line char per chunk
   {
     FILE* _bufferTest = fopen("test/_bufferTest", "r");
+    if (_bufferTest == nullptr) {
+      exit(1);
+    }
     FileChunk buf(140);
     // read first chunk (59 bytes)
     int bytes_read = buf.setContentFromFile(_bufferTest, 50, true);
@@ -160,6 +166,9 @@ TEST(BufferTest, setContentFromFile) {
   // setContentFromFile will fail and return -1 here
   {
     FILE* _bufferTest = fopen("test/_bufferTest", "r");
+    if (_bufferTest == nullptr) {
+      exit(1);
+    }
     FileChunk buf(20);
     // read first chunk (60 bytes)
     int bytes_read = buf.setContentFromFile(_bufferTest, 10, true);
@@ -194,8 +203,7 @@ TEST(BufferTest, operators) {
 TEST(BufferTest, compressDecompress) {
   FILE* uncompressedFile = fopen("test/_bufferCompressTest", "r");
   if (uncompressedFile == nullptr) {
-    std::cout << "Error reading file." << std::endl;
-    exit(6);
+    exit(1);
   }
   FileChunk buf(10037000);
   buf.setContentFromFile(uncompressedFile, 10037000);

@@ -1,0 +1,6 @@
+first line with keyword
+second one with two times keyword: first and second keyword
+third line without that word
+fourth line with keyword, later we have keyword again and some more in the next line
+keyword appears here multiple times: like keyword or even another double keywordkeyword that we can search for
+here does this word not occur for some reason!

@@ -1,0 +1,1 @@
+add_library(strstrSearch using_strstr.h using_strstr.cpp)

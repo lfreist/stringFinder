@@ -39,22 +39,24 @@ TEST(StringFinderTest, testConstructor) {
 TEST(StringFinderTest, testReadFile) {
   const string filepath("test/_stringFinder.test.txt");
   StringFinder string_finder(false, 1);
+  string_finder.reset();
   string_finder.readFile(filepath);
   ASSERT_NE(string_finder._fileDataMap.find(filepath), string_finder._fileDataMap.end());
   ASSERT_EQ(string_finder._fileDataMap.size(), 1);
   ASSERT_EQ(string_finder._fileDataMap[filepath].size(), 5);
   // append file
   const string filepath2("test/_stringFinder2.test.txt");
-  string_finder.readFile(filepath2, true);
+  string_finder.readFile(filepath2);
   ASSERT_NE(string_finder._fileDataMap.find(filepath), string_finder._fileDataMap.end());
   ASSERT_NE(string_finder._fileDataMap.find(filepath2), string_finder._fileDataMap.end());
   ASSERT_EQ(string_finder._fileDataMap.size(), 2);
   ASSERT_EQ(string_finder._fileDataMap[filepath].size(), 5);
   ASSERT_EQ(string_finder._fileDataMap[filepath2].size(), 5);
   // overwrite files
-  string_finder.readFile(string("test/_stringFinder.test.txt"));
+  string_finder.readFile(filepath);
   ASSERT_NE(string_finder._fileDataMap.find(filepath), string_finder._fileDataMap.end());
-  ASSERT_EQ(string_finder._fileDataMap.size(), 1);
+  ASSERT_NE(string_finder._fileDataMap.find(filepath2), string_finder._fileDataMap.end());
+  ASSERT_EQ(string_finder._fileDataMap.size(), 2);
   ASSERT_EQ(string_finder._fileDataMap[filepath].size(), 5);
 }
 

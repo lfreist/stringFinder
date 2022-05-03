@@ -11,100 +11,152 @@
 #include <vector>
 #include <string>
 
+#include "../StringFinder.h"
+
 namespace x3 = boost::spirit::x3;
 
 using std::string;
 
-// TODO: should be pure abstract
+// helper function to get the number of digits an integer consists of
+int getNumDigits(ulong number) {
+  int maxDigits = 1;
+  while (number /= 10) {
+    maxDigits++;
+  }
+  return maxDigits;
+}
+
+// helper function to print a result line in a pretty way
+void printPrettyResultLine(const string& line, ulong num, int maxDigits) {
+  std::cout << std::right << std::setw(maxDigits) << num << ". " << line << std::endl;
+}
+
+
 class Command {
  public:
   Command() = default;
-  virtual ~Command() = default;
-  virtual string type() = 0;
+  virtual void execute(StringFinder &sf) = 0;
 };
 
-class SearchCommand : public Command {
-  public:
-  SearchCommand(string searchPattern, string targetFile, int limit) {
+class SearchCommand : public virtual Command {
+ public:
+  SearchCommand(string searchPattern, string targetFile, int limit, const vector<string>& withAttr = {}) {
     _searchPattern = std::move(searchPattern);
     _targetFile = std::move(targetFile);
+    _performance = std::find(withAttr.begin(), withAttr.end(), "performance") != withAttr.end();
+    _matchCase = std::find(withAttr.begin(), withAttr.end(), "matchCase") != withAttr.end();
     _limit = limit;
   }
-  ~SearchCommand() override = default;
-  string type {"search"};
-  string getSearchPattern() {
-    return _searchPattern;
+
+  ~SearchCommand() = default;
+
+  void execute(StringFinder &sf) override {
+    if (_performance) {
+      sf.measurePerformance(_searchPattern, _matchCase);
+      return;
+    }
+    auto result = sf.find(_searchPattern, _matchCase);
+    ulong numPrintResults = _limit < 0 ? result.size() : _limit;
+    int maxDigits = getNumDigits(numPrintResults);
+    ulong counter = 1;
+    std::cout << "Results: " << _limit << std::endl;
+    for (auto &line : result) {
+      printPrettyResultLine(*line, counter, maxDigits);
+      if (counter++ >= numPrintResults) {
+        break;
+      }
+    }
   }
-  string getTargetFile() {
-    return _targetFile;
-  }
-  [[nodiscard]] int getLimit() const {
-    return _limit;
-  }
+
  private:
   string _searchPattern;
   string _targetFile;
+  bool _performance;
+  bool _matchCase;
   int _limit;
   FRIEND_TEST(InputParserTest, searchQuery);
 };
 
-class LoadCommand : public Command {
+class LoadCommand : public virtual Command {
  public:
-  LoadCommand(string filepath, string alias) {
+  explicit LoadCommand(string filepath, string alias = "") {
     _filepath = std::move(filepath);
-    _alias = std::move(alias);
+    _alias = alias.empty() ? _filepath : std::move(alias);
   }
-  ~LoadCommand() override = default;
-  string type {"load"};
-  string getFilePath() {
-    return _filepath;
+
+  ~LoadCommand() = default;
+
+  void execute(StringFinder &sf) override {
+    sf.readFile(_filepath, _alias);
+    // std::cout << "Reading " << sf.numLines(_alias) << " from '" << _filepath << "' as '" << _alias << "'" << std::endl;
   }
-  string getAlias() {
-    return _alias;
-  }
+
  private:
   string _filepath;
   string _alias;
   FRIEND_TEST(InputParserTest, loadQuery);
 };
 
+class ListCommand : public virtual Command {
+ public:
+  ListCommand() = default;
+  ~ListCommand() = default;
+  void execute(StringFinder &sf) override {
+    // TODO
+  }
+};
 
-template <typename Iterator>
-auto parse(Iterator begin, Iterator end, bool &success) {
-  string search;
-  string load;
-  string target;
+class ResetCommand : public virtual Command {
+ public:
+  ResetCommand() = default;
+  ~ResetCommand() = default;
+  void execute(StringFinder &sf) override {
+    sf.reset();
+  }
+};
+
+
+struct SFCliGrammar {};
+
+template<typename Iterator>
+std::optional<Command*> parse(Iterator begin, Iterator end) {
+  string searchPattern;
+  string fileName;
   string alias;
+  vector<string> withAttr;
   int limit = -1;
 
-  auto toSearch = [&](auto &ctx) {search = x3::_attr(ctx);};
-  auto toLoad   = [&](auto &ctx) {load   = x3::_attr(ctx);};
-  auto toTarget = [&](auto &ctx) {target = x3::_attr(ctx);};
-  auto toAlias  = [&](auto &ctx) {alias  = x3::_attr(ctx);};
-  auto toLimit  = [&](auto &ctx) {limit  = x3::_attr(ctx);};
+  auto toSearch = [&](auto &ctx) { searchPattern = x3::_attr(ctx); };
+  auto toFileName = [&](auto &ctx) { fileName = x3::_attr(ctx); };
+  auto toAlias = [&](auto &ctx) { alias = x3::_attr(ctx); };
+  auto toLimit = [&](auto &ctx) { limit = x3::_attr(ctx); };
+  auto toWithAttr = [&](auto &ctx) { withAttr = x3::_attr(ctx); };
 
-  auto keywords = x3::lit("SEARCH") | x3::lit("LOAD") | x3::lit("AS") | x3::lit("IN") | x3::lit("LIMIT");
-  auto var      = *(x3::char_ - keywords);
-  auto num      = x3::int_;
+  auto keywords = x3::lit("search") | x3::lit("load") | x3::lit("as") | x3::lit("in") | x3::lit("limit") |
+      x3::lit("reset") | x3::lit("with");
 
-  auto search_clause = "SEARCH" >> var[toSearch] >> -("IN" >> var[toTarget]) >> -("LIMIT" >> num[toLimit]);
-  auto load_clause   = "LOAD" >> var[toLoad] >> -("AS" >> var[toAlias]);
-  auto query         = search_clause | load_clause;
+  auto var = *(x3::char_ - keywords);
+  auto num = x3::int_;
 
-  success = x3::phrase_parse(begin, end, query, x3::ascii::space);
+  auto search_clause = "search" >> var[toSearch] >> -("in" >> var[toFileName]) >> -("limit" >> num[toLimit])
+      >> -("with" >> (var % ",")[toWithAttr]);
+  auto load_clause = "load" >> var[toFileName] >> -("as" >> var[toAlias]);
+  auto reset_clause = "reset";
+  auto query = search_clause | load_clause | reset_clause;
 
-  Command *cmd;
+  bool success = x3::phrase_parse(begin, end, query, x3::ascii::space);
 
   if (!success) {
-    return nullptr
+    std::cout << "ParsingError: Failed parsing input..." << std::endl;
+    return {};
   }
-  if (search.empty()) {
-    cmd = new LoadCommand(load, alias);
-  } else {
-    cmd = new SearchCommand(search, target, limit);
+  if (!searchPattern.empty()) {
+    std::cout << "search..." << limit << std::endl;
+    return new SearchCommand(searchPattern, fileName, limit, withAttr);
+  } else if (!fileName.empty()) {
+    return new LoadCommand(fileName, alias);
   }
-  return cmd;
+  return new ResetCommand();
 }
-
 
 #endif  // SRC_UTILS_INPUTPARSER_H_

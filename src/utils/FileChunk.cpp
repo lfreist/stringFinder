@@ -74,7 +74,7 @@ int FileChunk::setContentFromFile(FILE *fp, unsigned int minNumBytes, bool toNew
     assert(originalSize != 0);
     _originalSize = originalSize;
     size_t bytes_read = fread(&_compressedContent[0], sizeof(char), minNumBytes, fp);
-    _compressedSize = minNumBytes;
+    _compressedSize = bytes_read;
     return (int) bytes_read;
   }
   if (toNewLine) {
@@ -199,7 +199,8 @@ unsigned FileChunk::length() const {
 size_t FileChunk::compress(int compressionLevel) {
   _compressedContent = ZstdWrapper::compress(_content, _len, compressionLevel);
   _originalSize = _len;
-  return _compressedContent.size();
+  _compressedSize = _compressedContent.size();
+  return _compressedSize;
 }
 
 // _____________________________________________________________________________________________________________________
@@ -207,7 +208,7 @@ size_t FileChunk::decompress() {
   if (_bufferSize < _originalSize + 1) {
     _bufferSize = _originalSize + 1;
     delete[] _content;
-    _content = new char[_bufferSize];
+    _content = new char[_bufferSize+1];
   }
   ZstdWrapper::decompressToBuffer(
       _compressedContent.data(),
