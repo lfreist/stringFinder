@@ -22,4 +22,5 @@ add_library(ESFMetaFile
         )
 
 add_library(InputParser InputParser.h)
+target_link_libraries(InputParser StringFinder)
 set_target_properties(InputParser PROPERTIES LINKER_LANGUAGE CXX)

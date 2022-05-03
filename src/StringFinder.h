@@ -25,15 +25,19 @@ class StringFinder {
 
   ~StringFinder();
 
-  void readFile(const string &filepath, bool append = false);
+  void readFile(const string &filepath, string alias = "");
 
   [[nodiscard]] vector<const string *> find(string expression, bool matchCase = false) const;
 
   void measurePerformance(const string &expression, bool matchCase = false) const;
 
-  [[nodiscard]] unsigned long numLines() const;
+  template <typename ...ArgsT>
+  [[nodiscard]] ulong numLines(ArgsT ...files) const;
+
+  void reset();
 
  protected:
+  [[nodiscard]] ulong numLines(std::initializer_list<string> files) const;
   std::map<const string, vector<string>> _fileDataMap;
   bool _verbose;
   unsigned _nThreads;

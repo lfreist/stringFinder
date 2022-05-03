@@ -26,7 +26,6 @@ void mergeArrays(vector<const string *> *out, vector<const string *> *in) {
 
 // _____________________________________________________________________________________________________________________
 StringFinder::StringFinder(const string &filepath, bool verbose, unsigned nThreads) {
-  _fileDataMap.insert(pair<const string, vector<string>>(filepath, vector<string>()));
   _verbose = verbose;
   _nThreads = nThreads;
   readFile(filepath);
@@ -36,23 +35,23 @@ StringFinder::StringFinder(const string &filepath, bool verbose, unsigned nThrea
 StringFinder::StringFinder(bool verbose, unsigned int nThreads) {
   _verbose = verbose;
   _nThreads = nThreads;
+  std::cout << _fileDataMap.size() << std::endl;
 }
 
 // _____________________________________________________________________________________________________________________
 StringFinder::~StringFinder() = default;
 
 // _____________________________________________________________________________________________________________________
-void StringFinder::readFile(const string &filepath, bool append) {
-  if (!append) {
-    _fileDataMap.clear();
+void StringFinder::readFile(const string &filepath, string alias) {
+  if (alias.empty()) {
+    alias = filepath;
   }
-  if (_fileDataMap.find(filepath) != _fileDataMap.end()) {
+  if (_fileDataMap.find(alias) != _fileDataMap.end()) {
     std::cout << "File " << filepath << " already hold in data!" << std::endl;
+    return;
   }
-  _fileDataMap.insert(pair<const string, vector<string>>(filepath, vector<string>()));
-  if (_verbose) {
-    std::cout << "Reading file " << filepath << std::endl;
-  }
+  _fileDataMap.insert(pair<const string, vector<string>>(alias, vector<string>()));
+  std::cout << "Reading file " << filepath << " as " << alias << std::endl;
   string line;
   ifstream file(filepath);
   if (!file.is_open()) {
@@ -66,7 +65,7 @@ void StringFinder::readFile(const string &filepath, bool append) {
     if (line.empty()) {
       continue;
     }
-    _fileDataMap[filepath].push_back(line);
+    _fileDataMap[alias].push_back(line);
     if (_verbose) {
       counter++;
       if (counter == 100000) {
@@ -117,25 +116,43 @@ void StringFinder::measurePerformance(const string &expression, bool matchCase) 
   timer.stop();
   string matchCaseStr = matchCase ? string("true") : string("false");
   std::cout << "Performance Report for file(s):";
-  unsigned numLines = 0;
-  for (auto &pair: _fileDataMap) {
-    std::cout << " " << pair.first << " ";
-    numLines += pair.second.size();
-  }
   std::cout << std::endl;
   std::cout << "Using " << _nThreads << " thread(s)." << std::endl;
   std::cout << "StringFinder.find(expression=" << expression << ", matchCase=" << matchCaseStr << "):" << std::endl;
-  std::cout << " total #lines:\t" << numLines << std::endl;
+  std::cout << " total #lines:\t" << numLines() << std::endl;
   std::cout << " total #matches:\t" << results.size() << std::endl;
   std::cout << " query time:\t" << timer.elapsedSeconds() << " s" << std::endl;
   std::cout << " time / match:\t" << timer.elapsedSeconds() / static_cast<double>(results.size()) << " s" << std::endl;
 }
 
 // _____________________________________________________________________________________________________________________
-unsigned long StringFinder::numLines() const {
-  unsigned numLines = 0;
-  for (auto &pair: _fileDataMap) {
-    numLines += pair.second.size();
+template <typename ...ArgsT>
+ulong StringFinder::numLines(ArgsT ...files) const {
+  return numLines({files...});
+}
+
+
+// _____________________________________________________________________________________________________________________
+ulong StringFinder::numLines(std::initializer_list<string> files) const {
+  if (empty(files)) {
+    ulong numLines;
+    for (auto &pair: _fileDataMap) {
+      numLines += pair.second.size();
+    }
+    return numLines;
+  }
+  ulong numLines = 0;
+  for (const auto& file : files) {
+    auto pair = _fileDataMap.find(file);
+    if (pair != _fileDataMap.end()) {
+      numLines += pair->second.size();
+    }
   }
   return numLines;
+}
+
+
+// _____________________________________________________________________________________________________________________
+void StringFinder::reset() {
+  _fileDataMap.clear();
 }

@@ -21,7 +21,7 @@ class InteractiveStringFinder : public StringFinder {
   void run();
 
  private:
-  void usage() const;
+  static void usage() ;
 };
 
 #endif  // SRC_INTERACTIVEFINDER_H_

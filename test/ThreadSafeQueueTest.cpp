@@ -34,7 +34,7 @@ TEST(TSQueueTest, methodsTest) {
   }
   {
     auto pushIntoQueue = [](TSQueue<FileChunk*>* q, FileChunk* elem) {
-      sleep(10);
+      sleep(1);
       q->push(elem);
     };
     auto popFromQueue = [](TSQueue<FileChunk*>* q, FileChunk* expectElem) {

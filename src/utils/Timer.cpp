@@ -32,7 +32,7 @@ void Timer::stop() {
   }
   _stop = std::chrono::steady_clock::now();
   _running = false;
-  _duration += std::chrono::duration_cast<std::chrono::duration<double>>(_stop - _start).count();
+  _duration = std::chrono::duration_cast<std::chrono::duration<double>>(_stop - _start).count();
 }
 
 // ____________________________________________________________________________
