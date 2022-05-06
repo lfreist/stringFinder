@@ -9,6 +9,7 @@
 #include "../using_strstr.h"
 
 using std::string;
+using namespace strstr_alg;
 
 TEST(strstrSearchTest, findNextNewLine) {
   const string filepath("src/string_search_algorithms/test/files/_search.test.txt");
@@ -35,7 +36,7 @@ TEST(strstrSearchTest, findNext) {
   std::string filepath("src/string_search_algorithms/test/files/_search.test.txt");
   FILE* file = fopen(filepath.c_str(), "r");
   if (file == nullptr) {
-    std::cout << "lol: reading file " << filepath << " failed..." << std::endl;
+    std::cout << "reading file " << filepath << " failed..." << std::endl;
     exit(-1);
   }
   const char pattern[] = "keyword";

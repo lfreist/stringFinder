@@ -41,8 +41,8 @@ target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor ESFMetaFile boost_p
 add_executable(StringFinderMain StringFinderMain.cpp)
 target_link_libraries(StringFinderMain PUBLIC StringFinder boost_program_options OpenMP::OpenMP_CXX)
 
-add_executable(strstrSearchBenchmark strstrSearchBenchmark.cpp)
-target_link_libraries(strstrSearchBenchmark PUBLIC Timer boost_program_options)
+add_executable(stringSearchBenchmark stringSearchBenchmark.cpp)
+target_link_libraries(stringSearchBenchmark PUBLIC Timer boost_program_options)
 
 configure_file(test/_stringFinder.test.txt test/_stringFinder.test.txt)
 configure_file(test/_stringFinder2.test.txt test/_stringFinder2.test.txt)
