@@ -1,1 +1,3 @@
-add_library(strstrSearch using_strstr.h using_strstr.cpp)
+add_library(strstrSearch INTERFACE using_strstr.h)
+
+add_library(stdstringSearch INTERFACE using_stdstring.h)
