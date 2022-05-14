@@ -4,9 +4,9 @@
 #ifndef SRC_UTILS_COMPRESSOR_H_
 #define SRC_UTILS_COMPRESSOR_H_
 
-#include <cstdio>
 #include <string>
 #include <iostream>
+#include <fstream>
 
 #include "ZstdWrapper.h"
 #include "FileChunk.h"
@@ -17,13 +17,13 @@ class ESFCompress {
  public:
   static bool compress(const std::string& srcFile, const std::string& outFile, const std::string& metaFile = "",
                 int compressionLevel = 3, unsigned long minChunkSize = (2<<23), int chunkOverflowSize = (2<<13)) {
-    FILE *src = fopen(srcFile.c_str(), "r");
-    if (src == nullptr) {
+    std::ifstream _srcFile(srcFile);
+    if (!_srcFile.is_open()) {
       std::cerr << "Could not read source file '" << srcFile << "'..." << std::endl;
       return false;
     }
-    FILE *out = fopen(outFile.c_str(), "w");
-    if (out == nullptr) {
+    std::ofstream _outFile(outFile);
+    if (!_outFile.is_open()) {
       std::cerr << "Could not write out file '" << outFile << "'..." << std::endl;
       return false;
     }
@@ -33,23 +33,21 @@ class ESFCompress {
     meta.writeMaxOriginalSize(static_cast<unsigned long>(minChunkSize + chunkOverflowSize));
     // read whole file and compress chunks
     for (int counter = 1; ; counter++) {
-      FileChunk chunk(minChunkSize + chunkOverflowSize);
-      long uncompressed_bytes_read = chunk.setContentFromFile(src, minChunkSize, true);
+      FileChunk chunk;
+      size_t uncompressed_bytes_read = chunk.setContentFromFile(_srcFile, minChunkSize, true);
       if (uncompressed_bytes_read == 0) { break; } else if (uncompressed_bytes_read < 0) {
         std::cerr << "Error reading chunk: Did not found a new line. Increase chunkOverflowSize." << std::endl;
         return false;
       }
       // actual compression
-      std::vector<char> comp = ZstdWrapper::compress((char*) chunk.cstring(), chunk.length(), compressionLevel);
-      fwrite(comp.data(), comp.size(), 1, out);
+      chunk.compress(compressionLevel);
+      _outFile.write(chunk.getCompressedContent().data(), static_cast<std::streamsize>(chunk.compressedLength()));
       // write the actual uncompressed buffer size and the compressed size to the meta file: 'orig_size comp_size'
-      chunkSize cs{static_cast<unsigned>(uncompressed_bytes_read), static_cast<unsigned>(comp.size())};
-      cs.originalSize = static_cast<unsigned long>(uncompressed_bytes_read);
-      cs.compressedSize = static_cast<unsigned long>(comp.size());
+      chunkSize cs{static_cast<unsigned>(chunk.length()), static_cast<unsigned>(chunk.compressedLength())};
       meta.writeChunkSize(cs);
     }
-    fclose(src);
-    fclose(out);
+    _srcFile.close();
+    _outFile.close();
     return true;
   }
 };

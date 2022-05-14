@@ -14,22 +14,22 @@ using std::string;
 using namespace stdstring_alg;
 
 TEST(stdstringSearchTest, findAllPerLine) {
-  std::string filepath("src/string_search_algorithms/test/files/_search.test.txt");
+  std::string filepath("files/_search.test.txt");
   std::ifstream file(filepath);
   string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
   {
-    //int matches = findAllPerLine("keyword", content);
-    //ASSERT_EQ(matches, 4);
+    int matches = findAllPerLine("keyword", content);
+    ASSERT_EQ(matches, 4);
   }
   {
-    //int matches = findAllPerLine("eureka", content);
-    //ASSERT_EQ(matches, 0);
+    int matches = findAllPerLine("eureka", content);
+    ASSERT_EQ(matches, 0);
   }
 }
 
 TEST(stdstringSearchTest, findAll) {
   // TODO: fix file path here
-  std::string filepath("src/string_search_algorithms/test/files/_search.test.txt");
+  std::string filepath("files/_search.test.txt");
   std::ifstream file(filepath);
   string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
   {
@@ -37,7 +37,7 @@ TEST(stdstringSearchTest, findAll) {
     ASSERT_EQ(matches, 9);
   }
   {
-    int matches = findAllPerLine("eureka", content);
+    int matches = findAll("eureka", content);
     ASSERT_EQ(matches, 0);
   }
 }

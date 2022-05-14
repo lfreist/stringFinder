@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
   add("input-file", po::value(&inputFile), "input-file");
   add("patterns,p", po::value(&searchPatterns)->multitoken(), "search-patterns");
   add("algorithms", po::value(&algorithms)->multitoken(), "algorithms (strstr, stdstring, all)");
-  add("per-line,l", po::bool_switch(&searchPerLine)->default_value(false), "search per line");
+  add("per-line,l", po::bool_switch(&searchPerLine)->default_value(true), "search per line");
   add("all,a", po::bool_switch(&searchAll)->default_value(true), "search all");
   add("help,h", "Produces this help message.");
 
@@ -78,8 +78,10 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+  std::cout << "reading file '" << inputFile << "'..." << std::flush;
   std::ifstream file(inputFile);
-  string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
+  string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  std::cout << "\r" << std::flush;
 
   std::cout << std::left << std::setw(25) << "algorithm"
             << std::left << std::setw(15) << "pattern"
@@ -98,38 +100,46 @@ int main(int argc, char **argv) {
     char *c_content = const_cast<char *>(content.c_str());
     if (searchPerLine) {
       for (const auto& pattern : searchPatterns) {
+        std::cout << "running performance test on strstr (per line), pattern '" << pattern << "'..." << std::flush;
         timer.start(true);
         matches = strstr_alg::findAllPerLine(pattern.c_str(), c_content);
         timer.stop();
+        std::cout << "\r" << std::flush;
         printTableLine("strstr (per line)", pattern, matches, timer.elapsedSeconds());
       }
     }
 
     if (searchAll) {
       for (const auto& pattern : searchPatterns) {
+        std::cout << "running performance test on strstr (all), pattern: '" << pattern << "'..." << std::flush;
         timer.start(true);
         matches = strstr_alg::findAll(pattern.c_str(), c_content);
         timer.stop();
+        std::cout << "\r" << std::flush;
         printTableLine("strstr (all)", pattern, matches, timer.elapsedSeconds());
       }
     }
   }
 
-  if (algorithms.empty() || std::find(algorithms.begin(), algorithms.end(), "stdstring") != algorithms.end()) {
+  if (algorithms.empty() || std::find(algorithms.begin(), algorithms.end(), "stdstr") != algorithms.end()) {
     if (searchPerLine) {
       for (const auto& pattern : searchPatterns) {
+        std::cout << "running performance test on stdstring (per line), pattern '" << pattern << "'..." << std::flush;
         timer.start(true);
-        matches = stdstring_alg::findAllPerLine(pattern, c_content);
+        matches = stdstring_alg::findAllPerLine(pattern, content);
         timer.stop();
+        std::cout << "\r" << std::flush;
         printTableLine("stdstring (per line)", pattern, matches, timer.elapsedSeconds());
       }
     }
 
     if (searchAll) {
       for (const auto& pattern : searchPatterns) {
+        std::cout << "running performance test on stdstring (all), pattern '" << pattern << "'..." << std::flush;
         timer.start(true);
-        matches = stdstring_alg::findAll(pattern, c_content);
+        matches = stdstring_alg::findAll(pattern, content);
         timer.stop();
+        std::cout << "\r" << std::flush;
         printTableLine("stdstring (all)", pattern, matches, timer.elapsedSeconds());
       }
     }

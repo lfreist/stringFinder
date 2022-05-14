@@ -32,34 +32,28 @@ include_directories(third_party/googletest/googletest/include)
 # StringFinder Project
 add_subdirectory(src)
 
-add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
-target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer boost_program_options)
-
 add_executable(ESFCompressorMain ESFCompressorMain.cpp)
 target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor ESFMetaFile boost_program_options)
 
 add_executable(StringFinderMain StringFinderMain.cpp)
 target_link_libraries(StringFinderMain PUBLIC StringFinder boost_program_options OpenMP::OpenMP_CXX)
 
+add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
+target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer boost_program_options)
+
 add_executable(stringSearchBenchmark stringSearchBenchmark.cpp)
 target_link_libraries(stringSearchBenchmark PUBLIC Timer boost_program_options)
 
-configure_file(test/_stringFinder.test.txt test/_stringFinder.test.txt)
-configure_file(test/_stringFinder2.test.txt test/_stringFinder2.test.txt)
-configure_file(test/_externFinderTest test/_externFinderTest)
-configure_file(test/_bufferTest test/_bufferTest)
-configure_file(test/_esfMetaFileTest test/_esfMetaFileTest)
-configure_file(test/_bufferCompressTest test/_bufferCompressTest)
-
 add_subdirectory(test)
 add_subdirectory(src/string_search_algorithms/test)
+add_subdirectory(src/utils/test)
+
 include(CTest)
-# add_test(InteractiveFinderTest test/InteractiveFinderTest)
 add_test(StringFinderTest test/StringFinderTest)
 add_test(WallTimerTest test/WallTimerTest)
-# add_test(ExternStringFinderTest test/ExternStringFinderTest)
-add_test(BufferTest test/BufferTest)
 add_test(TSQTest test/TSQTest)
 add_test(InputParserTest test/InputParserTest)
 
 add_test(strstrSearchTest src/string_search_algorithms/test/strstrSearchTest)
+
+add_test(FileChunkTest src/utils/test/FileChunkTest)

@@ -4,7 +4,7 @@ add_subdirectory(string_search_algorithms)
 add_library(ExternStringFinder
         ExternStringFinder.h ExternStringFinder.cpp
 )
-target_link_libraries(ExternStringFinder PUBLIC pthread Timer TSQueue Buffer ESFMetaFile)
+target_link_libraries(ExternStringFinder PUBLIC pthread Timer TSQueue FileChunk ESFMetaFile)
 
 add_library(StringFinder
         StringFinder.h StringFinder.cpp
