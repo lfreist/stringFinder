@@ -2,6 +2,7 @@
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
 #include <iostream>
+#include <fstream>
 #include <thread>
 
 #include "ExternStringFinder.h"
@@ -12,7 +13,7 @@ ExternStringFinder::ExternStringFinder(const string& file, const string& pattern
                                        const string& metaFile, bool verbose, bool performance, unsigned nBuffers, unsigned minBufferSize,
                                        unsigned bufferOverflowSize, unsigned nDecompressionThreads,
                                        unsigned nSearchThreads) {
-  _searchFile = file.empty() ? stdin : fopen(file.c_str(), "r");
+  _searchFile = file;
   _pattern = pattern;
   _metaFile = metaFile.empty() ? nullptr : new ESFMetaFile(metaFile, std::ios::in);
   _verbose = verbose;
@@ -29,9 +30,6 @@ ExternStringFinder::ExternStringFinder(const string& file, const string& pattern
 
 // _____________________________________________________________________________________________________________________
 ExternStringFinder::~ExternStringFinder() {
-  if (_searchFile != nullptr) {
-    fclose(_searchFile);
-  }
   delete _metaFile;
   for (auto chunk: _fileChunks) {
     delete chunk;
@@ -41,7 +39,7 @@ ExternStringFinder::~ExternStringFinder() {
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::initializeQueues() {
   for (unsigned i = 0; i <= _nBuffers; ++i) {
-    auto *chunk = new FileChunk(_maxBufferSize);
+    auto *chunk = new FileChunk();
     _fileChunks.push_back(chunk);
     _readQueue.push(chunk);
   }
@@ -52,12 +50,16 @@ void ExternStringFinder::readBuffers() {
   Timer waitTimer;
   Timer readingTimer;
   _totalNumberBytesRead = 0;
+  std::ifstream searchFile(_searchFile);
+  if (!searchFile.is_open()) {
+    exit(1);
+  }
   if (_metaFile == nullptr) {
     while (true) {
       if (_verbose && _performance) { waitTimer.start(false); }
-      FileChunk *currentBuffer = _readQueue.pop();
+      FileChunk *currentChunk = _readQueue.pop();
       if (_verbose && _performance) { waitTimer.stop(); }
-      int bytesRead = currentBuffer->setContentFromFile(_searchFile, _minBufferSize, true);
+      size_t bytesRead = currentChunk->setContentFromFile(searchFile, _minBufferSize, true);
       if (bytesRead < 1) {
         _searchQueue.close();
         if (_verbose && _performance) {
@@ -66,18 +68,18 @@ void ExternStringFinder::readBuffers() {
         }
         return;
       }
-      _searchQueue.push(currentBuffer);
+      _searchQueue.push(currentChunk);
       _totalNumberBytesRead += bytesRead;
     }
   } else {
     while (true) {
       if (_verbose && _performance) { waitTimer.start(false); }
-      FileChunk *currentBuffer = _readQueue.pop();
+      FileChunk *currentChunk = _readQueue.pop();
       if (_verbose && _performance) { waitTimer.stop(); }
       if (_verbose && _performance) { readingTimer.start(false); }
       auto currentChunkSize = _metaFile->nextChunkSize();
-      int bytesRead = currentBuffer->setContentFromFile(
-          _searchFile,
+      size_t bytesRead = currentChunk->setContentFromFile(
+          searchFile,
           currentChunkSize.compressedSize,
           false,
           true,
@@ -94,7 +96,7 @@ void ExternStringFinder::readBuffers() {
         }
         return;
       }
-      _decompressQueue.push(currentBuffer);
+      _decompressQueue.push(currentChunk);
       _totalNumberBytesRead += bytesRead;
     }
   }
@@ -129,16 +131,16 @@ void ExternStringFinder::searchBuffers() {
   Timer computeTimer;
   while (true) {
     if (_verbose && _performance) { waitTimer.start(false); }
-    FileChunk *currentBuffer = _searchQueue.pop(nullptr);
+    FileChunk *currentChunk = _searchQueue.pop(nullptr);
     if (_verbose && _performance) { waitTimer.stop(); }
-    if (currentBuffer == nullptr) {
+    if (currentChunk == nullptr) {
       _partialResultsQueue.close();
       break;
     }
     if (_verbose && _performance) { computeTimer.start(false); }
-    auto matches = currentBuffer->findPerLine(_pattern.c_str());
+    auto matches = currentChunk->searchAllPerLine(_pattern);
     if (_verbose && _performance) { computeTimer.stop(); }
-    _readQueue.push(currentBuffer);
+    _readQueue.push(currentChunk);
     _partialResultsQueue.push(matches);
     // _bufferPosition += strlen(currentBuffer->cstring());
   }
@@ -183,7 +185,7 @@ vector<unsigned> ExternStringFinder::find() {
 
   // TODO<lfreist>: this can run in a thread parallel to search as well...
   while (true) {
-    auto elem = _partialResultsQueue.pop(vector<unsigned>(1, 0));
+    auto elem = _partialResultsQueue.pop(vector<string::size_type>(1, 0));
     if (elem.size() == 1) {
       if (elem[0] == 0) break;
     }

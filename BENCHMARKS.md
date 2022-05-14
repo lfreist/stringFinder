@@ -2,16 +2,22 @@
 
 ## Algorithms
 
-### using strstr and strchr
+find the code:
+- [strstr](src/string_search_algorithms/using_strstr.h)
+- [stdstr](src/string_search_algorithms/using_stdstring.h)
 
 ```
-$ ./cmake-build-debug/strstrSearchBenchmark files/1gb.test.txt --patterns keyword lkt
+$ ./stringSearchBenchmark files/1gb.test.txt --patterns keyword lkt --algorithms all
 algorithm                pattern                matches       time [s]
 ----------------------------------------------------------------------
-strstr (per line)        keyword                    625        90.4014
-strstr (per line)        lkt                       1472        210.495
-strstr (all)             keyword                    625         45.011
-strstr (all)             lkt                       1473        103.904
+strstr (per line)        keyword                    625        52.9024
+strstr (per line)        lkt                       1472       123.6570
+strstr (all)             keyword                    625        42.1696
+strstr (all)             lkt                       1473        99.2842
+stdstring (per line)     keyword                    625         0.1336
+stdstring (per line)     lkt                       1472         0.3938
+stdstring (all)          keyword                    625         0.1347
+stdstring (all)          lkt                       1473         0.3923
 ```
 
 ## ExternStringFinder

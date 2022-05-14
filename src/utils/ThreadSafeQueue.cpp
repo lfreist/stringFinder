@@ -1,7 +1,7 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#include <chrono>
+#include <string>
 #include <vector>
 
 #include "ThreadSafeQueue.h"
@@ -17,6 +17,8 @@ template
 class TSQueue<unsigned>;
 template
 class TSQueue<vector<unsigned>>;
+template
+class TSQueue<vector<std::string::size_type>>;
 
 // _____________________________________________________________________________________________________________________
 template<class T>

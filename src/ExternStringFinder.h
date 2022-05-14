@@ -60,7 +60,7 @@ class ExternStringFinder {
   TSQueue<FileChunk*> _readQueue;
   TSQueue<FileChunk*> _searchQueue;
   TSQueue<FileChunk*> _decompressQueue;
-  TSQueue<vector<unsigned>> _partialResultsQueue;
+  TSQueue<vector<string::size_type>> _partialResultsQueue;
 
   std::vector<std::thread> _decompressionThreads;
   std::vector<std::thread> _searchThreads;
@@ -73,7 +73,7 @@ class ExternStringFinder {
   unsigned long _totalNumberBytesRead;
 
   string _pattern;
-  FILE* _searchFile;
+  string _searchFile;
   ESFMetaFile* _metaFile;
 
   unsigned _nBuffers;

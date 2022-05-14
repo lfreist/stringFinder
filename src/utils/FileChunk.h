@@ -1,112 +1,141 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef SRC_UTILS_BUFFER_H_
-#define SRC_UTILS_BUFFER_H_
+#ifndef SRC_UTILS_FILECHUNK_H_
+#define SRC_UTILS_FILECHUNK_H_
 
-#include <gtest/gtest.h>
-
+#include <string>
 #include <vector>
+#include <fstream>
+#include <exception>
 
-/**
- * @brief representing a buffer using intern c like string (char*)
- * 
- */
+#include "gtest/gtest.h"
+
+using std::string;
+using std::vector;
+
 class FileChunk {
  public:
-  // default constructor
+  /// default constructor
   FileChunk();
-  // constructor setting _len and creating a char* of _len
-  explicit FileChunk(unsigned int bufferSize);
-  // copy constructor
-  FileChunk(const FileChunk &str);
-  // constructor setting _content to str
-  explicit FileChunk(const char *str);
-  // destructor
+  /**
+   * Constructor for uncompressed content
+   * @param uncompressedContent
+   */
+  explicit FileChunk(string &uncompressedContent);
+  /**
+   * Constructor for compressed content
+   * @param compressedContent
+   */
+  FileChunk(vector<char> compressedContent, size_t originalSize);
+  /// destructor
   ~FileChunk();
 
   /**
-   * @brief set _content to str
-   * 
-   * @param str
+   * Set uncompressed content
+   * @param uncompressedContent
    */
-  void setContent(const char *str);
-
+  void setContent(string uncompressedContent);
   /**
-   * @brief read minNumBytes bytes from fp into _content
-   * 
-   * @param fp   -> file pointer
-   * @return int -> number of bytes actually read
+   * Set compressed content
+   * @param compressedContent
+   * @param originalSize size of uncompressed data
    */
-  int setContentFromFile(
-      FILE *fp,
-      unsigned int minNumBytes = 0,
+  void setContent(vector<char> compressedContent, size_t originalSize);
+  /**
+   * Read a minimum of minNumBytes from file. If toNewLine is set to true, minNumBytes are read and further bytes until
+   * the next new line character are appended.
+   * @param file input file
+   * @param minNumBytes minimum numbers of bytes that will be read
+   * @param toNewLine indicates whether to read exactly minNumBytes or fill until the next new line character (ignored when zstdCompressed is true)
+   * @param zstdCompressed indicates whether input file is zstd compressed or not
+   * @param originalSize original size, if input file is zstd compressed
+   * @return number of bytes actually read.
+   */
+  size_t setContentFromFile(
+      std::ifstream &file,
+      std::streamsize minNumBytes,
       bool toNewLine = true,
       bool zstdCompressed = false,
-      size_t originalSize = 0,
-      unsigned startPosition = 0
+      size_t originalSize = 0
   );
-
   /**
-   * @brief search for pattern in _content starting at _content[shift]
-   * 
-   * @param pattern       -> searching pattern
-   * @param shift         -> start at _content[shift]
-   * @param caseSensitive -> true for case sensitive search, else false
-   * @return int          -> number of matches
+   * Search all occurrences of pattern in _uncompressedContent
+   * @param pattern pattern to be searched for
+   * @return positions of all matches
    */
-  int find(const char *pattern, unsigned shift, bool caseSensitive = true);
-
+  vector<string::size_type> searchAll(string &pattern);
   /**
-   * @brief search for pattern in _content. After finding a match, jump to next line ('\n')
-   * 
-   * @param pattern                    -> searching pattern
-   * @param bytePositionShift          -> is added to match position for multi-buffer-search
-   * @param caseSensitive              -> true for case sensitive search, else false
-   * @return std::vector<unsigned int> -> byte position of matches relative to _content
+   * Search all occurrences of pattern in _uncompressedContent per line (jump to next line if a match was found)
+   * @param pattern pattern to be searched for
+   * @return positions of all matches
    */
-  std::vector<unsigned> findPerLine(const char *pattern, bool caseSensitive = true);
-
+  vector<string::size_type> searchAllPerLine(string &pattern);
   /**
-   * @brief get c like string (char*)
-   * 
-   * @return const char* 
+   * Get length of _uncompressedContent
+   * @return length of _uncompressedContent
    */
-  const char *cstring();
+  [[nodiscard]] string::size_type length() const;
+  /**
+   * Get length of _compressedContent
+   * @return length of _compressedContent
+   */
+  [[nodiscard]] size_t compressedLength() const;
+  /**
+   * Compress _uncompressedContent into _compressedContent using zstd
+   * @param compressionLevel
+   * @return size of compressed data
+   */
+  size_t compress(int compressionLevel = 3);
+  /**
+   * Decompress _compressedContent into _uncompressedContent using zstd
+   * @param originalSize size of uncompressed result. Use _originalSize if 0.
+   * @return size of uncompressed data
+   */
+  size_t decompress(size_t originalSize = 0);
 
-  unsigned length() const;
+  vector<char> getCompressedContent();
+  string getUncompressedContent();
 
-  size_t compress(int compressionLevel);
-  size_t decompress();
-
-  void setOriginalSize(unsigned origSize);
-  unsigned int getOriginalSize() const;
-
-  bool operator==(const FileChunk &compStr);
-  bool operator!=(const FileChunk &compStr);
-
+  bool operator==(const FileChunk &compChunk);
+  bool operator!=(const FileChunk &compChunk);
  private:
-
   /**
-   * @brief get position of next new line character ('\n') in _content starting at shift (_content[shift])
-   * 
-   * @param shift -> start at _content[shift]
-   * @return int  -> position of next new line character
+   * Search pattern in _uncompressedContent starting at offset
+   * @param pattern pattern to be searched for
+   * @param offset start search at this offset
+   * @return position of match
    */
-  int findNewLine(unsigned int shift);
+  string::size_type search(string &pattern, size_t offset);
 
-  char *_content;
-  unsigned _bufferSize;
-  unsigned _len;
-  unsigned _globalShift;
-  size_t _originalSize;  // in case buffer is compressed
-  std::vector<char> _compressedContent;
-  unsigned _compressedSize;
+  /// indicates whether the content is available uncompressed
+  bool _isUncompressed;
+  /// indicates whether the content is available compressed
+  bool _isCompressed;
+  /// uncompressed content
+  string _uncompressedContent;
+  /// compressed content
+  vector<char> _compressedContent;
+  /// original size (length of _uncompressedContent)
+  string::size_type _originalSize;
+  /// offset of content relative to the beginning of a file
+  size_t _offset;
 
-  FRIEND_TEST(BufferTest, Constructor);
-  FRIEND_TEST(BufferTest, setContentFromFile);
-  FRIEND_TEST(BufferTest, findPerLine);
-  FRIEND_TEST(BufferTest, compressDecompress);
+  FRIEND_TEST(FileChunkTest, constructor);
+  FRIEND_TEST(FileChunkTest, writeAndRead);
 };
 
-#endif  // SRC_UTILS_BUFFER_H_
+
+struct NotUncompressedException : public std::exception {
+  [[nodiscard]] const char *what() const noexcept override {
+    return "There is no uncompressed content to perform this method on.";
+  }
+};
+
+struct NotCompressedException : public std::exception {
+  [[nodiscard]] const char *what() const noexcept override {
+    return "There is no compressed content to perform this method on.";
+  }
+};
+
+#endif  // SRC_UTILS_FILECHUNK_H_

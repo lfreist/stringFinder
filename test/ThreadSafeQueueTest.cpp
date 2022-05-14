@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 #include <thread>
+#include <string>
 
 #include "../src/utils/ThreadSafeQueue.h"
 #include "../src/utils/FileChunk.h"
@@ -17,8 +18,10 @@ TEST(TSQueueTest, Constructor) {
 // ____________________________________________________________________________________________________________________
 TEST(TSQueueTest, methodsTest) {
   {
-    FileChunk str1("hello");
-    FileChunk str2("bye");
+    std::string tmp("hello");
+    FileChunk str1(tmp);
+    tmp = "bye";
+    FileChunk str2(tmp);
     TSQueue<FileChunk*> tsq;
     tsq.push(&str1);
     ASSERT_FALSE(tsq.empty());
@@ -43,7 +46,8 @@ TEST(TSQueueTest, methodsTest) {
       ASSERT_EQ(elem, expectElem);
     };
     TSQueue<FileChunk*> tsq;
-    FileChunk str("element");
+    std::string tmp("element");
+    FileChunk str(tmp);
     std::thread push(pushIntoQueue, &tsq, &str);
     std::thread pop(popFromQueue, &tsq, &str);
     push.join();
