@@ -78,12 +78,10 @@ void ExternStringFinder::readBuffers() {
       if (_verbose && _performance) { waitTimer.stop(); }
       if (_verbose && _performance) { readingTimer.start(false); }
       auto currentChunkSize = _metaFile->nextChunkSize();
-      size_t bytesRead = currentChunk->setContentFromFile(
+      size_t bytesRead = currentChunk->setContentFromZstdFile(
           searchFile,
-          currentChunkSize.compressedSize,
-          false,
-          true,
-          currentChunkSize.originalSize
+          currentChunkSize.originalSize,
+          currentChunkSize.compressedSize
       );
       if (_verbose && _performance) { readingTimer.stop(); }
       if (bytesRead < 1 || currentChunkSize.originalSize == 0) {

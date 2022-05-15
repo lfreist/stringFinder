@@ -107,6 +107,9 @@ int main(int argc, char **argv) {
 
   ExternStringFinder extern_string_finder(inputFile, searchPattern, metaFile, verbose, performance, nBuffers,
                                           minBufferSize, bufferOverflowSize, nThreads[0], nThreads[1]);
-  extern_string_finder.find();
+  auto result = extern_string_finder.find();
+  if (count) {
+    std::cout << "Found " << result.size() << " matches" << std::endl;
+  }
   return 0;
 }
