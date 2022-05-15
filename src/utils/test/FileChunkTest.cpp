@@ -33,55 +33,70 @@ TEST(FileChunkTest, constructor) {
 TEST(FileChunkTest, setContentFromFile) {
   // read exactly 50 bytes per chunk
   {
-    std::ifstream _bufferTest("files/_buffer.test.txt");
+    std::ifstream _bufferTest("files/_chunk.test.txt");
     FileChunk chunk;
     // read first 50 bytes
     size_t bytes_read = chunk.setContentFromFile(_bufferTest, 50, false);
     ASSERT_EQ(bytes_read, 50);
     ASSERT_EQ(chunk.length(), 50);
     ASSERT_EQ(chunk.getUncompressedContent(), "declamations artal jejunoileitis monochlorinated s");
+    ASSERT_FALSE(chunk._isCompressed);
+    ASSERT_TRUE(chunk._isUncompressed);
     // second 50 bytes
     bytes_read = chunk.setContentFromFile(_bufferTest, 50, false);
     ASSERT_EQ(bytes_read, 50);
     ASSERT_EQ(chunk.length(), 50);
     ASSERT_EQ(chunk.getUncompressedContent(), "uperthick\ndamns kodakked mermithized Indy scrod Ha");
+    ASSERT_FALSE(chunk._isCompressed);
+    ASSERT_TRUE(chunk._isUncompressed);
     // third 50 bytes
     bytes_read = chunk.setContentFromFile(_bufferTest, 50, false);
     ASSERT_EQ(bytes_read, 50);
     ASSERT_EQ(chunk.length(), 50);
     ASSERT_EQ(chunk.getUncompressedContent(), "imes\npirr SM zarnich Elsey yard-thick teniacide Sa");
+    ASSERT_FALSE(chunk._isCompressed);
+    ASSERT_TRUE(chunk._isUncompressed);
     // forth 50 bytes
     bytes_read = chunk.setContentFromFile(_bufferTest, 50, false);
     ASSERT_EQ(bytes_read, 50);
     ASSERT_EQ(chunk.length(), 50);
     ASSERT_EQ(chunk.getUncompressedContent(), "mnorwood rejectees overstay isoclinically\nfrogtong");
+    ASSERT_FALSE(chunk._isCompressed);
+    ASSERT_TRUE(chunk._isUncompressed);
     // fifth 50 bytes
     bytes_read = chunk.setContentFromFile(_bufferTest, 50, false);
     ASSERT_EQ(bytes_read, 50);
     ASSERT_EQ(chunk.length(), 50);
     ASSERT_EQ(chunk.getUncompressedContent(), "ue pot-au-feu settergrass cuneated\nDunseath Innes ");
+    ASSERT_FALSE(chunk._isCompressed);
+    ASSERT_TRUE(chunk._isUncompressed);
     // sixth 50 bytes
     bytes_read = chunk.setContentFromFile(_bufferTest, 50, false);
     ASSERT_EQ(bytes_read, 50);
     ASSERT_EQ(chunk.length(), 50);
     ASSERT_EQ(chunk.getUncompressedContent(), "untailorlike adnouns compressible dead-light Stall");
+    ASSERT_FALSE(chunk._isCompressed);
+    ASSERT_TRUE(chunk._isUncompressed);
     // last 13 bytes
     bytes_read = chunk.setContentFromFile(_bufferTest, 50, false);
-    std::cout << chunk.getUncompressedContent() << std::endl;
     ASSERT_EQ(bytes_read, 13);
     ASSERT_EQ(chunk.length(), 13);
     ASSERT_EQ(chunk.getUncompressedContent(), "worth Kiangpu");
+    ASSERT_FALSE(chunk._isCompressed);
+    ASSERT_TRUE(chunk._isUncompressed);
     // read empty
     bytes_read = chunk.setContentFromFile(_bufferTest, 50, false);
     ASSERT_EQ(bytes_read, 0);
     ASSERT_EQ(chunk.length(), 0);
     ASSERT_EQ(chunk.getUncompressedContent(), "");
+    ASSERT_FALSE(chunk._isCompressed);
+    ASSERT_TRUE(chunk._isUncompressed);
 
     _bufferTest.close();
   }
   // read (50 + x) bytes to new line char per chunk
   {
-    std::ifstream _bufferTest("files/_buffer.test.txt");
+    std::ifstream _bufferTest("files/_chunk.test.txt");
     FileChunk chunk;
     // read first chunk (59 bytes)
     size_t bytes_read = chunk.setContentFromFile(_bufferTest, 50, true);
@@ -105,6 +120,44 @@ TEST(FileChunkTest, setContentFromFile) {
     ASSERT_EQ(chunk.getUncompressedContent(), "");
 
     _bufferTest.close();
+  }
+  {
+    // TODO: test setContentFromFile for zstd compressed file
+  }
+}
+
+// ____________________________________________________________________________________________________________________
+TEST(FileChunkTest, de_compression) {
+  std::ifstream _chunkTest("files/_chunk.test.txt");
+  FileChunk chunk0;
+  size_t bytes_read = chunk0.setContentFromFile(_chunkTest);
+  _chunkTest.close();
+  ASSERT_EQ(bytes_read, 313);
+  std::ifstream  _compressedFile("files/_chunk.test.zst", std::ios::binary);
+  FileChunk chunk1;
+  bytes_read = chunk1.setContentFromZstdFile(_compressedFile, 313);
+  _compressedFile.close();
+  ASSERT_EQ(bytes_read, 229);
+  ASSERT_EQ(chunk1._originalSize, 313);
+  {  // decompression
+    ASSERT_NE(chunk0._uncompressedContent, chunk1._uncompressedContent);
+    ASSERT_TRUE(chunk1._isCompressed);
+    ASSERT_FALSE(chunk1._isUncompressed);
+    chunk1.decompress();
+    ASSERT_TRUE(chunk1._isCompressed);
+    ASSERT_TRUE(chunk1._isUncompressed);
+    ASSERT_EQ(chunk1.length(), 313);
+    ASSERT_EQ(chunk0._uncompressedContent, chunk1._uncompressedContent);
+  }
+  {  // compression
+    ASSERT_NE(chunk0._compressedContent, chunk1._compressedContent);
+    ASSERT_FALSE(chunk0._isCompressed);
+    ASSERT_TRUE(chunk0._isUncompressed);
+    chunk0.compress();
+    ASSERT_TRUE(chunk1._isCompressed);
+    ASSERT_TRUE(chunk1._isUncompressed);
+    ASSERT_EQ(chunk0.length(), 313);
+    ASSERT_EQ(chunk0._compressedContent, chunk1._compressedContent);
   }
 }
 

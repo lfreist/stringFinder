@@ -46,19 +46,27 @@ class FileChunk {
    * Read a minimum of minNumBytes from file. If toNewLine is set to true, minNumBytes are read and further bytes until
    * the next new line character are appended.
    * @param file input file
-   * @param minNumBytes minimum numbers of bytes that will be read
+   * @param minNumBytes minimum numbers of bytes that will be read. Read to end of file if 0.
    * @param toNewLine indicates whether to read exactly minNumBytes or fill until the next new line character (ignored when zstdCompressed is true)
-   * @param zstdCompressed indicates whether input file is zstd compressed or not
-   * @param originalSize original size, if input file is zstd compressed
    * @return number of bytes actually read.
    */
   size_t setContentFromFile(
       std::ifstream &file,
-      std::streamsize minNumBytes,
-      bool toNewLine = true,
-      bool zstdCompressed = false,
-      size_t originalSize = 0
+      std::streamsize minNumBytes = 0,
+      bool toNewLine = false
   );
+  /**
+   * Read numBytes from zstd compressed file
+   * @param file input file (zstd compressed)
+   * @param numBytes number of bytes that will be read. Read to end of file if 0.
+   * @param originalSize size of uncompressed data
+   * @return number of bytes actually read.
+   */
+  size_t setContentFromZstdFile(
+      std::ifstream &file,
+      size_t originalSize,
+      std::streamsize numBytes = 0
+      );
   /**
    * Search all occurrences of pattern in _uncompressedContent
    * @param pattern pattern to be searched for
@@ -122,7 +130,8 @@ class FileChunk {
   size_t _offset;
 
   FRIEND_TEST(FileChunkTest, constructor);
-  FRIEND_TEST(FileChunkTest, writeAndRead);
+  FRIEND_TEST(FileChunkTest, setContentFromFile);
+  FRIEND_TEST(FileChunkTest, de_compression);
 };
 
 

@@ -52,29 +52,21 @@ void FileChunk::setContent(const vector<char> compressedContent, size_t original
 }
 
 // _____________________________________________________________________________________________________________________
-size_t FileChunk::setContentFromFile(std::ifstream &file,
-                                   std::streamsize minNumBytes,
-                                   bool toNewLine,
-                                   bool zstdCompressed,
-                                   size_t originalSize) {
-  if (zstdCompressed) {
-    if (file.peek() == EOF) {
-      _compressedContent.resize(0);
-    } else {
-      _compressedContent.resize(minNumBytes);
-      file.read(&_compressedContent[0], minNumBytes);
-    }
-    _isUncompressed = false;
-    _isCompressed = true;
-    _originalSize = originalSize;
-    return compressedLength();
-  }
+size_t FileChunk::setContentFromFile(std::ifstream &file, std::streamsize minNumBytes, bool toNewLine) {
   if (file.peek() == EOF) {
     _uncompressedContent = "";
     _isUncompressed = true;
     _isCompressed = false;
-    _originalSize = 0;
-    return 0;
+    _originalSize = length();
+    return length();
+  }
+  if (minNumBytes == 0) {  // read to end of file
+    _uncompressedContent.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    _uncompressedContent.pop_back();
+    _isUncompressed = true;
+    _isCompressed = false;
+    _originalSize = length();
+    return length();
   }
   _uncompressedContent.resize(minNumBytes);;
   file.read(_uncompressedContent.data(), minNumBytes);
@@ -83,7 +75,7 @@ size_t FileChunk::setContentFromFile(std::ifstream &file,
     _uncompressedContent.pop_back();
     _isUncompressed = true;
     _isCompressed = false;
-    _originalSize = _uncompressedContent.length();
+    _originalSize = length();
   }
   if (toNewLine) {
     char nextByte = 0;
@@ -96,8 +88,32 @@ size_t FileChunk::setContentFromFile(std::ifstream &file,
   }
   _isUncompressed = true;
   _isCompressed = false;
-  _originalSize = _uncompressedContent.length();
+  _originalSize = length();
   return length();
+}
+
+// _____________________________________________________________________________________________________________________
+size_t FileChunk::setContentFromZstdFile(std::ifstream &file, size_t originalSize, std::streamsize numBytes) {
+  if (file.peek() == EOF) {
+    _compressedContent.resize(0);
+    _isUncompressed = false;
+    _isCompressed = true;
+    _originalSize = 0;
+    return 0;
+  }
+  if (numBytes == 0) {  // read to end of file
+    _compressedContent.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    _originalSize = originalSize;
+    _isUncompressed = false;
+    _isCompressed = true;
+    return compressedLength();
+  }
+  _compressedContent.resize(numBytes);
+  file.read((char*) &_compressedContent[0], numBytes);
+  _originalSize = originalSize;
+  _isUncompressed = false;
+  _isCompressed = true;
+  return compressedLength();
 }
 
 // _____________________________________________________________________________________________________________________
@@ -142,18 +158,24 @@ size_t FileChunk::compressedLength() const {
 
 // _____________________________________________________________________________________________________________________
 size_t FileChunk::compress(int compressionLevel) {
+  if (_isCompressed) {
+    return compressedLength();
+  }
   if (!_isUncompressed) { throw NotUncompressedException(); }
-  _compressedContent = ZstdWrapper::compress(&_uncompressedContent, length(), compressionLevel);
+  _compressedContent = ZstdWrapper::compress(_uncompressedContent.data(), length(), compressionLevel);
   _isCompressed = true;
   return compressedLength();
 }
 
 // _____________________________________________________________________________________________________________________
 size_t FileChunk::decompress(size_t originalSize) {
+  if (_isUncompressed) {
+    return length();
+  }
   if (!_isCompressed) { throw NotCompressedException(); }
   originalSize = originalSize == 0 ? _originalSize : originalSize;
-  auto uncompressedData = ZstdWrapper::decompress<char>(&_compressedContent, _compressedContent.size(), originalSize);
-  _uncompressedContent = string(uncompressedData.begin(), uncompressedData.end());
+  auto uncompressedData = ZstdWrapper::decompress<char>(_compressedContent.data(), compressedLength(), originalSize);
+  _uncompressedContent.assign(uncompressedData.begin(), uncompressedData.end());
   _isUncompressed = true;
   return length();
 }
