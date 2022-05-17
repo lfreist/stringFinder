@@ -52,7 +52,7 @@ void FileChunk::setContent(const vector<char> compressedContent, size_t original
 }
 
 // _____________________________________________________________________________________________________________________
-size_t FileChunk::setContentFromFile(std::ifstream &file, std::streamsize minNumBytes, bool toNewLine) {
+size_t FileChunk::setContentFromFile(std::istream &file, std::streamsize minNumBytes, bool toNewLine) {
   if (file.peek() == EOF) {
     _uncompressedContent = "";
     _isUncompressed = true;
@@ -93,7 +93,7 @@ size_t FileChunk::setContentFromFile(std::ifstream &file, std::streamsize minNum
 }
 
 // _____________________________________________________________________________________________________________________
-size_t FileChunk::setContentFromZstdFile(std::ifstream &file, size_t originalSize, std::streamsize numBytes) {
+size_t FileChunk::setContentFromZstdFile(std::istream &file, size_t originalSize, std::streamsize numBytes) {
   if (file.peek() == EOF) {
     _compressedContent.resize(0);
     _isUncompressed = false;

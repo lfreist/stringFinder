@@ -51,7 +51,7 @@ class FileChunk {
    * @return number of bytes actually read.
    */
   size_t setContentFromFile(
-      std::ifstream &file,
+      std::istream &file,
       std::streamsize minNumBytes = 0,
       bool toNewLine = false
   );
@@ -63,7 +63,7 @@ class FileChunk {
    * @return number of bytes actually read.
    */
   size_t setContentFromZstdFile(
-      std::ifstream &file,
+      std::istream &file,
       size_t originalSize,
       std::streamsize numBytes = 0
       );

@@ -76,10 +76,12 @@ int main(int argc, char **argv) {
       std::cout << options << std::endl;
       return 0;
     }
-    if (!optionsMap.count("search-pattern") || !optionsMap.count("input-file")) {
-      std::cerr << "Error: You must provide a search-pattern and a file."
-                << "If you want to read stdin, provide '-' as file." << std::endl;
+    if (!optionsMap.count("search-pattern")) {
+      std::cerr << "Error: You must provide a search-pattern." << std::endl;
       return 1;
+    }
+    if (!optionsMap.count("input-file")) {
+      inputFile = "-";
     }
     po::notify(optionsMap);
     if (optionsMap.count("threads")) {

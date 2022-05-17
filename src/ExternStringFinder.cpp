@@ -46,20 +46,16 @@ void ExternStringFinder::initializeQueues() {
 }
 
 // _____________________________________________________________________________________________________________________
-void ExternStringFinder::readBuffers() {
+void ExternStringFinder::readBuffers(std::istream &input) {
   Timer waitTimer;
   Timer readingTimer;
   _totalNumberBytesRead = 0;
-  std::ifstream searchFile(_searchFile);
-  if (!searchFile.is_open()) {
-    exit(1);
-  }
   if (_metaFile == nullptr) {
     while (true) {
       if (_verbose && _performance) { waitTimer.start(false); }
       FileChunk *currentChunk = _readQueue.pop();
       if (_verbose && _performance) { waitTimer.stop(); }
-      size_t bytesRead = currentChunk->setContentFromFile(searchFile, _minBufferSize, true);
+      size_t bytesRead = currentChunk->setContentFromFile(input, _minBufferSize, true);
       if (bytesRead < 1) {
         _searchQueue.close();
         if (_verbose && _performance) {
@@ -79,7 +75,7 @@ void ExternStringFinder::readBuffers() {
       if (_verbose && _performance) { readingTimer.start(false); }
       auto currentChunkSize = _metaFile->nextChunkSize();
       size_t bytesRead = currentChunk->setContentFromZstdFile(
-          searchFile,
+          input,
           currentChunkSize.originalSize,
           currentChunkSize.compressedSize
       );
@@ -160,15 +156,27 @@ vector<unsigned> ExternStringFinder::find() {
   buildThreads();
 
   if (_metaFile == nullptr) {
-    std::thread readBuffers(&ExternStringFinder::readBuffers, this);
-    readBuffers.join();
+    if (_searchFile == "-") {
+      std::thread readBuffers(&ExternStringFinder::readBuffers, this, std::ref(std::cin));
+      readBuffers.join();
+    } else {
+      std::ifstream file(_searchFile);
+      std::thread readBuffers(&ExternStringFinder::readBuffers, this, std::ref(file));
+      readBuffers.join();
+    }
 
     for (auto &searchThread: _searchThreads) {
       searchThread.join();
     }
   } else {
-    std::thread readBuffers(&ExternStringFinder::readBuffers, this);
-    readBuffers.join();
+    if (_searchFile == "-") {
+      std::thread readBuffers(&ExternStringFinder::readBuffers, this, std::ref(std::cin));
+      readBuffers.join();
+    } else {
+      std::ifstream file(_searchFile);
+      std::thread readBuffers(&ExternStringFinder::readBuffers, this, std::ref(file));
+      readBuffers.join();
+    }
 
     for (auto &decompressionThread: _decompressionThreads) {
       decompressionThread.join();

@@ -53,7 +53,7 @@ class ExternStringFinder {
 
   void buildThreads();
 
-  void readBuffers();
+  void readBuffers(std::istream &input);
   void decompressBuffers();
   void searchBuffers();
 
