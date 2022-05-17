@@ -176,6 +176,9 @@ size_t FileChunk::decompress(size_t originalSize) {
   originalSize = originalSize == 0 ? _originalSize : originalSize;
   auto uncompressedData = ZstdWrapper::decompress<char>(_compressedContent.data(), compressedLength(), originalSize);
   _uncompressedContent.assign(uncompressedData.begin(), uncompressedData.end());
+  //TODO: this throws Zstd error for ExternStringFinder - FileChunkTest Works:
+  //_uncompressedContent.resize(originalSize);
+  //ZstdWrapper::decompressToBuffer(reinterpret_cast<const char*>(_compressedContent.data()), compressedLength(), _uncompressedContent.data(), originalSize);
   _isUncompressed = true;
   return length();
 }
