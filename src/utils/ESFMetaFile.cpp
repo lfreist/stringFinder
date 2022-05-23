@@ -17,7 +17,7 @@ ESFMetaFile::ESFMetaFile(const std::string& filePath, std::ios::openmode mode) {
     throw std::invalid_argument("Cannot open file");
   }
   if (_mode == (std::ios::in | std::ios::binary)) {
-    _metaFile.read(reinterpret_cast<char*>(&_maxOriginalSize), sizeof(unsigned));
+    _metaFile.read(reinterpret_cast<char*>(&_maxOriginalSize), sizeof(size_t));
   }
 }
 
@@ -36,14 +36,14 @@ chunkSize ESFMetaFile::nextChunkSize() {
 }
 
 // _____________________________________________________________________________________________________________________
-unsigned ESFMetaFile::getMaxOriginalSize() const {
+size_t ESFMetaFile::getMaxOriginalSize() const {
   return _maxOriginalSize;
 }
 
 // _____________________________________________________________________________________________________________________
-void ESFMetaFile::writeMaxOriginalSize(unsigned maxOriginalSize) {
+void ESFMetaFile::writeMaxOriginalSize(size_t maxOriginalSize) {
   assert(_mode == (std::ios::out | std::ios::binary));
-  _metaFile.write(reinterpret_cast<char*>(&maxOriginalSize), sizeof(unsigned));
+  _metaFile.write(reinterpret_cast<char*>(&maxOriginalSize), sizeof(size_t));
 }
 
 // _____________________________________________________________________________________________________________________

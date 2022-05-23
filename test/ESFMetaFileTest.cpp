@@ -9,7 +9,7 @@
 
 TEST(ESFMetaFileTest, constructor) {
   {  // open metafile for read
-    ESFMetaFile metaFile(std::string("test/_esfMetaFileTest"), std::ios::in);
+    ESFMetaFile metaFile(std::string("test/files/_esfMetaFileTest"), std::ios::in);
   }
 }
 
@@ -20,14 +20,14 @@ TEST(ESFMetaFileTest, writeAndRead) {
   chunkSize thirdChunk{7469543, 643534};
   chunkSize eofChunk{0, 0};
   {  // write to file
-    ESFMetaFile metaFile(std::string("test/_tmpEsfMetaFile"), std::ios::out);
+    ESFMetaFile metaFile(std::string("test/files/_tmpEsfMetaFile"), std::ios::out);
     metaFile.writeMaxOriginalSize(mos);
     metaFile.writeChunkSize(firstChunk);
     metaFile.writeChunkSize(secondChunk);
     metaFile.writeChunkSize(thirdChunk);
   }
   {  // read from file
-    ESFMetaFile metaFile(std::string("test/_tmpEsfMetaFile"), std::ios::in);
+    ESFMetaFile metaFile(std::string("test/files/_tmpEsfMetaFile"), std::ios::in);
     ASSERT_EQ(metaFile.getMaxOriginalSize(), mos);
     ASSERT_EQ(metaFile.nextChunkSize(), firstChunk);
     ASSERT_EQ(metaFile.nextChunkSize(), secondChunk);

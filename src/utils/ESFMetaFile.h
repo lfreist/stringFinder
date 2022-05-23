@@ -26,13 +26,13 @@ class ESFMetaFile {
   ~ESFMetaFile();
 
   chunkSize nextChunkSize();
-  unsigned getMaxOriginalSize() const;
+  size_t getMaxOriginalSize() const;
 
-  void writeMaxOriginalSize(unsigned maxOriginalSize);
+  void writeMaxOriginalSize(size_t maxOriginalSize);
   void writeChunkSize(chunkSize chunk);
 
  private:
-  unsigned int _maxOriginalSize;
+  size_t _maxOriginalSize;
   chunkSize _chunkSize;
   const chunkSize _endOfFileChunkSize{0, 0};
   std::fstream _metaFile;
