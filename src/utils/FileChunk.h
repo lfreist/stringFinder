@@ -48,24 +48,28 @@ class FileChunk {
    * @param file input file
    * @param minNumBytes minimum numbers of bytes that will be read. Read to end of file if 0.
    * @param toNewLine indicates whether to read exactly minNumBytes or fill until the next new line character (ignored when zstdCompressed is true)
+   * @param fileOffset offset relative to beginning of file
    * @return number of bytes actually read.
    */
   size_t setContentFromFile(
       std::istream &file,
       std::streamsize minNumBytes = 0,
-      bool toNewLine = false
+      bool toNewLine = false,
+      size_t fileOffset = 0
   );
   /**
    * Read numBytes from zstd compressed file
    * @param file input file (zstd compressed)
    * @param numBytes number of bytes that will be read. Read to end of file if 0.
    * @param originalSize size of uncompressed data
+   * @param fileOffset offset relative to beginning of file
    * @return number of bytes actually read.
    */
   size_t setContentFromZstdFile(
       std::istream &file,
       size_t originalSize,
-      std::streamsize numBytes = 0
+      std::streamsize numBytes = 0,
+      size_t fileOffset = 0
       );
   /**
    * Search all occurrences of pattern in _uncompressedContent
@@ -105,6 +109,12 @@ class FileChunk {
   vector<char> getCompressedContent();
   string getUncompressedContent();
 
+  /**
+   * Set _offset
+   * @param offset
+   */
+  void setOffset(size_t offset);
+
   bool operator==(const FileChunk &compChunk);
   bool operator!=(const FileChunk &compChunk);
  private:
@@ -132,19 +142,6 @@ class FileChunk {
   FRIEND_TEST(FileChunkTest, constructor);
   FRIEND_TEST(FileChunkTest, setContentFromFile);
   FRIEND_TEST(FileChunkTest, de_compression);
-};
-
-
-struct NotUncompressedException : public std::exception {
-  [[nodiscard]] const char *what() const noexcept override {
-    return "There is no uncompressed content to perform this method on.";
-  }
-};
-
-struct NotCompressedException : public std::exception {
-  [[nodiscard]] const char *what() const noexcept override {
-    return "There is no compressed content to perform this method on.";
-  }
 };
 
 #endif  // SRC_UTILS_FILECHUNK_H_

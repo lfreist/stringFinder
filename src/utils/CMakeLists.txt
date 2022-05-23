@@ -10,7 +10,7 @@ add_library(ESFCompressor ESFCompressor.h)
 target_link_libraries(ESFCompressor zstd FileChunk)
 set_target_properties(ESFCompressor PROPERTIES LINKER_LANGUAGE CXX)
 
-add_library(ESFMetaFile ESFMetaFile.h ESFMetaFile.cpp)
+add_library(ESFMetaFile ESFMetaFile.h ESFMetaFile.cpp exceptions.h)
 
 add_library(InputParser InputParser.h)
 target_link_libraries(InputParser StringFinder)

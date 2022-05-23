@@ -35,10 +35,7 @@ class ESFCompress {
     for (int counter = 1; ; counter++) {
       FileChunk chunk;
       size_t uncompressed_bytes_read = chunk.setContentFromFile(_srcFile, minChunkSize, true);
-      if (uncompressed_bytes_read == 0) { break; } else if (uncompressed_bytes_read < 0) {
-        std::cerr << "Error reading chunk: Did not found a new line. Increase chunkOverflowSize." << std::endl;
-        return false;
-      }
+      if (uncompressed_bytes_read == 0) { break; }
       // actual compression
       chunk.compress(compressionLevel);
       _outFile.write(chunk.getCompressedContent().data(), static_cast<std::streamsize>(chunk.compressedLength()));

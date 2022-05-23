@@ -45,7 +45,7 @@ class ExternStringFinder {
   /**
    * @brief find _pattern in _searchFile
    */
-  vector<unsigned> find();
+  vector<string::size_type> find();
 
  private:
 
@@ -77,7 +77,6 @@ class ExternStringFinder {
   ESFMetaFile* _metaFile;
 
   unsigned _nBuffers;
-  unsigned _maxBufferSize;
   unsigned _minBufferSize;
 
   unsigned _nDecompressionThreads;

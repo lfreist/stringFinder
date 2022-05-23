@@ -11,8 +11,8 @@
 
 
 struct chunkSize {
-  unsigned originalSize;
-  unsigned compressedSize;
+  size_t originalSize;
+  size_t compressedSize;
 
   bool operator==(const chunkSize& other) const {
     return (originalSize == other.originalSize) && (compressedSize == other.compressedSize);
