@@ -30,7 +30,7 @@ class ESFCompress {
     ESFMetaFile meta((metaFile.empty() ? (outFile + std::string(".meta")) : metaFile), std::ios::out);
 
     // write the max uncompressed buffer size to the top of the meta file
-    meta.writeMaxOriginalSize(static_cast<unsigned long>(minChunkSize + chunkOverflowSize));
+    meta.writeMaxOriginalSize(static_cast<size_t>(minChunkSize + chunkOverflowSize));
     // read whole file and compress chunks
     for (int counter = 1; ; counter++) {
       FileChunk chunk;
@@ -40,7 +40,7 @@ class ESFCompress {
       chunk.compress(compressionLevel);
       _outFile.write(chunk.getCompressedContent().data(), static_cast<std::streamsize>(chunk.compressedLength()));
       // write the actual uncompressed buffer size and the compressed size to the meta file: 'orig_size comp_size'
-      chunkSize cs{static_cast<unsigned>(chunk.length()), static_cast<unsigned>(chunk.compressedLength())};
+      chunkSize cs{static_cast<size_t>(chunk.length()), static_cast<size_t>(chunk.compressedLength())};
       meta.writeChunkSize(cs);
     }
     _srcFile.close();
