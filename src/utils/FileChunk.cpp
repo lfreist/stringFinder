@@ -3,6 +3,7 @@
 
 #include "FileChunk.h"
 #include "ZstdWrapper.h"
+#include "./exceptions.h"
 #include "../string_search_algorithms/using_stdstring.h"
 
 // _____________________________________________________________________________________________________________________
@@ -52,7 +53,10 @@ void FileChunk::setContent(const vector<char> compressedContent, size_t original
 }
 
 // _____________________________________________________________________________________________________________________
-size_t FileChunk::setContentFromFile(std::istream &file, std::streamsize minNumBytes, bool toNewLine) {
+size_t FileChunk::setContentFromFile(std::istream &file, std::streamsize minNumBytes, bool toNewLine,
+                                     size_t fileOffset) {
+  // TODO: set _offset to actual offset if it is 0
+  _offset = fileOffset;
   if (file.peek() == EOF) {
     _uncompressedContent = "";
     _isUncompressed = true;
@@ -93,7 +97,11 @@ size_t FileChunk::setContentFromFile(std::istream &file, std::streamsize minNumB
 }
 
 // _____________________________________________________________________________________________________________________
-size_t FileChunk::setContentFromZstdFile(std::istream &file, size_t originalSize, std::streamsize numBytes) {
+size_t FileChunk::setContentFromZstdFile(std::istream &file, size_t originalSize, std::streamsize numBytes,
+                                         size_t fileOffset) {
+
+  // TODO: set _offset to actual offset if it is 0
+  _offset = fileOffset;
   if (file.peek() == EOF) {
     _compressedContent.resize(0);
     _isUncompressed = false;
@@ -118,11 +126,11 @@ size_t FileChunk::setContentFromZstdFile(std::istream &file, size_t originalSize
 
 // _____________________________________________________________________________________________________________________
 vector<string::size_type> FileChunk::searchAll(string &pattern) {
-  if (!_isUncompressed) { throw NotUncompressedException(); }
+  if (!_isUncompressed) { throw sf_utils::NotUncompressedException(); }
   vector<string::size_type> result;
   string::size_type shift = 0;
   while ((shift = search(pattern, shift)) != string::npos) {
-    result.push_back(shift);
+    result.push_back(shift + _offset);
     shift += pattern.length();
   }
   return result;
@@ -130,11 +138,11 @@ vector<string::size_type> FileChunk::searchAll(string &pattern) {
 
 // _____________________________________________________________________________________________________________________
 vector<string::size_type> FileChunk::searchAllPerLine(string &pattern) {
-  if (!_isUncompressed) { throw NotUncompressedException(); }
+  if (!_isUncompressed) { throw sf_utils::NotUncompressedException(); }
   vector<string::size_type> result;
   size_t shift = 0;
   while ((shift = search(pattern, shift)) != string::npos) {
-    result.push_back(shift);
+    result.push_back(shift + _offset);
     shift += pattern.length();
     shift = _uncompressedContent.find('\n', shift);
     if (shift == string::npos) {
@@ -161,7 +169,7 @@ size_t FileChunk::compress(int compressionLevel) {
   if (_isCompressed) {
     return compressedLength();
   }
-  if (!_isUncompressed) { throw NotUncompressedException(); }
+  if (!_isUncompressed) { throw sf_utils::NotUncompressedException(); }
   _compressedContent = ZstdWrapper::compress(_uncompressedContent.data(), length(), compressionLevel);
   _isCompressed = true;
   return compressedLength();
@@ -172,7 +180,7 @@ size_t FileChunk::decompress(size_t originalSize) {
   if (_isUncompressed) {
     return length();
   }
-  if (!_isCompressed) { throw NotCompressedException(); }
+  if (!_isCompressed) { throw sf_utils::NotCompressedException(); }
   originalSize = originalSize == 0 ? _originalSize : originalSize;
   auto uncompressedData = ZstdWrapper::decompress<char>(_compressedContent.data(), compressedLength(), originalSize);
   _uncompressedContent.assign(uncompressedData.begin(), uncompressedData.end());
@@ -197,6 +205,11 @@ string FileChunk::getUncompressedContent() {
     decompress(_originalSize);
   }
   return _uncompressedContent;
+}
+
+// _____________________________________________________________________________________________________________________
+void FileChunk::setOffset(size_t offset) {
+    _offset = offset;
 }
 
 // _____________________________________________________________________________________________________________________

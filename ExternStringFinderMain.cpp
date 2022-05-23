@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
                                           minBufferSize, bufferOverflowSize, nThreads[0], nThreads[1]);
   auto result = extern_string_finder.find();
   if (count) {
-    std::cout << "Found " << result.size() << " matches" << std::endl;
+    std::cout << result.size() << std::endl;
   }
   return 0;
 }
