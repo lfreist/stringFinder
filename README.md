@@ -1,4 +1,4 @@
-# bachelorprojekt
+# stringFinder (bachelorprojekt)
 Search a file for a keyword.
 
 > Benchmarks: [BENCHMARKS.md](BENCHMARKS.md)
