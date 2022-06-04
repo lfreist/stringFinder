@@ -96,7 +96,7 @@ bool TSQueue<T>::isClosed() {
 
 // _____________________________________________________________________________________________________________________
 template<class T>
-void TSQueue<T>::setNumberOfWriteThreads(int numberOfWriteThreads) {
+void TSQueue<T>::setNumberOfWriteThreads(unsigned numberOfWriteThreads) {
   std::lock_guard<std::mutex> lock(_numWriteThreadsMutex);
   _numberOfWriteThreads = numberOfWriteThreads;
 }

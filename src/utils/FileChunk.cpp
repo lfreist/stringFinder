@@ -182,13 +182,22 @@ size_t FileChunk::decompress(size_t originalSize) {
   }
   if (!_isCompressed) { throw sf_utils::NotCompressedException(); }
   originalSize = originalSize == 0 ? _originalSize : originalSize;
-  auto uncompressedData = ZstdWrapper::decompress<char>(_compressedContent.data(), compressedLength(), originalSize);
-  _uncompressedContent.assign(uncompressedData.begin(), uncompressedData.end());
-  //TODO: this throws Zstd error for ExternStringFinder - FileChunkTest Works:
-  //_uncompressedContent.resize(originalSize);
-  //ZstdWrapper::decompressToBuffer(reinterpret_cast<const char*>(_compressedContent.data()), compressedLength(), _uncompressedContent.data(), originalSize);
+  _uncompressedContent.resize(originalSize);
+  ZstdWrapper::decompressToBuffer(_compressedContent.data(), compressedLength(), _uncompressedContent.data(), originalSize);
   _isUncompressed = true;
   return length();
+}
+
+// _____________________________________________________________________________________________________________________
+void FileChunk::transform(std::function<int(int)> &transformer) {
+  if (!_isUncompressed) { throw sf_utils::NotUncompressedException(); }
+  std::transform(_uncompressedContent.begin(), _uncompressedContent.end(), _uncompressedContent.begin(), transformer);
+}
+
+// _____________________________________________________________________________________________________________________
+void FileChunk::transform(std::function<string(string)> &transformer) {
+  if (!_isUncompressed) { throw sf_utils::NotUncompressedException(); }
+  _uncompressedContent = transformer(_uncompressedContent);
 }
 
 // _____________________________________________________________________________________________________________________

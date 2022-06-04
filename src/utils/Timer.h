@@ -18,9 +18,9 @@ class Timer {
 
   void stop();
 
-  double elapsedMicroseconds();
+  double elapsedMicroseconds() const;
 
-  double elapsedSeconds();
+  double elapsedSeconds() const;
 
  private:
   std::chrono::time_point<std::chrono::steady_clock> _start;

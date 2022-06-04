@@ -1,6 +1,8 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
+#include <math.h>
+
 #include <boost/program_options.hpp>
 #include <string>
 #include <vector>
@@ -29,7 +31,7 @@ void option_anti_dependency(const po::variables_map &vm, const string &for_what,
 int main(int argc, char **argv) {
   bool performance;
   bool verbose;
-  bool matchCase;
+  bool ignoreCase;
   string searchPattern;
   string inputFile;
   string metaFile;
@@ -59,11 +61,11 @@ int main(int argc, char **argv) {
   add("performance,p", po::bool_switch(&performance), "measure performance.");
   add("threads,j",
       po::value<vector<unsigned>>(&nThreads)->multitoken(),
-      "number of threads used for decompression and search (e.g. '-j 4 2' for 4 decompression threads and 2 search threads).");
+      "number of threads used for decompression, transformation and search (e.g. '-j 4 2 2' for 4 decompression threads, 2 transformation threads and 2 search threads).");
   add("buffers,b",
       po::value<unsigned>(&nBuffers)->default_value(10),
       "number of buffers used for decompression and search.");
-  add("match-case,C", po::bool_switch(&matchCase), "match case.");
+  add("ignore-case,C", po::bool_switch(&ignoreCase), "ignore case.");
   add("count,c", po::bool_switch(&count), "only count the number of matching lines.");
   add("buffer-size", po::value(&minBufferSize)->default_value(2 << 23), "minimal size of one buffer.");
   add("buffer-overflow-size", po::value(&bufferOverflowSize)->default_value(2 << 15), "maximal additional sized to buffer-size.");
@@ -87,19 +89,27 @@ int main(int argc, char **argv) {
     if (optionsMap.count("threads")) {
       // if only one integer is provided, it is considered to be the total number of threads
       if (nThreads.size() == 1) {
-        if (nThreads[0] <= 1) {
-          nThreads[0] = 1;
-          nThreads.push_back(1);
-        } else if (!optionsMap["meta-file"].defaulted()) {
-          nThreads[0] = nThreads[0] / 2;
-          nThreads.push_back(nThreads[0]);
+        if (nThreads[0] <= 2) {
+          if (optionsMap["meta-file"].defaulted()) {
+            if (ignoreCase) {
+              nThreads = {0, 1, 1};
+            } else {
+              nThreads = {0, 0, nThreads[0]};
+            }
+          } else {
+            if (ignoreCase) {
+              nThreads = {1, 1, 1};
+            } else {
+              nThreads = {1, 0, 1};
+            }
+          }
         } else {
-          nThreads.push_back(nThreads[0]);
-          nThreads[0] = 0;
+          unsigned numThreads = ceil(static_cast<double>(nThreads[0])/3);
+          nThreads = {numThreads, numThreads, numThreads};
         }
       }
     } else {
-      nThreads = {1, 1};
+      nThreads = {1, 1, 1};
     }
   } catch (const std::exception &e) {
     std::cerr << "Error in command line argument: " << e.what() << std::endl;
@@ -107,8 +117,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  ExternStringFinder extern_string_finder(inputFile, searchPattern, metaFile, verbose, performance, nBuffers,
-                                          minBufferSize, bufferOverflowSize, nThreads[0], nThreads[1]);
+  ExternStringFinder extern_string_finder(inputFile, searchPattern, metaFile, ignoreCase, verbose, performance, nBuffers,
+                                          minBufferSize, bufferOverflowSize, nThreads[0], nThreads[1], nThreads[2]);
   auto result = extern_string_finder.find();
   if (count) {
     std::cout << result.size() << std::endl;
