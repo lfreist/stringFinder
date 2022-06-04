@@ -56,7 +56,7 @@ class TSQueue {
    */
   int size() const;
 
-  void setNumberOfWriteThreads(int numberOfWriteThreads);
+  void setNumberOfWriteThreads(unsigned numberOfWriteThreads);
   void close();
 
   bool isClosed();
@@ -70,7 +70,7 @@ class TSQueue {
 
   bool _closed;
 
-  int _numberOfWriteThreads;
+  unsigned _numberOfWriteThreads;
 
   FRIEND_TEST(TSQueueTest, Constructor);
   FRIEND_TEST(TSQueueTest, methodsTest);

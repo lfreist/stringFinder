@@ -22,6 +22,9 @@ void Timer::start(bool restart) {
   }
   _running = true;
   _started = true;
+  if (restart) {
+    _duration = 0;
+  }
   _start = std::chrono::steady_clock::now();
 }
 
@@ -32,11 +35,11 @@ void Timer::stop() {
   }
   _stop = std::chrono::steady_clock::now();
   _running = false;
-  _duration = std::chrono::duration_cast<std::chrono::duration<double>>(_stop - _start).count();
+  _duration += std::chrono::duration_cast<std::chrono::duration<double>>(_stop - _start).count();
 }
 
 // ____________________________________________________________________________
-double Timer::elapsedSeconds() {
+double Timer::elapsedSeconds() const {
   if (!_started || _running) {
     return -1;
   }
@@ -44,6 +47,6 @@ double Timer::elapsedSeconds() {
 }
 
 // ____________________________________________________________________________
-double Timer::elapsedMicroseconds() {
+double Timer::elapsedMicroseconds() const {
   return elapsedSeconds() * 1000 * 1000;
 }

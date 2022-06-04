@@ -11,7 +11,7 @@ namespace strstr_alg {
  */
 int findNextNewLine(char* content, unsigned shift) {
   char *match = strchr(content + shift, '\n');
-  return match == nullptr ? -1 : (strlen(content) - strlen(match));
+  return match == nullptr ? -1 : match - content;
 }
 
 /**
@@ -24,7 +24,7 @@ int findNextNewLine(char* content, unsigned shift) {
  */
 int findNext(const char* pattern, char* content, unsigned shift) {
   char* match = strstr(content + shift, pattern);
-  return match == nullptr ? -1 : (strlen(content) - strlen(match));
+  return match == nullptr ? -1 : match - content;
 }
 
 int findAllPerLine(const char* pattern, char* content) {

@@ -27,7 +27,10 @@ class ZstdWrapper {
   static std::vector<T> decompress(void* src, size_t numBytes, size_t knownOriginalSize) {
     knownOriginalSize *= sizeof(T);
     std::vector<T> result(knownOriginalSize / sizeof(T));
-    auto compressedSize = ZSTD_decompress(result.data(), knownOriginalSize, src, numBytes);
+    auto decompressedSize = ZSTD_decompress(result.data(), knownOriginalSize, src, numBytes);
+    if (ZSTD_isError(decompressedSize)) {
+      exit(26);
+    }
     return result;
   }
 

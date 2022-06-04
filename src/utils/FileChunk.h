@@ -8,6 +8,7 @@
 #include <vector>
 #include <fstream>
 #include <exception>
+#include <functional>
 
 #include "gtest/gtest.h"
 
@@ -108,6 +109,9 @@ class FileChunk {
 
   vector<char> getCompressedContent();
   string getUncompressedContent();
+
+  void transform(std::function<int(int)> &transformer);
+  void transform(std::function<string(string)> &transformer);
 
   /**
    * Set _offset
