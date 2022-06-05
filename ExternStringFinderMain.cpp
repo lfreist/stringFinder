@@ -30,7 +30,6 @@ void option_anti_dependency(const po::variables_map &vm, const string &for_what,
 
 int main(int argc, char **argv) {
   bool performance;
-  bool verbose;
   bool ignoreCase;
   string searchPattern;
   string inputFile;
@@ -57,7 +56,6 @@ int main(int argc, char **argv) {
   add("input-file", po::value<string>(&inputFile), "input-file.");
   add("meta-file,m", po::value<string>(&metaFile)->default_value(""), "meta-file (if input is ESF-compressed).");
   add("help,h", "Produces this help message.");
-  add("verbose,v", po::bool_switch(&verbose), "toggle verbosity.");
   add("performance,p", po::bool_switch(&performance), "measure performance.");
   add("threads,j",
       po::value<vector<unsigned>>(&nThreads)->multitoken(),
@@ -117,7 +115,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  ExternStringFinder extern_string_finder(inputFile, searchPattern, metaFile, ignoreCase, verbose, performance, nBuffers,
+  ExternStringFinder extern_string_finder(inputFile, searchPattern, metaFile, ignoreCase, performance, nBuffers,
                                           minBufferSize, bufferOverflowSize, nThreads[0], nThreads[1], nThreads[2]);
   auto result = extern_string_finder.find();
   std::cout << extern_string_finder << std::endl;

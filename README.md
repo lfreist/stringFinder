@@ -54,7 +54,7 @@ done
 > find expression --performance
 Searching for 'expression'...
 Performance Report:
-StringFinder.measurePerformance(expression, 0):
+InternStringFinder.measurePerformance(expression, 0):
  total lines:   6131837
  total matches: 2
  query time:    0.825045 s
@@ -66,7 +66,7 @@ StringFinder.measurePerformance(expression, 0):
 ESF basically works as the (non regex) grep command:
 
 ```
-StringFinder - ExternStringFinder - Leon Freist <freist@informatik.uni-freibur.de>
+InternStringFinder - ExternStringFinder - Leon Freist <freist@informatik.uni-freibur.de>
 Usage: ./ExternStringFinderMain [PATTERN] [FILE] [OPTION]...
  Search for a PATTERN in a FILE.
  Example: ./ExternStringFinderMain 'hello world' main.c

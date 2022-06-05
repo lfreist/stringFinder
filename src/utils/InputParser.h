@@ -11,7 +11,7 @@
 #include <vector>
 #include <string>
 
-#include "../StringFinder.h"
+#include "../InternStringFinder.h"
 
 namespace x3 = boost::spirit::x3;
 
@@ -35,7 +35,7 @@ void printPrettyResultLine(const string& line, ulong num, int maxDigits) {
 class Command {
  public:
   Command() = default;
-  virtual void execute(StringFinder &sf) = 0;
+  virtual void execute(InternStringFinder &sf) = 0;
 };
 
 class SearchCommand : public virtual Command {
@@ -50,7 +50,7 @@ class SearchCommand : public virtual Command {
 
   ~SearchCommand() = default;
 
-  void execute(StringFinder &sf) override {
+  void execute(InternStringFinder &sf) override {
     if (_performance) {
       sf.measurePerformance(_searchPattern, _matchCase);
       return;
@@ -86,7 +86,7 @@ class LoadCommand : public virtual Command {
 
   ~LoadCommand() = default;
 
-  void execute(StringFinder &sf) override {
+  void execute(InternStringFinder &sf) override {
     sf.readFile(_filepath, _alias);
     // std::cout << "Reading " << sf.numLines(_alias) << " from '" << _filepath << "' as '" << _alias << "'" << std::endl;
   }
@@ -101,7 +101,7 @@ class ListCommand : public virtual Command {
  public:
   ListCommand() = default;
   ~ListCommand() = default;
-  void execute(StringFinder &sf) override {
+  void execute(InternStringFinder &sf) override {
     // TODO
   }
 };
@@ -110,7 +110,7 @@ class ResetCommand : public virtual Command {
  public:
   ResetCommand() = default;
   ~ResetCommand() = default;
-  void execute(StringFinder &sf) override {
+  void execute(InternStringFinder &sf) override {
     sf.reset();
   }
 };

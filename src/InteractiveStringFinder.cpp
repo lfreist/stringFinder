@@ -12,13 +12,13 @@ using std::vector;
 using std::string;
 
 // _____________________________________________________________________________________________________________________
-InteractiveStringFinder::InteractiveStringFinder(const string &filepath, bool verbose, unsigned int nThreads) : StringFinder(
+InteractiveStringFinder::InteractiveStringFinder(const string &filepath, bool verbose, unsigned int nThreads) : InternStringFinder(
     filepath,
     verbose,
     nThreads) {}
 
 // _____________________________________________________________________________________________________________________
-InteractiveStringFinder::InteractiveStringFinder(bool verbose, unsigned int nThreads) : StringFinder(verbose, nThreads) {}
+InteractiveStringFinder::InteractiveStringFinder(bool verbose, unsigned int nThreads) : InternStringFinder(verbose, nThreads) {}
 
 // _____________________________________________________________________________________________________________________
 void InteractiveStringFinder::run() {

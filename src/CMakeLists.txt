@@ -9,7 +9,7 @@ add_library(ExternStringFinder
 target_link_libraries(ExternStringFinder PUBLIC pthread Timer TSQueue FileChunk ESFMetaFile)
 
 add_library(StringFinder
-        StringFinder.h StringFinder.cpp
+        InternStringFinder.h InternStringFinder.cpp
         InteractiveStringFinder.h InteractiveStringFinder.cpp
 )
 target_link_libraries(StringFinder PUBLIC OpenMP::OpenMP_CXX Timer)

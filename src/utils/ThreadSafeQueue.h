@@ -10,19 +10,21 @@
 #include <mutex>
 #include <condition_variable>
 
+namespace sf::sf_utils {
 
 /**
  * @brief thread safe queue using std::queue
  * 
  */
-template <class T>
+template<class T>
 class TSQueue {
  public:
-  // default constructor
   TSQueue();
-  explicit TSQueue(int numberOfWriteThreads);
-  // destructor
+  explicit TSQueue(unsigned maxSize);
+  explicit TSQueue(unsigned maxSize, unsigned numberOfWriteThreads);
   ~TSQueue();
+
+  void setMaxSize(ulong maxSize);
 
   /**
    * @brief push an element of type T onto queue
@@ -62,18 +64,26 @@ class TSQueue {
   bool isClosed();
 
  private:
+  unsigned _maxSize;
+
   std::queue<T> _queue;
-  mutable std::mutex _queueMutex;
+
+  mutable std::mutex _pushMutex;
+  mutable std::mutex _popMutex;
   mutable std::mutex _numWriteThreadsMutex;
   mutable std::mutex _closedMutex;
-  std::condition_variable _condVar;
+
+  std::condition_variable _popCondVar;
+  std::condition_variable _pushCondVar;
 
   bool _closed;
 
-  unsigned _numberOfWriteThreads;
+  unsigned _numberOfWriteThreads = 1;
 
   FRIEND_TEST(TSQueueTest, Constructor);
   FRIEND_TEST(TSQueueTest, methodsTest);
 };
+
+}
 
 #endif  // SRC_UTILS_THREADSAFEQUEUE_H_

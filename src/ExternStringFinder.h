@@ -37,7 +37,7 @@ class ExternStringFinder {
    * @param bufferOverflowSize
    */
   ExternStringFinder(const string& file, const string& pattern, const string& metaFile = "", bool transform = false,
-                     bool verbose = false, bool performance = false, unsigned nBuffers = 10, unsigned minBufferSize = (1 << 22),
+                     bool performance = false, unsigned nBuffers = 10, unsigned minBufferSize = (1 << 22),
                      unsigned bufferOverflowSize = (1 << 15), unsigned nDecompressionThreads = 1,
                      unsigned nTransformThreads = 1, unsigned nSearchThreads = 1);
 
@@ -53,6 +53,7 @@ class ExternStringFinder {
   void setNumberOfSearchThreads(unsigned nSearchThreads);
 
   string toString() const;
+
 
  private:
 
@@ -94,7 +95,6 @@ class ExternStringFinder {
 
   unsigned _nTransformThreads;
   unsigned _nSearchThreads;
-  bool _verbose;
 
   bool _performance;
 

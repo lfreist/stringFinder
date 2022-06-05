@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
-#include "../src/StringFinder.h"
+#include "../src/InternStringFinder.h"
 
 using std::string;
 
@@ -14,21 +14,21 @@ TEST(StringFinderTest, testConstructor) {
   bool verbose = true;
   unsigned nThreads = 4;
   {  // default argument values
-    StringFinder string_finder(filepath);
+    InternStringFinder string_finder(filepath);
     ASSERT_NE(string_finder._fileDataMap.find(filepath), string_finder._fileDataMap.end());
     ASSERT_EQ(string_finder._verbose, false);
     ASSERT_EQ(string_finder._nThreads, 1);
     ASSERT_EQ(string_finder._fileDataMap[filepath].size(), 5);
   }
   {  // also provide values for optional arguments
-    StringFinder string_finder(filepath, verbose, nThreads);
+    InternStringFinder string_finder(filepath, verbose, nThreads);
     ASSERT_NE(string_finder._fileDataMap.find(filepath), string_finder._fileDataMap.end());
     ASSERT_EQ(string_finder._verbose, true);
     ASSERT_EQ(string_finder._nThreads, 4);
     ASSERT_EQ(string_finder._fileDataMap[filepath].size(), 5);
   }
   {  // constructor without filepath
-    StringFinder string_finder(verbose, nThreads);
+    InternStringFinder string_finder(verbose, nThreads);
     ASSERT_TRUE(string_finder._fileDataMap.empty());
     ASSERT_EQ(string_finder._verbose, true);
     ASSERT_EQ(string_finder._nThreads, 4);
@@ -38,7 +38,7 @@ TEST(StringFinderTest, testConstructor) {
 // _____________________________________________________________________________________________________________________
 TEST(StringFinderTest, testReadFile) {
   const string filepath("test/_stringFinder.test.txt");
-  StringFinder string_finder(false, 1);
+  InternStringFinder string_finder(false, 1);
   string_finder.reset();
   string_finder.readFile(filepath);
   ASSERT_NE(string_finder._fileDataMap.find(filepath), string_finder._fileDataMap.end());
@@ -62,7 +62,7 @@ TEST(StringFinderTest, testReadFile) {
 
 // ____________________________________________________________________________
 TEST(StringDataTest, testFind) {
-  StringFinder string_finder(string("test/_stringFinder.test.txt"));
+  InternStringFinder string_finder(string("test/_stringFinder.test.txt"));
   {
     vector<const string *> result = string_finder.find("NotInFile", true);
     ASSERT_EQ(result.size(), 0);
