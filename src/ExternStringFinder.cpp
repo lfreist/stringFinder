@@ -15,7 +15,7 @@ using namespace sf_utils;
 
 // _____________________________________________________________________________________________________________________
 ExternStringFinder::ExternStringFinder(const string &file, const string &pattern, const string &metaFile,
-                                       bool transform, bool verbose, bool performance, unsigned nBuffers,
+                                       bool transform, bool performance, unsigned nBuffers,
                                        unsigned minBufferSize, unsigned bufferOverflowSize,
                                        unsigned nDecompressionThreads, unsigned nTransformThreads,
                                        unsigned nSearchThreads) {
@@ -23,7 +23,6 @@ ExternStringFinder::ExternStringFinder(const string &file, const string &pattern
   _pattern = pattern;
   _metaFile = metaFile.empty() ? nullptr : new ESFMetaFile(metaFile, std::ios::in);
   _toBeTransformed = transform;
-  _verbose = verbose;
   _performance = performance;
   _nBuffers = nBuffers;
   _minBufferSize = minBufferSize;
@@ -117,8 +116,8 @@ string ExternStringFinder::toString() const {
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::readChunk(std::istream &input,
-                                   TSQueue<FileChunk *> &popFromQueue,
-                                   TSQueue<FileChunk *> &pushToQueue) {
+                                   sf::sf_utils::TSQueue<FileChunk *> &popFromQueue,
+                                   sf::sf_utils::TSQueue<FileChunk *> &pushToQueue) {
   Timer waitTimer;
   Timer readingTimer;
   _totalNumberBytesRead = 0;
@@ -165,14 +164,10 @@ void ExternStringFinder::readChunk(std::istream &input,
     std::unique_lock<std::mutex> printLock(_timerMutex);
     _totalReadTime += readingTimer.elapsedSeconds();
     _totalReadWaitTime += waitTimer.elapsedSeconds();
-    if (_verbose) {
-      std::cout << "Runtime (readChunk): " << readingTimer.elapsedSeconds() << "s." << std::endl;
-      std::cout << "Waiting (readChunk): " << waitTimer.elapsedSeconds() << "s." << std::endl;
-    }
   }
 }
 
-void ExternStringFinder::decompressChunk(TSQueue<FileChunk *> &popFromQueue, TSQueue<FileChunk *> &pushToQueue) {
+void ExternStringFinder::decompressChunk(sf::sf_utils::TSQueue<FileChunk *> &popFromQueue, sf::sf_utils::TSQueue<FileChunk *> &pushToQueue) {
   Timer waitTimer;
   Timer computeTimer;
   while (true) {
@@ -192,10 +187,6 @@ void ExternStringFinder::decompressChunk(TSQueue<FileChunk *> &popFromQueue, TSQ
     std::unique_lock timerLock(_timerMutex);
     _totalDecompressionTime += computeTimer.elapsedSeconds();
     _totalDecompressionWaitTime += waitTimer.elapsedSeconds();
-    if (_verbose) {
-      std::cout << "Runtime (decompressChunk): " << computeTimer.elapsedSeconds() << "s." << std::endl;
-      std::cout << "Waiting (decompressChunk): " << waitTimer.elapsedSeconds() << "s." << std::endl;
-    }
   }
 }
 
@@ -221,10 +212,6 @@ void ExternStringFinder::transformChunk(std::function<int(int)> transformer,
     std::unique_lock printLock(_timerMutex);
     _totalTransformTime += computeTimer.elapsedSeconds();
     _totalTransformWaitTime += waitTimer.elapsedSeconds();
-    if (_verbose) {
-      std::cout << "Runtime (transformChunk): " << computeTimer.elapsedSeconds() << "s." << std::endl;
-      std::cout << "Waiting (transformChunk): " << waitTimer.elapsedSeconds() << "s." << std::endl;
-    }
   }
 }
 
@@ -249,15 +236,10 @@ void ExternStringFinder::searchBuffers(TSQueue<FileChunk *> &popFromQueue, TSQue
     std::unique_lock printLock(_timerMutex);
     _totalSearchTime += computeTimer.elapsedSeconds();
     _totalSearchWaitTime += waitTimer.elapsedSeconds();
-    if (_verbose) {
-      std::cout << "Runtime (searchBuffers): " << computeTimer.elapsedSeconds() << "s." << std::endl;
-      std::cout << "Waiting (searchBuffers): " << waitTimer.elapsedSeconds() << "s." << std::endl;
-    }
   }
 }
 
 // _____________________________________________________________________________________________________________________
-// TODO<lfreist> building threads is weired distributed to find() and buildThreads()... do this at one place
 vector<string::size_type> ExternStringFinder::find() {
   Timer timer;
   if (_performance) {
@@ -281,7 +263,6 @@ vector<string::size_type> ExternStringFinder::find() {
     searchThread.join();
   }
 
-  unsigned count = 0;
   vector<string::size_type> mergedResult;
 
   // TODO<lfreist>: this can run in a thread parallel to search as well...
@@ -290,7 +271,6 @@ vector<string::size_type> ExternStringFinder::find() {
     if (elem.size() == 1) {
       if (elem[0] == 0) break;
     }
-    count += elem.size();
     std::copy(elem.begin(), elem.end(), std::back_inserter(mergedResult));
   }
 
@@ -305,6 +285,7 @@ vector<string::size_type> ExternStringFinder::find() {
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::buildThreads() {
+  // read from stdin
   if (_searchFile == "-") {
     _readThread = std::thread(&ExternStringFinder::readChunk,
                               this,
@@ -314,7 +295,7 @@ void ExternStringFinder::buildThreads() {
                                                                         : std::ref(_toBeSearchedChunkQueue))
                                                     : std::ref(_toBeDecompressedChunkQueue))
     );
-  } else {
+  } else {  // read from file
     _file = std::ifstream(_searchFile);
     if (!_file) {
       throw sf_utils::FileReadError();

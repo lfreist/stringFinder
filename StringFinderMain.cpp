@@ -4,7 +4,7 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 
-#include "src/StringFinder.h"
+#include "src/InternStringFinder.h"
 #include "src/InteractiveStringFinder.h"
 
 namespace po = boost::program_options;
@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
         InteractiveStringFinder(verbose, nThreads) : InteractiveStringFinder(inputFile, verbose, nThreads);
     interactive_string_finder.run();
   } else {
-    StringFinder string_finder(inputFile, verbose, nThreads);
+    InternStringFinder string_finder(inputFile, verbose, nThreads);
     if (performance) {
       string_finder.measurePerformance(searchPattern, matchCase);
     } else {

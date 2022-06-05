@@ -9,12 +9,12 @@
 #include <string>
 #include <vector>
 
-#include "StringFinder.h"
+#include "InternStringFinder.h"
 
 using std::string;
 using std::vector;
 
-class InteractiveStringFinder : public StringFinder {
+class InteractiveStringFinder : public InternStringFinder {
  public:
   explicit InteractiveStringFinder(const string& filepath, bool verbose = false, unsigned nThreads = 1);
   explicit InteractiveStringFinder(bool verbose = false, unsigned nThreads = 1);

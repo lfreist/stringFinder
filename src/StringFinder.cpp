@@ -1,158 +1,222 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#include <getopt.h>
-#include <fstream>
-#include <iostream>
-#include <vector>
+#pragma once
+
 #include <string>
-#include <map>
-#include <utility>
+#include <vector>
 
-#include "StringFinder.h"
-#include "./utils/Timer.h"
+#include "./utils/ThreadSafeQueue.h"
 
-using std::vector;
+#include "./StringFinder.h"
+
 using std::string;
-using std::map;
-using std::pair;
-using std::ifstream;
+using std::vector;
 
-void mergeArrays(vector<const string *> *out, vector<const string *> *in) {
-  vector<const string *> tmp(out->size() + in->size());
-  std::merge(out->begin(), out->end(), in->begin(), in->end(), tmp.begin());
-  *out = std::move(tmp);
-}
+namespace sf {
 
-// _____________________________________________________________________________________________________________________
-StringFinder::StringFinder(const string &filepath, bool verbose, unsigned nThreads) {
-  _verbose = verbose;
-  _nThreads = nThreads;
-  readFile(filepath);
-}
+// --- public stuff ----------------------------------------------------------------------------------------------------
+StringFinder::StringFinder() = default;
 
-// _____________________________________________________________________________________________________________________
-StringFinder::StringFinder(bool verbose, unsigned int nThreads) {
-  _verbose = verbose;
-  _nThreads = nThreads;
-  std::cout << _fileDataMap.size() << std::endl;
-}
-
-// _____________________________________________________________________________________________________________________
 StringFinder::~StringFinder() = default;
 
-// _____________________________________________________________________________________________________________________
-void StringFinder::readFile(const string &filepath, string alias) {
-  if (alias.empty()) {
-    alias = filepath;
-  }
-  if (_fileDataMap.find(alias) != _fileDataMap.end()) {
-    std::cout << "File " << filepath << " already hold in data!" << std::endl;
-    return;
-  }
-  _fileDataMap.insert(pair<const string, vector<string>>(alias, vector<string>()));
-  std::cout << "Reading file " << filepath << " as " << alias << std::endl;
-  string line;
-  ifstream file(filepath);
-  if (!file.is_open()) {
-    std::cerr << "Error: Cannot open file " << filepath << std::endl;
-    return;
-  }
-  int counter = 0;
-  int innerCounter = 1;
-  while (!file.eof()) {
-    getline(file, line);
-    if (line.empty()) {
-      continue;
-    }
-    _fileDataMap[alias].push_back(line);
-    if (_verbose) {
-      counter++;
-      if (counter == 100000) {
-        std::cout << "\r" << innerCounter * counter << " lines..." << std::flush;
-        counter = 0;
-        innerCounter++;
-      }
-    }
-  }
-  if (_verbose) {
-    std::cout << "\r" << _fileDataMap[filepath].size() << " lines ✓" << std::endl;
-  }
+void StringFinder::setNumberOfDecompressionThreads(unsigned int nDecompressionThreads) {
+  _nDecompressionThreads = nDecompressionThreads > 0 ? nDecompressionThreads : 0;
+  setNumberOfQueueWriteThreads();
 }
 
-// _____________________________________________________________________________________________________________________
-vector<const string *> StringFinder::find(string expression, bool matchCase) const {
-#pragma omp declare reduction (merge: vector<const string*> : mergeArrays(&omp_out, &omp_in))
-  vector<const string *> results;
-  if (!matchCase) {
-    transform(expression.begin(), expression.end(), expression.begin(), ::tolower);
-  }
-  for (auto mit = _fileDataMap.begin(); mit != _fileDataMap.end(); ++mit) {
-#pragma omp parallel for reduction(merge: results) num_threads(_nThreads)
-    for (auto vit = mit->second.begin(); vit != mit->second.end(); ++vit) {
-      if (!matchCase) {
-        string newStr = *vit;
-        transform(newStr.begin(), newStr.end(), newStr.begin(), ::tolower);
-        if (newStr.find(expression) != string::npos) {
-#pragma omp critical
-          results.push_back(&(*vit));
-        }
-      } else {
-        if (vit->find(expression) != string::npos) {
-#pragma omp critical
-          results.push_back(&(*vit));
-        }
-      }
-    }
-  }
-  return results;
+void StringFinder::setNumberOfTransformationThreads(unsigned int nTransformationThreads) {
+  _nTransformationThreads = nTransformationThreads > 0 ? nTransformationThreads : 0;
+  setNumberOfQueueWriteThreads();
 }
 
-// _____________________________________________________________________________________________________________________
-void StringFinder::measurePerformance(const string &expression, bool matchCase) const {
+void StringFinder::setNumberOfSearchingThreads(unsigned int nSearchingThreads) {
+  _nSearchingThreads = nSearchingThreads > 0 ? nSearchingThreads : 0;
+}
+
+void StringFinder::setNumberOfMergingThreads(unsigned int nMergingThreads) {
+  _nMergingThreads = nMergingThreads;
+}
+
+void StringFinder::enablePerformanceMeasuring(bool enabled) {
+  if (enabled | _performanceMeasuring) { _totalTime = 0; }
+  _performanceMeasuring = enabled;
+}
+
+void StringFinder::setNumberOfFileChunks(unsigned int nFileChunks) {
+  _nFileChunks = nFileChunks;
+  _availableChunkQueue.setMaxSize(_nFileChunks);
+  _toBeDecompressedChunkQueue.setMaxSize(_nFileChunks);
+  _toBeTransformedChunkQueue.setMaxSize(_nFileChunks);
+  _toBeSearchedChunkQueue.setMaxSize(_nFileChunks);
+  _partialResultsQueue.setMaxSize(_nFileChunks);
+}
+
+vector<string::size_type> StringFinder::find(string &pattern) {
   Timer timer;
-  timer.start();
-  vector<const string *> results = find(expression, matchCase);
-  timer.stop();
-  string matchCaseStr = matchCase ? string("true") : string("false");
-  std::cout << "Performance Report for file(s):";
-  std::cout << std::endl;
-  std::cout << "Using " << _nThreads << " thread(s)." << std::endl;
-  std::cout << "StringFinder.find(expression=" << expression << ", matchCase=" << matchCaseStr << "):" << std::endl;
-  std::cout << " total #lines:\t" << numLines() << std::endl;
-  std::cout << " total #matches:\t" << results.size() << std::endl;
-  std::cout << " query time:\t" << timer.elapsedSeconds() << " s" << std::endl;
-  std::cout << " time / match:\t" << timer.elapsedSeconds() / static_cast<double>(results.size()) << " s" << std::endl;
-}
+  if (_performanceMeasuring) { timer.start(); }
 
-// _____________________________________________________________________________________________________________________
-template <typename ...ArgsT>
-ulong StringFinder::numLines(ArgsT ...files) const {
-  return numLines({files...});
-}
+  vector<string::size_type> matchPositions = {};
+  vector<string::size_type>* matchPositionsPtr = &matchPositions;
 
+  buildThreads(matchPositionsPtr);
 
-// _____________________________________________________________________________________________________________________
-ulong StringFinder::numLines(std::initializer_list<string> files) const {
-  if (empty(files)) {
-    ulong numLines;
-    for (auto &pair: _fileDataMap) {
-      numLines += pair.second.size();
-    }
-    return numLines;
+  _readingThread.join();
+  for (auto &decompressionThread: _decompressionThreads) {
+    decompressionThread.join();
   }
-  ulong numLines = 0;
-  for (const auto& file : files) {
-    auto pair = _fileDataMap.find(file);
-    if (pair != _fileDataMap.end()) {
-      numLines += pair->second.size();
-    }
+  for (auto &transformThread: _transformationThreads) {
+    transformThread.join();
   }
-  return numLines;
+  for (auto &searchThread: _searchingThreads) {
+    searchThread.join();
+  }
+  for (auto &mergeThread: _mergingThreads) {
+    mergeThread.join();
+  }
+
+  delete matchPositionsPtr;
+
+  if (_performanceMeasuring) {
+    timer.stop();
+    _totalTime = timer.elapsedSeconds();
+  }
+
+  return matchPositions;
 }
 
+vector<string::size_type> StringFinder::find(string &pattern, const std::function<int(int)>& transformer) {
+  Timer timer;
+  if (_performanceMeasuring) { timer.start(); }
 
-// _____________________________________________________________________________________________________________________
-void StringFinder::reset() {
-  _fileDataMap.clear();
+  vector<string::size_type> matchPositions = {};
+  vector<string::size_type>* matchPositionsPtr = &matchPositions;
+
+  buildThreads(matchPositionsPtr, transformer);
+
+  _readingThread.join();
+  for (auto &decompressionThread: _decompressionThreads) {
+    decompressionThread.join();
+  }
+  for (auto &transformThread: _transformationThreads) {
+    transformThread.join();
+  }
+  for (auto &searchThread: _searchingThreads) {
+    searchThread.join();
+  }
+  for (auto &mergeThread: _mergingThreads) {
+    mergeThread.join();
+  }
+
+  delete matchPositionsPtr;
+
+  if (_performanceMeasuring) {
+    timer.stop();
+    _totalTime = timer.elapsedSeconds();
+  }
+
+  return matchPositions;
+}
+
+vector<string::size_type> StringFinder::find(string &pattern, const std::function<string(string)>& transformer) {
+  Timer timer;
+  if (_performanceMeasuring) { timer.start(); }
+
+  vector<string::size_type> matchPositions = {};
+  vector<string::size_type>* matchPositionsPtr = &matchPositions;
+
+  buildThreads(matchPositionsPtr, transformer);
+
+  _readingThread.join();
+  for (auto &decompressionThread: _decompressionThreads) {
+    decompressionThread.join();
+  }
+  for (auto &transformThread: _transformationThreads) {
+    transformThread.join();
+  }
+  for (auto &searchThread: _searchingThreads) {
+    searchThread.join();
+  }
+  for (auto &mergeThread: _mergingThreads) {
+    mergeThread.join();
+  }
+
+  delete matchPositionsPtr;
+
+  if (_performanceMeasuring) {
+    timer.stop();
+    _totalTime = timer.elapsedSeconds();
+  }
+
+  return matchPositions;
+}
+
+string StringFinder::toString() const {
+  // TODO: implement
+  return "";
+}
+
+// --- protected stuff -------------------------------------------------------------------------------------------------
+void StringFinder::buildThreads(vector<string::size_type> *matchPositionsPtr) {
+  // TODO: implement
+}
+
+void StringFinder::buildThreads(vector<string::size_type> *matchPositionsPtr, const std::function<int(int)>& transformer) {
+  // TODO: implement
+}
+
+void StringFinder::buildThreads(vector<string::size_type> *matchPositionsPtr,
+                                const std::function<string(string)>& transformer) {
+  // TODO: implement
+}
+
+void StringFinder::decompressChunks(sf_utils::TSQueue<FileChunk *> &popFromQueue,
+                                    sf_utils::TSQueue<FileChunk *> &pushToQueue) {
+  // TODO: implement
+}
+
+void StringFinder::transformChunks(const std::function<int(int)>& transformer,
+                                   sf_utils::TSQueue<FileChunk *> &popFromQueue,
+                                   sf_utils::TSQueue<FileChunk *> &pushToQueue) {
+  // TODO: implement
+}
+
+void StringFinder::transformChunks(const std::function<string(string)>& transformer,
+                                   sf_utils::TSQueue<FileChunk *> &popFromQueue,
+                                   sf_utils::TSQueue<FileChunk *> &pushToQueue) {
+  // TODO: implement
+}
+
+void StringFinder::searchChunks(string &pattern,
+                                sf_utils::TSQueue<FileChunk *> &popFromQueue,
+                                sf_utils::TSQueue<FileChunk *> &pushToQueue) {
+  // TODO: implement
+}
+
+void StringFinder::mergeResults(vector<string::size_type> *machPositionsPtr,
+                                sf_utils::TSQueue<FileChunk *> &popFromQueue,
+                                sf_utils::TSQueue<FileChunk *> &pushToQueue) {
+  // TODO: implement
+}
+
+// --- private stuff ---------------------------------------------------------------------------------------------------
+void StringFinder::setNumberOfQueueWriteThreads() {
+  if (_nDecompressionThreads > 0) {
+    _toBeDecompressedChunkQueue.setNumberOfWriteThreads(1);
+    if (_nTransformationThreads > 0) {
+      _toBeTransformedChunkQueue.setNumberOfWriteThreads(_nDecompressionThreads);
+    } else {
+      _toBeSearchedChunkQueue.setNumberOfWriteThreads(_nDecompressionThreads);
+    }
+  } else {
+    if (_nTransformationThreads > 0) {
+      _toBeTransformedChunkQueue.setNumberOfWriteThreads(1);
+    } else {
+      _toBeSearchedChunkQueue.setNumberOfWriteThreads(1);
+    }
+  }
+  _partialResultsQueue.setNumberOfWriteThreads(_nSearchingThreads);
+  _availableChunkQueue.setNumberOfWriteThreads(_nMergingThreads);
+}
+
 }
