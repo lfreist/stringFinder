@@ -120,6 +120,7 @@ int main(int argc, char **argv) {
   ExternStringFinder extern_string_finder(inputFile, searchPattern, metaFile, ignoreCase, verbose, performance, nBuffers,
                                           minBufferSize, bufferOverflowSize, nThreads[0], nThreads[1], nThreads[2]);
   auto result = extern_string_finder.find();
+  std::cout << extern_string_finder << std::endl;
   if (count) {
     std::cout << result.size() << std::endl;
   }
