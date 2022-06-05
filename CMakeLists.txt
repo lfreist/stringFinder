@@ -43,6 +43,9 @@ target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer boo
 
 add_executable(stringSearchBenchmark stringSearchBenchmark.cpp)
 target_link_libraries(stringSearchBenchmark PUBLIC Timer boost_program_options)
+
+add_executable(tmp tmp.cpp src/utils/output/tree.h)
+
 # ______________________________________________________________________________________________________________________
 
 # ___ Tests ____________________________________________________________________________________________________________

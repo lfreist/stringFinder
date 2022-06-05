@@ -48,6 +48,12 @@ class ExternStringFinder {
    */
   vector<string::size_type> find();
 
+  void setNumberOfDecompressionThreads(unsigned nDecompressionThreads);
+  void setNumberOfTransformationThreads(unsigned nTransformationThreads);
+  void setNumberOfSearchThreads(unsigned nSearchThreads);
+
+  string toString() const;
+
  private:
 
   void initializeQueues();
@@ -78,6 +84,7 @@ class ExternStringFinder {
   string _pattern;
 
   string _searchFile;
+  std::ifstream _file;
   ESFMetaFile* _metaFile;
   bool _toBeTransformed;
   unsigned _nBuffers;
@@ -94,14 +101,18 @@ class ExternStringFinder {
   // for debugging (performance/verbose):
   mutable std::mutex _timerMutex;
 
-  double _totalReadTime;
-  double _totalReadWaitTime;
-  double _totalDecompressionTime;
-  double _totalDecompressionWaitTime;
-  double _totalTransformTime;
-  double _totalTransformWaitTime;
-  double _totalSearchTime;
-  double _totalSearchWaitTime;
+  double _totalTime = 0;
+
+  double _totalReadTime = 0;
+  double _totalReadWaitTime = 0;
+  double _totalDecompressionTime = 0;
+  double _totalDecompressionWaitTime = 0;
+  double _totalTransformTime = 0;
+  double _totalTransformWaitTime = 0;
+  double _totalSearchTime = 0;
+  double _totalSearchWaitTime = 0;
 };
+
+std::ostream &operator<<(std::ostream &os, const ExternStringFinder &esf);
 
 #endif  // SRC_EXTERNSTRINGFINDER_H_
