@@ -9,7 +9,7 @@
 
 using std::vector;
 
-namespace sf::sf_utils {
+namespace sf::utils {
 
 template
 class TSQueue<int>;
@@ -20,7 +20,7 @@ class TSQueue<unsigned>;
 template
 class TSQueue<vector<unsigned>>;
 template
-class TSQueue<vector<std::string::size_type>>;
+class TSQueue<vector<ulong>>;
 
 // _____________________________________________________________________________________________________________________
 template<class T>
@@ -53,7 +53,7 @@ template<class T>
 void TSQueue<T>::setMaxSize(ulong maxSize) {
   std::unique_lock pushLock(_pushMutex);
   std::unique_lock popLock(_popMutex);
-  _maxSize = maxSize
+  _maxSize = maxSize;
 }
 
 // _____________________________________________________________________________________________________________________
@@ -71,12 +71,15 @@ void TSQueue<T>::push(T element) {
 
 // _____________________________________________________________________________________________________________________
 template<class T>
-T TSQueue<T>::pop() {
-  std::unique_lock lock(_popMutex);
+std::optional<T> TSQueue<T>::pop() {
+  std::unique_lock popLock(_popMutex);
   while (_queue.empty()) {
-    _popCondVar.wait(lock);
+    if (isClosed()) {
+      return {};
+    }
+    _popCondVar.wait(popLock);
   }
-  std::unique_lock lockPush(_pushMutex);
+  std::unique_lock pushLock(_pushMutex);
   T element = _queue.front();
   _queue.pop();
   _pushCondVar.notify_one();
@@ -125,23 +128,6 @@ template<class T>
 void TSQueue<T>::setNumberOfWriteThreads(unsigned numberOfWriteThreads) {
   std::lock_guard<std::mutex> lock(_numWriteThreadsMutex);
   _numberOfWriteThreads = numberOfWriteThreads;
-}
-
-// _____________________________________________________________________________________________________________________
-template<class T>
-T TSQueue<T>::pop(T defaultReturn) {
-  std::unique_lock popLock(_popMutex);
-  while (_queue.empty()) {
-    if (isClosed()) {
-      return defaultReturn;
-    }
-    _popCondVar.wait(popLock);
-  }
-  std::unique_lock pushLock(_pushMutex);
-  T element = _queue.front();
-  _queue.pop();
-  _pushCondVar.notify_one();
-  return element;
 }
 
 }

@@ -6,6 +6,8 @@
 #include "./exceptions.h"
 #include "../string_search_algorithms/using_stdstring.h"
 
+namespace sf::utils {
+
 // _____________________________________________________________________________________________________________________
 FileChunk::FileChunk() {
   _isUncompressed = false;
@@ -83,7 +85,7 @@ size_t FileChunk::setContentFromFile(std::istream &file, std::streamsize minNumB
   }
   if (toNewLine) {
     char nextByte = 0;
-    while(true) {
+    while (true) {
       if (file.eof()) { break; }
       file.get(nextByte);
       if (nextByte == '\n') { break; }
@@ -117,7 +119,7 @@ size_t FileChunk::setContentFromZstdFile(std::istream &file, size_t originalSize
     return compressedLength();
   }
   _compressedContent.resize(numBytes);
-  file.read((char*) &_compressedContent[0], numBytes);
+  file.read((char *) &_compressedContent[0], numBytes);
   _originalSize = originalSize;
   _isUncompressed = false;
   _isCompressed = true;
@@ -183,19 +185,22 @@ size_t FileChunk::decompress(size_t originalSize) {
   if (!_isCompressed) { throw sf_utils::NotCompressedException(); }
   originalSize = originalSize == 0 ? _originalSize : originalSize;
   _uncompressedContent.resize(originalSize);
-  ZstdWrapper::decompressToBuffer(_compressedContent.data(), compressedLength(), _uncompressedContent.data(), originalSize);
+  ZstdWrapper::decompressToBuffer(_compressedContent.data(),
+                                  compressedLength(),
+                                  _uncompressedContent.data(),
+                                  originalSize);
   _isUncompressed = true;
   return length();
 }
 
 // _____________________________________________________________________________________________________________________
-void FileChunk::transform(std::function<int(int)> &transformer) {
+void FileChunk::transform(const std::function<int(int)> &transformer) {
   if (!_isUncompressed) { throw sf_utils::NotUncompressedException(); }
   std::transform(_uncompressedContent.begin(), _uncompressedContent.end(), _uncompressedContent.begin(), transformer);
 }
 
 // _____________________________________________________________________________________________________________________
-void FileChunk::transform(std::function<string(string)> &transformer) {
+void FileChunk::transform(const std::function<string(string)> &transformer) {
   if (!_isUncompressed) { throw sf_utils::NotUncompressedException(); }
   _uncompressedContent = transformer(_uncompressedContent);
 }
@@ -218,7 +223,7 @@ string FileChunk::getUncompressedContent() {
 
 // _____________________________________________________________________________________________________________________
 void FileChunk::setOffset(size_t offset) {
-    _offset = offset;
+  _offset = offset;
 }
 
 // _____________________________________________________________________________________________________________________
@@ -244,3 +249,5 @@ bool FileChunk::operator==(const FileChunk &compChunk) {
 bool FileChunk::operator!=(const FileChunk &compStr) {
   return !(operator==(compStr));
 }
+
+}  // namespace sf::utils

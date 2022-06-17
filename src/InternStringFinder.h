@@ -10,40 +10,27 @@
 #include <string>
 #include <map>
 
+#include "StringFinder.h"
+
 using std::vector;
 using std::string;
 using std::map;
 
-// merge two sorted vectors. used for omp reduction in StringFinder.find()
-void mergeArrays(vector<const string *> *out, vector<const string *> *in);
+namespace sf {
 
 // Class StringData
-class InternStringFinder {
+class InternStringFinder : public StringFinder {
  public:
-  explicit InternStringFinder(const string& filepath, bool verbose = false, unsigned nThreads = 1);
-  explicit InternStringFinder(bool verbose = false, unsigned nThreads = 1);
-
+  InternStringFinder();
   ~InternStringFinder();
 
-  void readFile(const string &filepath, string alias = "");
-
-  [[nodiscard]] vector<const string *> find(string expression, bool matchCase = false) const;
-
-  void measurePerformance(const string &expression, bool matchCase = false) const;
-
-  template <typename ...ArgsT>
-  [[nodiscard]] ulong numLines(ArgsT ...files) const;
-
-  void reset();
-
- protected:
-  [[nodiscard]] ulong numLines(std::initializer_list<string> files) const;
-  std::map<const string, vector<string>> _fileDataMap;
-  bool _verbose;
-  unsigned _nThreads;
-
-  FRIEND_TEST(StringFinderTest, testConstructor);
-  FRIEND_TEST(StringFinderTest, testReadFile);
+  void buildThreads(vector<string::size_type> &matchPositions, string &pattern);
+  void buildThreads(vector<string::size_type> &matchPositions, string &pattern, const std::function<int(int)>& transformer);
+  void buildThreads(vector<string::size_type> &matchPositions, string &pattern, const std::function<string(string)>& transformer);
+  void readChunks(std::istream &input, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
+  void readChunks(std::string_view &input, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
 };
+
+}  // namespace sf
 
 #endif  // SRC_STRINGFINDER_H_

@@ -8,6 +8,8 @@
 
 #include <chrono>  // NOLINT(build/c++11)
 
+namespace sf::utils {
+
 class Timer {
  public:
   Timer();
@@ -34,5 +36,7 @@ class Timer {
 
   FRIEND_TEST(WallTimerTest, wallTimerStartStop);
 };
+
+}  // namespace sf::utils
 
 #endif  // SRC_UTILS_TIMER_H_

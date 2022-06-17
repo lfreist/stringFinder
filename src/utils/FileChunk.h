@@ -15,6 +15,8 @@
 using std::string;
 using std::vector;
 
+namespace sf::utils {
+
 class FileChunk {
  public:
   /// default constructor
@@ -110,8 +112,8 @@ class FileChunk {
   vector<char> getCompressedContent();
   string getUncompressedContent();
 
-  void transform(std::function<int(int)> &transformer);
-  void transform(std::function<string(string)> &transformer);
+  void transform(const std::function<int(int)> &transformer);
+  void transform(const std::function<string(string)> &transformer);
 
   /**
    * Set _offset
@@ -147,5 +149,7 @@ class FileChunk {
   FRIEND_TEST(FileChunkTest, setContentFromFile);
   FRIEND_TEST(FileChunkTest, de_compression);
 };
+
+}  // namespace sf::utils
 
 #endif  // SRC_UTILS_FILECHUNK_H_

@@ -53,13 +53,12 @@ void StringFinder::setNumberOfFileChunks(unsigned int nFileChunks) {
 }
 
 vector<string::size_type> StringFinder::find(string &pattern) {
-  Timer timer;
+  utils::Timer timer;
   if (_performanceMeasuring) { timer.start(); }
 
   vector<string::size_type> matchPositions = {};
-  vector<string::size_type>* matchPositionsPtr = &matchPositions;
 
-  buildThreads(matchPositionsPtr);
+  buildThreads(matchPositions, pattern);
 
   _readingThread.join();
   for (auto &decompressionThread: _decompressionThreads) {
@@ -71,11 +70,7 @@ vector<string::size_type> StringFinder::find(string &pattern) {
   for (auto &searchThread: _searchingThreads) {
     searchThread.join();
   }
-  for (auto &mergeThread: _mergingThreads) {
-    mergeThread.join();
-  }
-
-  delete matchPositionsPtr;
+  _mergingThread.join();
 
   if (_performanceMeasuring) {
     timer.stop();
@@ -86,13 +81,12 @@ vector<string::size_type> StringFinder::find(string &pattern) {
 }
 
 vector<string::size_type> StringFinder::find(string &pattern, const std::function<int(int)>& transformer) {
-  Timer timer;
+  utils::Timer timer;
   if (_performanceMeasuring) { timer.start(); }
 
   vector<string::size_type> matchPositions = {};
-  vector<string::size_type>* matchPositionsPtr = &matchPositions;
 
-  buildThreads(matchPositionsPtr, transformer);
+  buildThreads(matchPositions, pattern, transformer);
 
   _readingThread.join();
   for (auto &decompressionThread: _decompressionThreads) {
@@ -104,11 +98,7 @@ vector<string::size_type> StringFinder::find(string &pattern, const std::functio
   for (auto &searchThread: _searchingThreads) {
     searchThread.join();
   }
-  for (auto &mergeThread: _mergingThreads) {
-    mergeThread.join();
-  }
-
-  delete matchPositionsPtr;
+  _mergingThread.join();
 
   if (_performanceMeasuring) {
     timer.stop();
@@ -119,13 +109,12 @@ vector<string::size_type> StringFinder::find(string &pattern, const std::functio
 }
 
 vector<string::size_type> StringFinder::find(string &pattern, const std::function<string(string)>& transformer) {
-  Timer timer;
+  utils::Timer timer;
   if (_performanceMeasuring) { timer.start(); }
 
   vector<string::size_type> matchPositions = {};
-  vector<string::size_type>* matchPositionsPtr = &matchPositions;
 
-  buildThreads(matchPositionsPtr, transformer);
+  buildThreads(matchPositions, pattern, transformer);
 
   _readingThread.join();
   for (auto &decompressionThread: _decompressionThreads) {
@@ -137,11 +126,7 @@ vector<string::size_type> StringFinder::find(string &pattern, const std::functio
   for (auto &searchThread: _searchingThreads) {
     searchThread.join();
   }
-  for (auto &mergeThread: _mergingThreads) {
-    mergeThread.join();
-  }
-
-  delete matchPositionsPtr;
+  _mergingThread.join();
 
   if (_performanceMeasuring) {
     timer.stop();
@@ -156,47 +141,153 @@ string StringFinder::toString() const {
   return "";
 }
 
+void StringFinder::buildThreads(vector<string::size_type> &matchPositions, string &pattern) {
+  // reader thread must be created in child classes
+  // decompression thread must be created in child classes
+  // transformation threads must be created in child classes
+  // searching threads must be created in child classes
+  _mergingThread = std::thread(&StringFinder::mergeResults, this, std::ref(matchPositions));
+}
+
+void StringFinder::buildThreads(vector<string::size_type> &matchPositions,
+                                string &pattern,
+                                const std::function<int(int)> &transformer) {}
+
+void StringFinder::buildThreads(vector<string::size_type> &matchPositions,
+                                string &pattern,
+                                const std::function<string(string)> &transformer) {}
+
 // --- protected stuff -------------------------------------------------------------------------------------------------
-void StringFinder::buildThreads(vector<string::size_type> *matchPositionsPtr) {
-  // TODO: implement
-}
+void StringFinder::readChunks(std::istream &input,
+                              utils::TSQueue<utils::FileChunk *> &popFromQueue,
+                              utils::TSQueue<utils::FileChunk *> &pushToQueue) {}
 
-void StringFinder::buildThreads(vector<string::size_type> *matchPositionsPtr, const std::function<int(int)>& transformer) {
-  // TODO: implement
-}
+void StringFinder::readChunks(std::string_view &input,
+                              utils::TSQueue<utils::FileChunk *> &popFromQueue,
+                              utils::TSQueue<utils::FileChunk *> &pushToQueue) {}
 
-void StringFinder::buildThreads(vector<string::size_type> *matchPositionsPtr,
-                                const std::function<string(string)>& transformer) {
-  // TODO: implement
-}
-
-void StringFinder::decompressChunks(sf_utils::TSQueue<FileChunk *> &popFromQueue,
-                                    sf_utils::TSQueue<FileChunk *> &pushToQueue) {
-  // TODO: implement
+void StringFinder::decompressChunks(utils::TSQueue<utils::FileChunk *> &popFromQueue,
+                                    utils::TSQueue<utils::FileChunk *> &pushToQueue) {
+  utils::Timer waitTimer;
+  utils::Timer computeTimer;
+  while (true) {
+    if (_performanceMeasuring) { waitTimer.start(false); }
+    auto currentChunk = popFromQueue.pop();
+    if (_performanceMeasuring) { waitTimer.stop(); }
+    if (!currentChunk.has_value()) {
+      pushToQueue.close();
+      break;
+    }
+    if (_performanceMeasuring) { computeTimer.start(false); }
+    currentChunk.value()->decompress();
+    if (_performanceMeasuring) { computeTimer.stop(); }
+    pushToQueue.push(currentChunk.value());
+  }
+  if (_performanceMeasuring) {
+    std::unique_lock timerLock(_decompressionTimerMutex);
+    _totalDecompressionWaitTime += waitTimer.elapsedSeconds();
+    _totalDecompressionTime += computeTimer.elapsedSeconds();
+  }
 }
 
 void StringFinder::transformChunks(const std::function<int(int)>& transformer,
-                                   sf_utils::TSQueue<FileChunk *> &popFromQueue,
-                                   sf_utils::TSQueue<FileChunk *> &pushToQueue) {
-  // TODO: implement
+                                   utils::TSQueue<utils::FileChunk *> &popFromQueue,
+                                   utils::TSQueue<utils::FileChunk *> &pushToQueue) {
+  utils::Timer waitTimer;
+  utils::Timer computeTimer;
+  while (true) {
+    if (_performanceMeasuring) { waitTimer.start(false); }
+    auto currentChunk = popFromQueue.pop();
+    if (_performanceMeasuring) { waitTimer.stop(); }
+    if (!currentChunk.has_value()) {
+      pushToQueue.close();
+      break;
+    }
+    if (_performanceMeasuring) { computeTimer.start(false); }
+    currentChunk.value()->transform(transformer);
+    if (_performanceMeasuring) { computeTimer.stop(); }
+    pushToQueue.push(currentChunk.value());
+  }
+  if (_performanceMeasuring) {
+    std::unique_lock timerLock(_transformationTimerMutex);
+    _totalTransformationWaitTime += waitTimer.elapsedSeconds();
+    _totalTransformationTime += computeTimer.elapsedSeconds();
+  }
 }
 
 void StringFinder::transformChunks(const std::function<string(string)>& transformer,
-                                   sf_utils::TSQueue<FileChunk *> &popFromQueue,
-                                   sf_utils::TSQueue<FileChunk *> &pushToQueue) {
-  // TODO: implement
+                                   utils::TSQueue<utils::FileChunk *> &popFromQueue,
+                                   utils::TSQueue<utils::FileChunk *> &pushToQueue) {
+  utils::Timer waitTimer;
+  utils::Timer computeTimer;
+  while (true) {
+    if (_performanceMeasuring) { waitTimer.start(false); }
+    auto currentChunk = popFromQueue.pop();
+    if (_performanceMeasuring) { waitTimer.stop(); }
+    if (!currentChunk.has_value()) {
+      pushToQueue.close();
+      break;
+    }
+    if (_performanceMeasuring) { computeTimer.start(false); }
+    currentChunk.value()->transform(transformer);
+    if (_performanceMeasuring) { computeTimer.stop(); }
+    pushToQueue.push(currentChunk.value());
+  }
+  if (_performanceMeasuring) {
+    std::unique_lock timerLock(_transformationTimerMutex);
+    _totalTransformationWaitTime += waitTimer.elapsedSeconds();
+    _totalTransformationTime += computeTimer.elapsedSeconds();
+  }
 }
 
 void StringFinder::searchChunks(string &pattern,
-                                sf_utils::TSQueue<FileChunk *> &popFromQueue,
-                                sf_utils::TSQueue<FileChunk *> &pushToQueue) {
-  // TODO: implement
+                                utils::TSQueue<utils::FileChunk *> &popFromQueue,
+                                utils::TSQueue<utils::FileChunk *> &pushToQueue) {
+  utils::Timer waitTimer;
+  utils::Timer computeTimer;
+  while (true) {
+    if (_performanceMeasuring) { waitTimer.start(false); }
+    auto currentChunk = popFromQueue.pop();
+    if (_performanceMeasuring) { waitTimer.stop(); }
+    if (!currentChunk.has_value()) {
+      pushToQueue.close();
+      _partialResultsQueue.close();
+      break;
+    }
+    if (_performanceMeasuring) { computeTimer.start(false); }
+    vector<ulong> matches = currentChunk.value()->searchAllPerLine(pattern);
+    if (_performanceMeasuring) { computeTimer.stop(); }
+    _partialResultsQueue.push(matches);
+    pushToQueue.push(currentChunk.value());
+  }
+  if (_performanceMeasuring) {
+    std::unique_lock timerLock(_transformationTimerMutex);
+    _totalSearchingWaitTime += waitTimer.elapsedSeconds();
+    _totalSearchingTime += computeTimer.elapsedSeconds();
+  }
 }
 
-void StringFinder::mergeResults(vector<string::size_type> *machPositionsPtr,
-                                sf_utils::TSQueue<FileChunk *> &popFromQueue,
-                                sf_utils::TSQueue<FileChunk *> &pushToQueue) {
-  // TODO: implement
+void StringFinder::mergeResults(vector<string::size_type> &matchPositions) {
+  utils::Timer waitTimer;
+  utils::Timer computeTimer;
+  while (true) {
+    if (_performanceMeasuring) { waitTimer.start(false); }
+    auto partialResult = _partialResultsQueue.pop();
+    if (_performanceMeasuring) { waitTimer.stop(); }
+    if (!partialResult.has_value()) {
+      break;
+    }
+    if (_performanceMeasuring) { computeTimer.start(false); }
+    std::merge(matchPositions.begin(), matchPositions.end(),
+               partialResult.value().begin(), partialResult.value().end(),
+               matchPositions.begin());
+    if (_performanceMeasuring) { computeTimer.stop(); }
+  }
+  if (_performanceMeasuring) {
+    std::unique_lock timerLock(_transformationTimerMutex);
+    _totalMergingWaitTime += waitTimer.elapsedSeconds();
+    _totalMergingTime += computeTimer.elapsedSeconds();
+  }
 }
 
 // --- private stuff ---------------------------------------------------------------------------------------------------
@@ -216,7 +307,7 @@ void StringFinder::setNumberOfQueueWriteThreads() {
     }
   }
   _partialResultsQueue.setNumberOfWriteThreads(_nSearchingThreads);
-  _availableChunkQueue.setNumberOfWriteThreads(_nMergingThreads);
+  _availableChunkQueue.setNumberOfWriteThreads(_nSearchingThreads);
 }
 
 }
