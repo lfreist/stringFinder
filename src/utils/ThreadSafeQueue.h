@@ -9,8 +9,9 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include "FileChunk.h"
 
-namespace sf::sf_utils {
+namespace sf::utils {
 
 /**
  * @brief thread safe queue using std::queue
@@ -39,9 +40,7 @@ class TSQueue {
    * 
    * @return T 
    */
-  T pop();
-
-  T pop(T defaultReturn);
+  std::optional<T> pop();
 
   /**
    * @brief returns, whether the Queue is empty or not

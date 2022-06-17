@@ -37,36 +37,48 @@ class StringFinder {
 
   string toString() const;
 
+  virtual void buildThreads(vector<string::size_type> &matchPositions, string &pattern);
+  virtual void buildThreads(vector<string::size_type> &matchPositions, string &pattern, const std::function<int(int)>& transformer);
+  virtual void buildThreads(vector<string::size_type> &matchPositions, string &pattern, const std::function<string(string)>& transformer);
+
  protected:
-  void buildThreads(vector<string::size_type>* matchPositionsPtr);
-  void buildThreads(vector<string::size_type>* matchPositionsPtr, const std::function<int(int)>& transformer);
-  void buildThreads(vector<string::size_type>* matchPositionsPtr, const std::function<string(string)>& transformer);
-
-  virtual void readChunks(std::istream &input, sf_utils::TSQueue<FileChunk*> &popFromQueue, sf_utils::TSQueue<FileChunk*> &pushToQueue);
-  virtual void readChunks(std::string_view &input, sf_utils::TSQueue<FileChunk*> &popFromQueue, sf_utils::TSQueue<FileChunk*> &pushToQueue);
-  void decompressChunks(sf_utils::TSQueue<FileChunk*> &popFromQueue, sf_utils::TSQueue<FileChunk*> &pushToQueue);
-  void transformChunks(const std::function<int(int)>& transformer, sf_utils::TSQueue<FileChunk*> &popFromQueue, sf_utils::TSQueue<FileChunk*> &pushToQueue);
+  virtual void readChunks(std::istream &input, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
+  virtual void readChunks(std::string_view &input, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
+  void decompressChunks(utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
+  void transformChunks(const std::function<int(int)>& transformer, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
   // TODO: for string_view?
-  void transformChunks(const std::function<string(string)>& transformer, sf_utils::TSQueue<FileChunk*> &popFromQueue, sf_utils::TSQueue<FileChunk*> &pushToQueue);
-  void searchChunks(string &pattern, sf_utils::TSQueue<FileChunk*> &popFromQueue, sf_utils::TSQueue<FileChunk*> &pushToQueue);
-  void mergeResults(vector<string::size_type>* machPositionsPtr, sf_utils::TSQueue<FileChunk*> &popFromQueue, sf_utils::TSQueue<FileChunk*> &pushToQueue);
+  void transformChunks(const std::function<string(string)>& transformer, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
+  void searchChunks(string &pattern, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
+  void mergeResults(vector<string::size_type> &matchPositions);
 
+  string _fileName;
+
+  string _pattern;
   // Queues holding FileChunks for specific purposes
-  sf_utils::TSQueue<FileChunk*> _availableChunkQueue = {};
-  sf_utils::TSQueue<FileChunk*> _toBeDecompressedChunkQueue = {};
-  sf_utils::TSQueue<FileChunk*> _toBeTransformedChunkQueue = {};
-  sf_utils::TSQueue<FileChunk*> _toBeSearchedChunkQueue = {};
-  sf_utils::TSQueue<vector<string::size_type>> _partialResultsQueue = {};
+  utils::TSQueue<utils::FileChunk*> _availableChunkQueue = {};
+
+  utils::TSQueue<utils::FileChunk*> _toBeDecompressedChunkQueue = {};
+  utils::TSQueue<utils::FileChunk*> _toBeTransformedChunkQueue = {};
+  utils::TSQueue<utils::FileChunk*> _toBeSearchedChunkQueue = {};
+  utils::TSQueue<vector<string::size_type>> _partialResultsQueue = {};
 
   // threads:
   std::thread _readingThread;
   vector<std::thread> _decompressionThreads = {};
   vector<std::thread> _transformationThreads = {};
   vector<std::thread> _searchingThreads = {};
-  vector<std::thread> _mergingThreads = {};
+  std::thread _mergingThread;
 
+  // mutex
+  // mutable std::mutex _timerMutex;
+  // mutable std::mutex _readingTimerMutex;
+  mutable std::mutex _decompressionTimerMutex;
+
+  mutable std::mutex _transformationTimerMutex;
+  mutable std::mutex _searchingTimerMutex;
   // number of threads:
   unsigned _nDecompressionThreads = 0;
+
   unsigned _nTransformationThreads = 0;
   unsigned _nSearchingThreads = 0;
   unsigned _nMergingThreads = 0;
@@ -79,6 +91,17 @@ class StringFinder {
   // performance stuff:
   ulong _totalNumberBytesRead = 0;
   double _totalTime = 0;
+
+  double _totalReadingTime = 0;
+  double _totalDecompressionTime = 0;
+  double _totalTransformationTime = 0;
+  double _totalSearchingTime = 0;
+  double _totalMergingTime = 0;
+  double _totalReadingWaitTime = 0;
+  double _totalDecompressionWaitTime = 0;
+  double _totalTransformationWaitTime = 0;
+  double _totalSearchingWaitTime = 0;
+  double _totalMergingWaitTime = 0;
 
  private:
   void setNumberOfQueueWriteThreads();

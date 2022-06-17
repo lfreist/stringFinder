@@ -5,6 +5,8 @@
 
 #include "Timer.h"
 
+namespace sf::utils {
+
 // ____________________________________________________________________________
 Timer::Timer() {
   _running = false;
@@ -50,3 +52,5 @@ double Timer::elapsedSeconds() const {
 double Timer::elapsedMicroseconds() const {
   return elapsedSeconds() * 1000 * 1000;
 }
+
+}  // namespace sf::utils

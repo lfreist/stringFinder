@@ -116,8 +116,8 @@ string ExternStringFinder::toString() const {
 
 // _____________________________________________________________________________________________________________________
 void ExternStringFinder::readChunk(std::istream &input,
-                                   sf::sf_utils::TSQueue<FileChunk *> &popFromQueue,
-                                   sf::sf_utils::TSQueue<FileChunk *> &pushToQueue) {
+                                   sf::utils::TSQueue<FileChunk *> &popFromQueue,
+                                   sf::utils::TSQueue<FileChunk *> &pushToQueue) {
   Timer waitTimer;
   Timer readingTimer;
   _totalNumberBytesRead = 0;
@@ -167,7 +167,7 @@ void ExternStringFinder::readChunk(std::istream &input,
   }
 }
 
-void ExternStringFinder::decompressChunk(sf::sf_utils::TSQueue<FileChunk *> &popFromQueue, sf::sf_utils::TSQueue<FileChunk *> &pushToQueue) {
+void ExternStringFinder::decompressChunk(sf::utils::TSQueue<FileChunk *> &popFromQueue, sf::utils::TSQueue<FileChunk *> &pushToQueue) {
   Timer waitTimer;
   Timer computeTimer;
   while (true) {
@@ -191,8 +191,8 @@ void ExternStringFinder::decompressChunk(sf::sf_utils::TSQueue<FileChunk *> &pop
 }
 
 void ExternStringFinder::transformChunk(std::function<int(int)> transformer,
-                                        TSQueue<FileChunk *> &popFromQueue,
-                                        TSQueue<FileChunk *> &pushToQueue) {
+                                        sf::utils::TSQueue<FileChunk *> &popFromQueue,
+                                        sf::utils::TSQueue<FileChunk *> &pushToQueue) {
   Timer waitTimer;
   Timer computeTimer;
   while (true) {
@@ -215,7 +215,7 @@ void ExternStringFinder::transformChunk(std::function<int(int)> transformer,
   }
 }
 
-void ExternStringFinder::searchBuffers(TSQueue<FileChunk *> &popFromQueue, TSQueue<FileChunk *> &pushToQueue) {
+void ExternStringFinder::searchBuffers(sf::utils::TSQueue<FileChunk *> &popFromQueue, sf::utils::TSQueue<FileChunk *> &pushToQueue) {
   Timer waitTimer;
   Timer computeTimer;
   while (true) {
