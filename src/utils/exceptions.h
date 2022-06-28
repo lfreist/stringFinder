@@ -7,7 +7,7 @@
 #ifndef SRC_UTILS_EXCEPTIONS_H
 #define SRC_UTILS_EXCEPTIONS_H
 
-namespace sf_utils {
+namespace utils {
 struct NotUncompressedException : public std::exception {
   [[nodiscard]] const char *what() const noexcept override {
     return "There is no uncompressed content to perform this method on.";

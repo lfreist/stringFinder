@@ -1,8 +1,6 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#include <math.h>
-
 #include <boost/program_options.hpp>
 #include <string>
 #include <vector>
@@ -11,19 +9,18 @@
 
 namespace po = boost::program_options;
 
-using std::string;
-using std::vector;
-
-void option_dependency(const po::variables_map &vm, const string &for_what, const string &required_option) {
+void option_dependency(const po::variables_map &vm, const std::string &for_what, const std::string &required_option) {
   if ((vm.count(for_what) && !vm[for_what].defaulted())
-      && (vm.count(required_option) == 0 || vm[required_option].defaulted())) {
+    && (vm.count(required_option) == 0 || vm[required_option].defaulted())) {
     throw std::logic_error(std::string("Option '") + for_what + "' requires option '" + required_option + "'.");
   }
 }
 
-void option_anti_dependency(const po::variables_map &vm, const string &for_what, const string &anti_dependency) {
+void option_anti_dependency(const po::variables_map &vm,
+                            const std::string &for_what,
+                            const std::string &anti_dependency) {
   if ((vm.count(for_what) && !vm[for_what].defaulted())
-      && (vm.count(anti_dependency) && !vm[anti_dependency].defaulted())) {
+    && (vm.count(anti_dependency) && !vm[anti_dependency].defaulted())) {
     throw std::logic_error(std::string("Option '") + for_what + "' can not be set with '" + anti_dependency + "'.");
   }
 }
@@ -31,10 +28,10 @@ void option_anti_dependency(const po::variables_map &vm, const string &for_what,
 int main(int argc, char **argv) {
   bool performance;
   bool ignoreCase;
-  string searchPattern;
-  string inputFile;
-  string metaFile;
-  vector<unsigned> nThreads;
+  std::string searchPattern;
+  std::string inputFile;
+  std::string metaFile;
+  std::vector<unsigned> nThreads;
   bool count;
   unsigned nBuffers;
   unsigned minBufferSize;
@@ -52,13 +49,13 @@ int main(int argc, char **argv) {
 
   add_positional("search-pattern", 1);
   add_positional("input-file", 1);
-  add("search-pattern", po::value<string>(&searchPattern), "search-pattern.");
-  add("input-file", po::value<string>(&inputFile), "input-file.");
-  add("meta-file,m", po::value<string>(&metaFile)->default_value(""), "meta-file (if input is ESF-compressed).");
+  add("search-pattern", po::value<std::string>(&searchPattern), "search-pattern.");
+  add("input-file", po::value<std::string>(&inputFile), "input-file.");
+  add("meta-file,m", po::value<std::string>(&metaFile)->default_value(""), "meta-file (if input is ESF-compressed).");
   add("help,h", "Produces this help message.");
   add("performance,p", po::bool_switch(&performance), "measure performance.");
   add("threads,j",
-      po::value<vector<unsigned>>(&nThreads)->multitoken(),
+      po::value<std::vector<unsigned>>(&nThreads)->multitoken(),
       "number of threads used for decompression, transformation and search (e.g. '-j 4 2 2' for 4 decompression threads, 2 transformation threads and 2 search threads).");
   add("buffers,b",
       po::value<unsigned>(&nBuffers)->default_value(10),
@@ -66,7 +63,9 @@ int main(int argc, char **argv) {
   add("ignore-case,C", po::bool_switch(&ignoreCase), "ignore case.");
   add("count,c", po::bool_switch(&count), "only count the number of matching lines.");
   add("buffer-size", po::value(&minBufferSize)->default_value(2 << 23), "minimal size of one buffer.");
-  add("buffer-overflow-size", po::value(&bufferOverflowSize)->default_value(2 << 15), "maximal additional sized to buffer-size.");
+  add("buffer-overflow-size",
+      po::value(&bufferOverflowSize)->default_value(2 << 15),
+      "maximal additional sized to buffer-size.");
 
   po::variables_map optionsMap;
 
@@ -102,8 +101,14 @@ int main(int argc, char **argv) {
             }
           }
         } else {
-          unsigned numThreads = ceil(static_cast<double>(nThreads[0])/3);
-          nThreads = {numThreads, numThreads, numThreads};
+          if (ignoreCase) {
+            unsigned numThreads = ceil(static_cast<double>(nThreads[0]) / 3);
+            nThreads = {numThreads, numThreads, nThreads[0] - numThreads - numThreads};
+          } else {
+
+            unsigned numThreads = ceil(static_cast<double>(nThreads[0]) / 2);
+            nThreads = {numThreads, 0, nThreads[0] - numThreads};
+          }
         }
       }
     } else {
@@ -115,10 +120,10 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  ExternStringFinder extern_string_finder(inputFile, searchPattern, metaFile, ignoreCase, performance, nBuffers,
-                                          minBufferSize, bufferOverflowSize, nThreads[0], nThreads[1], nThreads[2]);
-  auto result = extern_string_finder.find();
-  std::cout << extern_string_finder << std::endl;
+  sf::ExternStringFinder esf;
+  auto result =
+    esf.find(searchPattern, inputFile, metaFile, ignoreCase, performance, nThreads[0], nThreads[1], nThreads[2]);
+  std::cout << esf.toString() << std::endl;
   if (count) {
     std::cout << result.size() << std::endl;
   }

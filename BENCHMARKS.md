@@ -2,7 +2,7 @@
 
 ## Algorithms
 
-find the code:
+_find_ the code:
 - [strstr](src/string_search_algorithms/using_strstr.h)
 - [stdstr](src/string_search_algorithms/using_stdstring.h)
 

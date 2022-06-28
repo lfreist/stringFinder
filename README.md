@@ -42,7 +42,7 @@ done
 > 
 > Commands:
 >  exit                          -> exit interactive mode
->  find EXPRESSION {--ARGUMENT}s -> find EXPRESSION in currentloaded file
+>  find EXPRESSION {--ARGUMENT}s -> _find_ EXPRESSION in currentloaded file
 >   --performance    display performance of a single search
 >   --lines n        display first n lines
 >  load FILE {--ARGUMENT}s       -> load FILE (delete old data)
@@ -51,7 +51,7 @@ done
 > ```
 
 ```
-> find expression --performance
+> _find_ expression --performance
 Searching for 'expression'...
 Performance Report:
 InternStringFinder.measurePerformance(expression, 0):
@@ -74,7 +74,7 @@ If you provide a (zstd-)compressed file as input, also set a meta file using the
 
   OPTIONS:
   --help         -h  print this guide and exit.
-  --performance  -p  measure wall time on find and print result.
+  --performance  -p  measure wall time on _find_ and print result.
   --silent       -s  dont print matching lines.
   --count        -c  print number of matching lines.
   --meta [FILE]  -m  set meta file.

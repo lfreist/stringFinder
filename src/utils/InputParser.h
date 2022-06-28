@@ -55,7 +55,7 @@ class SearchCommand : public virtual Command {
       sf.measurePerformance(_searchPattern, _matchCase);
       return;
     }
-    auto result = sf.find(_searchPattern, _matchCase);
+    auto result = sf._find_(_searchPattern, _matchCase);
     ulong numPrintResults = _limit < 0 ? result.size() : _limit;
     int maxDigits = getNumDigits(numPrintResults);
     ulong counter = 1;
