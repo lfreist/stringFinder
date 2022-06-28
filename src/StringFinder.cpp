@@ -53,7 +53,7 @@ double StringFinder::getThreadsTime() {
   double time = _totalTime;
   auto* task = _processingPipeline.getFirstTask();
   while (true) {
-    time += task->getTotalTime() - task->getPushWaitTime() - task->getPullWaitTime();
+    time += task->getComputeTime();
     task = task->getSubsequentTask();
     if (task == nullptr) {
       break;
