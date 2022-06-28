@@ -9,20 +9,20 @@
 
 #include <gtest/gtest.h>
 
+namespace sf::utils {
 
 struct chunkSize {
   size_t originalSize;
   size_t compressedSize;
 
-  bool operator==(const chunkSize& other) const {
+  bool operator==(const chunkSize &other) const {
     return (originalSize == other.originalSize) && (compressedSize == other.compressedSize);
   }
 };
 
-
 class ESFMetaFile {
  public:
-  explicit ESFMetaFile(const std::string& filePath, std::ios::openmode mode);
+  explicit ESFMetaFile(const std::string &filePath, std::ios::openmode mode);
   ~ESFMetaFile();
 
   chunkSize nextChunkSize();
@@ -41,5 +41,7 @@ class ESFMetaFile {
   FRIEND_TEST(ESFMetaFileTest, constructor);
   FRIEND_TEST(ESFMetaFileTest, writeAndRead);
 };
+
+}  // namespace sf::utils
 
 #endif  // SRC_ESFMETAFILE_H_

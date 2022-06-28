@@ -12,7 +12,7 @@
 // ____________________________________________________________________________________________________________________
 TEST(TSQueueTest, Constructor) {
 	TSQueue<FileChunk*> tsq;
-	ASSERT_TRUE(tsq._queue.empty());
+	ASSERT_TRUE(tsq._dataQueue.empty());
 }
 
 // ____________________________________________________________________________________________________________________
@@ -25,11 +25,11 @@ TEST(TSQueueTest, methodsTest) {
     TSQueue<FileChunk*> tsq;
     tsq.push(&str1);
     ASSERT_FALSE(tsq.empty());
-    ASSERT_EQ(tsq._queue.size(), 1);
+    ASSERT_EQ(tsq._dataQueue.size(), 1);
     tsq.push(&str2);
-    ASSERT_EQ(tsq._queue.size(), 2);
+    ASSERT_EQ(tsq._dataQueue.size(), 2);
     FileChunk* fst = tsq.pop();
-    ASSERT_EQ(tsq._queue.size(), 1);
+    ASSERT_EQ(tsq._dataQueue.size(), 1);
     FileChunk* snd = tsq.pop();
     ASSERT_TRUE(tsq.empty());
     ASSERT_TRUE(*fst == str1);

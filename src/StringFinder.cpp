@@ -1,313 +1,141 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#pragma once
-
-#include <string>
-#include <vector>
-
-#include "./utils/ThreadSafeQueue.h"
-
 #include "./StringFinder.h"
-
-using std::string;
-using std::vector;
 
 namespace sf {
 
-// --- public stuff ----------------------------------------------------------------------------------------------------
+// ----- public stuff --------------------------------------------------------------------------------------------------
+// _____________________________________________________________________________________________________________________
 StringFinder::StringFinder() = default;
 
-StringFinder::~StringFinder() = default;
-
-void StringFinder::setNumberOfDecompressionThreads(unsigned int nDecompressionThreads) {
-  _nDecompressionThreads = nDecompressionThreads > 0 ? nDecompressionThreads : 0;
-  setNumberOfQueueWriteThreads();
+// _____________________________________________________________________________________________________________________
+StringFinder::StringFinder(std::function<std::optional<utils::FileChunk>(void)> reader,
+                           const std::vector<TaskAndNumThreads> &tasksAndNumThreadsVector) {
+  _reader = std::move(reader);
+  setProcessingPipeline(tasksAndNumThreadsVector);
 }
 
-void StringFinder::setNumberOfTransformationThreads(unsigned int nTransformationThreads) {
-  _nTransformationThreads = nTransformationThreads > 0 ? nTransformationThreads : 0;
-  setNumberOfQueueWriteThreads();
+// _____________________________________________________________________________________________________________________
+void StringFinder::setProcessingPipeline(const std::vector<TaskAndNumThreads> &tasksAndNumThreadsVector) {
+  for (auto &task: tasksAndNumThreadsVector) {
+    _processingPipeline.addTask(task.name, task.task, task.numThreads);
+  }
 }
 
-void StringFinder::setNumberOfSearchingThreads(unsigned int nSearchingThreads) {
-  _nSearchingThreads = nSearchingThreads > 0 ? nSearchingThreads : 0;
-}
-
-void StringFinder::setNumberOfMergingThreads(unsigned int nMergingThreads) {
-  _nMergingThreads = nMergingThreads;
-}
-
+// _____________________________________________________________________________________________________________________
 void StringFinder::enablePerformanceMeasuring(bool enabled) {
-  if (enabled | _performanceMeasuring) { _totalTime = 0; }
   _performanceMeasuring = enabled;
 }
 
-void StringFinder::setNumberOfFileChunks(unsigned int nFileChunks) {
-  _nFileChunks = nFileChunks;
-  _availableChunkQueue.setMaxSize(_nFileChunks);
-  _toBeDecompressedChunkQueue.setMaxSize(_nFileChunks);
-  _toBeTransformedChunkQueue.setMaxSize(_nFileChunks);
-  _toBeSearchedChunkQueue.setMaxSize(_nFileChunks);
-  _partialResultsQueue.setMaxSize(_nFileChunks);
-}
-
-vector<string::size_type> StringFinder::find(string &pattern) {
+// _____________________________________________________________________________________________________________________
+void StringFinder::find() {
   utils::Timer timer;
   if (_performanceMeasuring) { timer.start(); }
+  std::thread getDataThread(&StringFinder::readChunks, this);
 
-  vector<string::size_type> matchPositions = {};
-
-  buildThreads(matchPositions, pattern);
-
-  _readingThread.join();
-  for (auto &decompressionThread: _decompressionThreads) {
-    decompressionThread.join();
-  }
-  for (auto &transformThread: _transformationThreads) {
-    transformThread.join();
-  }
-  for (auto &searchThread: _searchingThreads) {
-    searchThread.join();
-  }
-  _mergingThread.join();
-
+  _processingPipeline.run();
+  getDataThread.join();
   if (_performanceMeasuring) {
     timer.stop();
-    _totalTime = timer.elapsedSeconds();
+    _totalTime += timer.elapsedSeconds();
   }
-
-  return matchPositions;
+  //_processingPipeline.wait();
 }
 
-vector<string::size_type> StringFinder::find(string &pattern, const std::function<int(int)>& transformer) {
-  utils::Timer timer;
-  if (_performanceMeasuring) { timer.start(); }
-
-  vector<string::size_type> matchPositions = {};
-
-  buildThreads(matchPositions, pattern, transformer);
-
-  _readingThread.join();
-  for (auto &decompressionThread: _decompressionThreads) {
-    decompressionThread.join();
-  }
-  for (auto &transformThread: _transformationThreads) {
-    transformThread.join();
-  }
-  for (auto &searchThread: _searchingThreads) {
-    searchThread.join();
-  }
-  _mergingThread.join();
-
-  if (_performanceMeasuring) {
-    timer.stop();
-    _totalTime = timer.elapsedSeconds();
-  }
-
-  return matchPositions;
+// _____________________________________________________________________________________________________________________
+double StringFinder::getTotalRealTime() const {
+  return _totalTime;
 }
 
-vector<string::size_type> StringFinder::find(string &pattern, const std::function<string(string)>& transformer) {
-  utils::Timer timer;
-  if (_performanceMeasuring) { timer.start(); }
-
-  vector<string::size_type> matchPositions = {};
-
-  buildThreads(matchPositions, pattern, transformer);
-
-  _readingThread.join();
-  for (auto &decompressionThread: _decompressionThreads) {
-    decompressionThread.join();
-  }
-  for (auto &transformThread: _transformationThreads) {
-    transformThread.join();
-  }
-  for (auto &searchThread: _searchingThreads) {
-    searchThread.join();
-  }
-  _mergingThread.join();
-
-  if (_performanceMeasuring) {
-    timer.stop();
-    _totalTime = timer.elapsedSeconds();
-  }
-
-  return matchPositions;
-}
-
-string StringFinder::toString() const {
-  // TODO: implement
-  return "";
-}
-
-void StringFinder::buildThreads(vector<string::size_type> &matchPositions, string &pattern) {
-  // reader thread must be created in child classes
-  // decompression thread must be created in child classes
-  // transformation threads must be created in child classes
-  // searching threads must be created in child classes
-  _mergingThread = std::thread(&StringFinder::mergeResults, this, std::ref(matchPositions));
-}
-
-void StringFinder::buildThreads(vector<string::size_type> &matchPositions,
-                                string &pattern,
-                                const std::function<int(int)> &transformer) {}
-
-void StringFinder::buildThreads(vector<string::size_type> &matchPositions,
-                                string &pattern,
-                                const std::function<string(string)> &transformer) {}
-
-// --- protected stuff -------------------------------------------------------------------------------------------------
-void StringFinder::readChunks(std::istream &input,
-                              utils::TSQueue<utils::FileChunk *> &popFromQueue,
-                              utils::TSQueue<utils::FileChunk *> &pushToQueue) {}
-
-void StringFinder::readChunks(std::string_view &input,
-                              utils::TSQueue<utils::FileChunk *> &popFromQueue,
-                              utils::TSQueue<utils::FileChunk *> &pushToQueue) {}
-
-void StringFinder::decompressChunks(utils::TSQueue<utils::FileChunk *> &popFromQueue,
-                                    utils::TSQueue<utils::FileChunk *> &pushToQueue) {
-  utils::Timer waitTimer;
-  utils::Timer computeTimer;
+// _____________________________________________________________________________________________________________________
+double StringFinder::getThreadsTime() {
+  double time = _totalTime;
+  auto* task = _processingPipeline.getFirstTask();
   while (true) {
-    if (_performanceMeasuring) { waitTimer.start(false); }
-    auto currentChunk = popFromQueue.pop();
-    if (_performanceMeasuring) { waitTimer.stop(); }
-    if (!currentChunk.has_value()) {
-      pushToQueue.close();
+    time += task->getTotalTime() - task->getPushWaitTime() - task->getPullWaitTime();
+    task = task->getSubsequentTask();
+    if (task == nullptr) {
       break;
     }
-    if (_performanceMeasuring) { computeTimer.start(false); }
-    currentChunk.value()->decompress();
-    if (_performanceMeasuring) { computeTimer.stop(); }
-    pushToQueue.push(currentChunk.value());
   }
-  if (_performanceMeasuring) {
-    std::unique_lock timerLock(_decompressionTimerMutex);
-    _totalDecompressionWaitTime += waitTimer.elapsedSeconds();
-    _totalDecompressionTime += computeTimer.elapsedSeconds();
-  }
+  return time;
 }
 
-void StringFinder::transformChunks(const std::function<int(int)>& transformer,
-                                   utils::TSQueue<utils::FileChunk *> &popFromQueue,
-                                   utils::TSQueue<utils::FileChunk *> &pushToQueue) {
-  utils::Timer waitTimer;
-  utils::Timer computeTimer;
+// _____________________________________________________________________________________________________________________
+std::vector<std::pair<std::string, double>> StringFinder::getPartialTimes() {
+  std::vector<std::pair<std::string, double>> times;
+  // TODO: total reader time is not 100% correct since everything besides reading and waiting is ignored...
+  times.emplace_back(std::make_pair("reader", _readingTime + _readWaitingTime));
+  auto* task = _processingPipeline.getFirstTask();
   while (true) {
-    if (_performanceMeasuring) { waitTimer.start(false); }
-    auto currentChunk = popFromQueue.pop();
-    if (_performanceMeasuring) { waitTimer.stop(); }
-    if (!currentChunk.has_value()) {
-      pushToQueue.close();
+    times.emplace_back(std::make_pair(task->getName(), task->getTotalTime()));
+    task = task->getSubsequentTask();
+    if (task == nullptr) {
       break;
     }
-    if (_performanceMeasuring) { computeTimer.start(false); }
-    currentChunk.value()->transform(transformer);
-    if (_performanceMeasuring) { computeTimer.stop(); }
-    pushToQueue.push(currentChunk.value());
   }
-  if (_performanceMeasuring) {
-    std::unique_lock timerLock(_transformationTimerMutex);
-    _totalTransformationWaitTime += waitTimer.elapsedSeconds();
-    _totalTransformationTime += computeTimer.elapsedSeconds();
-  }
+  return times;
 }
 
-void StringFinder::transformChunks(const std::function<string(string)>& transformer,
-                                   utils::TSQueue<utils::FileChunk *> &popFromQueue,
-                                   utils::TSQueue<utils::FileChunk *> &pushToQueue) {
-  utils::Timer waitTimer;
-  utils::Timer computeTimer;
+// _____________________________________________________________________________________________________________________
+std::string StringFinder::toString() {
+  if (_performanceMeasuring) {
+    utils::output::Node root("Total Time (real): " + std::to_string(_totalTime) + " s");
+    utils::output::Node ttime("threads:  " + std::to_string(getThreadsTime()));
+    utils::output::Node reader("Reading: " + std::to_string(_readingTime + _readWaitingTime) + " s");
+    reader.addChild(utils::output::Node("reading: " + std::to_string(_readingTime) + " s"));
+    reader.addChild(utils::output::Node("waiting: " + std::to_string(_readWaitingTime) + " s"));
+    ttime.addChild(reader);
+    auto *task = _processingPipeline.getFirstTask();
+    while (task != nullptr) {
+      utils::output::Node taskNode(task->getName() + " (" + std::to_string(task->getNumThreads()) + " "
+                                     + (task->getNumThreads() > 1 ? "threads" : "thread") + "): "
+                                     + std::to_string(task->getTotalTime()) + " s");
+      taskNode.addChild(utils::output::Node("computing: " + std::to_string(task->getComputeTime()) + " s"));
+      utils::output::Node
+        waitNode("waiting: " + std::to_string(task->getPullWaitTime() + task->getPushWaitTime()) + " s");
+      waitNode.addChild(utils::output::Node("push: " + std::to_string(task->getPushWaitTime()) + " s"));
+      waitNode.addChild(utils::output::Node("pull: " + std::to_string(task->getPullWaitTime()) + " s"));
+      taskNode.addChild(waitNode);
+      ttime.addChild(taskNode);
+      task = task->getSubsequentTask();
+    }
+    root.addChild(ttime);
+    utils::output::Tree ot(root, "StringFinder - Performance Report");
+    return ot.parse();
+  }
+  return "StringFinder - set 'measurePerformance' to get a performance report";
+}
+
+// ----- protected stuff -----------------------------------------------------------------------------------------------
+// _____________________________________________________________________________________________________________________
+void StringFinder::readChunks() {
+  utils::Timer readingTimer, readWaitingTimer;
   while (true) {
-    if (_performanceMeasuring) { waitTimer.start(false); }
-    auto currentChunk = popFromQueue.pop();
-    if (_performanceMeasuring) { waitTimer.stop(); }
-    if (!currentChunk.has_value()) {
-      pushToQueue.close();
+    if (_performanceMeasuring) { readingTimer.start(false); }
+    std::optional<utils::FileChunk> chunk = _reader();
+    if (_performanceMeasuring) { readingTimer.stop(); }
+    if (!chunk.has_value()) {
       break;
     }
-    if (_performanceMeasuring) { computeTimer.start(false); }
-    currentChunk.value()->transform(transformer);
-    if (_performanceMeasuring) { computeTimer.stop(); }
-    pushToQueue.push(currentChunk.value());
+    if (_performanceMeasuring) { readWaitingTimer.start(false); }
+    _processingPipeline.getFirstTask()->appendData(std::move(chunk.value()));
+    if (_performanceMeasuring) { readWaitingTimer.stop(); }
   }
-  if (_performanceMeasuring) {
-    std::unique_lock timerLock(_transformationTimerMutex);
-    _totalTransformationWaitTime += waitTimer.elapsedSeconds();
-    _totalTransformationTime += computeTimer.elapsedSeconds();
-  }
+  _processingPipeline.getFirstTask()->close();
+  _readingTime += readingTimer.elapsedSeconds();
+  _readWaitingTime += readWaitingTimer.elapsedSeconds();
 }
 
-void StringFinder::searchChunks(string &pattern,
-                                utils::TSQueue<utils::FileChunk *> &popFromQueue,
-                                utils::TSQueue<utils::FileChunk *> &pushToQueue) {
-  utils::Timer waitTimer;
-  utils::Timer computeTimer;
+// _____________________________________________________________________________________________________________________
+void StringFinder::collectPartialResults(std::vector<std::pair<ulong, std::vector<ulong>>> &matchPositions) {
   while (true) {
-    if (_performanceMeasuring) { waitTimer.start(false); }
-    auto currentChunk = popFromQueue.pop();
-    if (_performanceMeasuring) { waitTimer.stop(); }
-    if (!currentChunk.has_value()) {
-      pushToQueue.close();
-      _partialResultsQueue.close();
-      break;
-    }
-    if (_performanceMeasuring) { computeTimer.start(false); }
-    vector<ulong> matches = currentChunk.value()->searchAllPerLine(pattern);
-    if (_performanceMeasuring) { computeTimer.stop(); }
-    _partialResultsQueue.push(matches);
-    pushToQueue.push(currentChunk.value());
-  }
-  if (_performanceMeasuring) {
-    std::unique_lock timerLock(_transformationTimerMutex);
-    _totalSearchingWaitTime += waitTimer.elapsedSeconds();
-    _totalSearchingTime += computeTimer.elapsedSeconds();
+    auto partRes = _partialResultsQueue.pop();
+    if (!partRes.has_value()) { break; }
+    matchPositions.push_back(std::move(partRes.value()));
   }
 }
 
-void StringFinder::mergeResults(vector<string::size_type> &matchPositions) {
-  utils::Timer waitTimer;
-  utils::Timer computeTimer;
-  while (true) {
-    if (_performanceMeasuring) { waitTimer.start(false); }
-    auto partialResult = _partialResultsQueue.pop();
-    if (_performanceMeasuring) { waitTimer.stop(); }
-    if (!partialResult.has_value()) {
-      break;
-    }
-    if (_performanceMeasuring) { computeTimer.start(false); }
-    std::merge(matchPositions.begin(), matchPositions.end(),
-               partialResult.value().begin(), partialResult.value().end(),
-               matchPositions.begin());
-    if (_performanceMeasuring) { computeTimer.stop(); }
-  }
-  if (_performanceMeasuring) {
-    std::unique_lock timerLock(_transformationTimerMutex);
-    _totalMergingWaitTime += waitTimer.elapsedSeconds();
-    _totalMergingTime += computeTimer.elapsedSeconds();
-  }
-}
-
-// --- private stuff ---------------------------------------------------------------------------------------------------
-void StringFinder::setNumberOfQueueWriteThreads() {
-  if (_nDecompressionThreads > 0) {
-    _toBeDecompressedChunkQueue.setNumberOfWriteThreads(1);
-    if (_nTransformationThreads > 0) {
-      _toBeTransformedChunkQueue.setNumberOfWriteThreads(_nDecompressionThreads);
-    } else {
-      _toBeSearchedChunkQueue.setNumberOfWriteThreads(_nDecompressionThreads);
-    }
-  } else {
-    if (_nTransformationThreads > 0) {
-      _toBeTransformedChunkQueue.setNumberOfWriteThreads(1);
-    } else {
-      _toBeSearchedChunkQueue.setNumberOfWriteThreads(1);
-    }
-  }
-  _partialResultsQueue.setNumberOfWriteThreads(_nSearchingThreads);
-  _availableChunkQueue.setNumberOfWriteThreads(_nSearchingThreads);
-}
-
-}
+// ----- private stuff -------------------------------------------------------------------------------------------------
+}  // namespace sf

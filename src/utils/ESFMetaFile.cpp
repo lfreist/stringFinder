@@ -7,9 +7,10 @@
 
 #include "ESFMetaFile.h"
 
+namespace sf::utils {
 
 // _____________________________________________________________________________________________________________________
-ESFMetaFile::ESFMetaFile(const std::string& filePath, std::ios::openmode mode) {
+ESFMetaFile::ESFMetaFile(const std::string &filePath, std::ios::openmode mode) {
   _mode = mode | std::ios::binary;
   _metaFile.open(filePath, _mode);
   _maxOriginalSize = 0;
@@ -17,7 +18,7 @@ ESFMetaFile::ESFMetaFile(const std::string& filePath, std::ios::openmode mode) {
     throw std::invalid_argument("Cannot open file");
   }
   if (_mode == (std::ios::in | std::ios::binary)) {
-    _metaFile.read(reinterpret_cast<char*>(&_maxOriginalSize), sizeof(size_t));
+    _metaFile.read(reinterpret_cast<char *>(&_maxOriginalSize), sizeof(size_t));
   }
 }
 
@@ -28,7 +29,7 @@ ESFMetaFile::~ESFMetaFile() {
 
 // _____________________________________________________________________________________________________________________
 chunkSize ESFMetaFile::nextChunkSize() {
-  _metaFile.read(reinterpret_cast<char*>(&_chunkSize), sizeof(_chunkSize));
+  _metaFile.read(reinterpret_cast<char *>(&_chunkSize), sizeof(_chunkSize));
   if (_metaFile.eof()) {
     return _endOfFileChunkSize;
   }
@@ -43,11 +44,13 @@ size_t ESFMetaFile::getMaxOriginalSize() const {
 // _____________________________________________________________________________________________________________________
 void ESFMetaFile::writeMaxOriginalSize(size_t maxOriginalSize) {
   assert(_mode == (std::ios::out | std::ios::binary));
-  _metaFile.write(reinterpret_cast<char*>(&maxOriginalSize), sizeof(size_t));
+  _metaFile.write(reinterpret_cast<char *>(&maxOriginalSize), sizeof(size_t));
 }
 
 // _____________________________________________________________________________________________________________________
 void ESFMetaFile::writeChunkSize(chunkSize chunk) {
   assert(_mode == (std::ios::out | std::ios::binary));
-  _metaFile.write(reinterpret_cast<char*>(&chunk), sizeof(chunkSize));
+  _metaFile.write(reinterpret_cast<char *>(&chunk), sizeof(chunkSize));
 }
+
+}  // namespace sf::utils

@@ -12,14 +12,14 @@ TEST(ExternStringFinder, find1) {
   std::string pattern("keyword");
   {
     ExternStringFinder esf(filename, pattern);
-    auto matches = esf.find();
+    auto matches = esf._find_();
     ASSERT_EQ(matches.size(), 2);
     ASSERT_EQ(matches[0], 15639);
     ASSERT_EQ(matches[1], 28350);
   }
   {
     ExternStringFinder esf(filename, pattern, "", false, false, 10, 10);
-    auto matches = esf.find();
+    auto matches = esf._find_();
     ASSERT_EQ(matches.size(), 2);
     ASSERT_EQ(matches[0], 15639);
     ASSERT_EQ(matches[1], 28350);

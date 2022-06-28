@@ -43,7 +43,7 @@ void Timer::stop() {
 // ____________________________________________________________________________
 double Timer::elapsedSeconds() const {
   if (!_started || _running) {
-    return -1;
+    return 0;
   }
   return _duration;
 }

@@ -5,108 +5,65 @@
 
 #include <string>
 #include <vector>
+#include <optional>
+#include <utility>
+#include <memory>
 
-#include "./utils/ThreadSafeQueue.h"
-#include "./utils/FileChunk.h"
+#include "./utils/output/tree.h"
 #include "./utils/Timer.h"
-
-using std::vector;
-using std::string;
+#include "./utils/FileChunk.h"
+#include "./utils/ThreadSafeQueue.h"
+#include "./utils/Task.h"
 
 #ifndef STRINGFINDER_SRC_STRINGFINDERBASE_H_
 #define STRINGFINDER_SRC_STRINGFINDERBASE_H_
 
 namespace sf {
 
+struct TaskAndNumThreads {
+  std::string name;
+  std::function<void(utils::FileChunk*)> task;
+  unsigned numThreads;
+};
+
 class StringFinder {
  public:
   StringFinder();
-  ~StringFinder();
+  StringFinder(std::function<std::optional<utils::FileChunk>(void)> reader,
+               const std::vector<TaskAndNumThreads>& tasksAndNumThreadsVector);
 
-  void setNumberOfDecompressionThreads(unsigned nDecompressionThreads);
-  void setNumberOfTransformationThreads(unsigned nTransformationThreads);
-  void setNumberOfSearchingThreads(unsigned nSearchingThreads);
-  void setNumberOfMergingThreads(unsigned nMergingThreads);
+  void setProcessingPipeline(const std::vector<TaskAndNumThreads>& tasksAndNumThreadsVector);
 
   void enablePerformanceMeasuring(bool enabled);
-  void setNumberOfFileChunks(unsigned nFileChunks);
 
-  [[nodiscard]] vector<string::size_type> find(string &pattern);
-  [[nodiscard]] vector<string::size_type> find(string &pattern, const std::function<int(int)>& transformer);
-  [[nodiscard]] vector<string::size_type> find(string &pattern, const std::function<string(string)>& transformer);
+  void find();
 
-  string toString() const;
+  double getTotalRealTime() const;
+  double getThreadsTime();
+  std::vector<std::pair<std::string, double>> getPartialTimes();
 
-  virtual void buildThreads(vector<string::size_type> &matchPositions, string &pattern);
-  virtual void buildThreads(vector<string::size_type> &matchPositions, string &pattern, const std::function<int(int)>& transformer);
-  virtual void buildThreads(vector<string::size_type> &matchPositions, string &pattern, const std::function<string(string)>& transformer);
+  std::string toString();
 
  protected:
-  virtual void readChunks(std::istream &input, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
-  virtual void readChunks(std::string_view &input, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
-  void decompressChunks(utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
-  void transformChunks(const std::function<int(int)>& transformer, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
-  // TODO: for string_view?
-  void transformChunks(const std::function<string(string)>& transformer, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
-  void searchChunks(string &pattern, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
-  void mergeResults(vector<string::size_type> &matchPositions);
+  void readChunks();
+  void collectPartialResults(std::vector<std::pair<ulong, std::vector<ulong>>> &matchPositions);
 
-  string _fileName;
+  std::function<std::optional<utils::FileChunk>(void)> _reader;
+  utils::TaskPipeline<utils::FileChunk> _processingPipeline;
 
-  string _pattern;
-  // Queues holding FileChunks for specific purposes
-  utils::TSQueue<utils::FileChunk*> _availableChunkQueue = {};
-
-  utils::TSQueue<utils::FileChunk*> _toBeDecompressedChunkQueue = {};
-  utils::TSQueue<utils::FileChunk*> _toBeTransformedChunkQueue = {};
-  utils::TSQueue<utils::FileChunk*> _toBeSearchedChunkQueue = {};
-  utils::TSQueue<vector<string::size_type>> _partialResultsQueue = {};
-
-  // threads:
-  std::thread _readingThread;
-  vector<std::thread> _decompressionThreads = {};
-  vector<std::thread> _transformationThreads = {};
-  vector<std::thread> _searchingThreads = {};
-  std::thread _mergingThread;
-
-  // mutex
-  // mutable std::mutex _timerMutex;
-  // mutable std::mutex _readingTimerMutex;
-  mutable std::mutex _decompressionTimerMutex;
-
-  mutable std::mutex _transformationTimerMutex;
-  mutable std::mutex _searchingTimerMutex;
-  // number of threads:
-  unsigned _nDecompressionThreads = 0;
-
-  unsigned _nTransformationThreads = 0;
-  unsigned _nSearchingThreads = 0;
-  unsigned _nMergingThreads = 0;
-
-  bool _performanceMeasuring = false;
-  unsigned _nFileChunks = 10;
-
-  ulong _bufferPosition = 0;
+  utils::TSQueue<std::pair<ulong, std::vector<ulong>>> _partialResultsQueue;
 
   // performance stuff:
+  bool _performanceMeasuring = false;
   ulong _totalNumberBytesRead = 0;
+
   double _totalTime = 0;
-
-  double _totalReadingTime = 0;
-  double _totalDecompressionTime = 0;
-  double _totalTransformationTime = 0;
-  double _totalSearchingTime = 0;
-  double _totalMergingTime = 0;
-  double _totalReadingWaitTime = 0;
-  double _totalDecompressionWaitTime = 0;
-  double _totalTransformationWaitTime = 0;
-  double _totalSearchingWaitTime = 0;
-  double _totalMergingWaitTime = 0;
-
- private:
-  void setNumberOfQueueWriteThreads();
+  double _readingTime = 0;
+  double _readWaitingTime = 0;
 };
 
-}
+}  // namespace sf
+
+
 
 #endif //STRINGFINDER_SRC_STRINGFINDERBASE_H_

@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     if (performance) {
       string_finder.measurePerformance(searchPattern, matchCase);
     } else {
-      vector<const string *> res = string_finder.find(searchPattern, matchCase);
+      vector<const string *> res = string_finder._find_(searchPattern, matchCase);
       if (count) {
         std::cout << res.size() << std::endl;
       } else {

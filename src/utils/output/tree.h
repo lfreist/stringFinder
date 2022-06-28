@@ -14,7 +14,7 @@ using std::vector;
 #ifndef STRINGFINDER_SRC_UTILS_OUTPUT_TREE_H_
 #define STRINGFINDER_SRC_UTILS_OUTPUT_TREE_H_
 
-namespace sf_utils::output {
+namespace sf::utils::output {
 
 class Node {
  public:
@@ -25,6 +25,7 @@ class Node {
 
   string parse(int stage, bool last = false, bool parentIsLast = true) {
     std::stringstream output;
+    // TODO: this bugs if parent is last but parent's parent is not last...
     if (parentIsLast) {
       for (int i = 0; i < stage; ++i) {
         output << " ";

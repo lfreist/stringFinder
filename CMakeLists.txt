@@ -35,16 +35,11 @@ add_subdirectory(src)
 add_executable(ESFCompressorMain ESFCompressorMain.cpp)
 target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor ESFMetaFile boost_program_options)
 
-add_executable(StringFinderMain StringFinderMain.cpp)
-target_link_libraries(StringFinderMain PUBLIC StringFinder boost_program_options OpenMP::OpenMP_CXX)
-
 add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
-target_link_libraries(ExternStringFinderMain PUBLIC ExternStringFinder Timer boost_program_options)
+target_link_libraries(ExternStringFinderMain PUBLIC StringFinder Timer boost_program_options)
 
-add_executable(stringSearchBenchmark stringSearchBenchmark.cpp)
-target_link_libraries(stringSearchBenchmark PUBLIC Timer boost_program_options)
-
-add_executable(tmp tmp.cpp src/utils/output/tree.h)
+add_executable(ESFTmp StringFinderTmp.cpp)
+target_link_libraries(ESFTmp StringFinder)
 
 # ______________________________________________________________________________________________________________________
 
