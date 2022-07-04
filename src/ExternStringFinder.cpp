@@ -78,25 +78,24 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
   } else {
     // minNumBytes = 0.5 GiB, maxNumBytes = 0.5 GiB + 1 KiB
     _reader = [minNumBytes = 536870912, maxNumBytes = 536871936, offset, filePtr]() mutable -> std::optional<utils::FileChunk> {
-      std::string data;
-      data.resize(maxNumBytes);
+      utils::FileChunk chunk;
+      chunk.strPtr()->resize(maxNumBytes);
       if (filePtr->peek() == EOF) {
         return {};
       }
-      filePtr->read(data.data(), minNumBytes);
+      filePtr->read(chunk.strPtr()->data(), minNumBytes);
       if (!(*filePtr)) {
-        data.resize(filePtr->gcount());
-        data.pop_back();
+        chunk.strPtr()->resize(filePtr->gcount());
+        chunk.strPtr()->pop_back();
       } else {
         char nextByte = 0;
         while (true) {
           if (filePtr->eof()) { break; }
           filePtr->get(nextByte);
           if (nextByte == '\n') { break; }
-          data += nextByte;
+          chunk.strPtr()->operator+=(nextByte);
         }
       }
-      utils::FileChunk chunk(std::move(data), offset);
       offset += chunk.strPtr()->size();
       return chunk;
     };
