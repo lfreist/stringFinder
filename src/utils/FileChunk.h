@@ -25,6 +25,9 @@ class FileChunk {
   [[nodiscard]] uint64_t getOffset() const;
   [[nodiscard]] uint64_t getOriginalSize() const;
 
+  void setOffset(uint64_t offset);
+
+  std::string* strPtr();
 
  private:
   std::string _content;
