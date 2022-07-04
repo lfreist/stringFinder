@@ -79,3 +79,5 @@ real    0m46.546s
 user    0m26.191s
 sys     0m2.204s
 ```
+
+# After rewriting
