@@ -76,7 +76,8 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
     tnt.numThreads = nDecompressionThreads;
     tasksVector.push_back(tnt);
   } else {
-    _reader = [minNumBytes = 1024, maxNumBytes = 2048, offset, filePtr]() mutable -> std::optional<utils::FileChunk> {
+    // minNumBytes = 0.5 GiB, maxNumBytes = 0.5 GiB + 1 KiB
+    _reader = [minNumBytes = 536870912, maxNumBytes = 536871936, offset, filePtr]() mutable -> std::optional<utils::FileChunk> {
       std::string data;
       data.resize(maxNumBytes);
       if (filePtr->peek() == EOF) {
