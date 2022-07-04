@@ -80,4 +80,58 @@ user    0m26.191s
 sys     0m2.204s
 ```
 
-# After rewriting
+# with commit [b930693](https://github.com/lfreist/stringFinder/commit/b930693355430a12eb8b6e61faf8bb95adfb58ab)
+> rewrote string finder with tasks etc
+
+####  [b930693](https://github.com/lfreist/stringFinder/commit/b930693355430a12eb8b6e61faf8bb95adfb58ab)
+```
+lfreist@think:~/CLionProjects/stringFinder/cmake-build-release$ time ./ExternStringFinderMain keyword ../files/5gb.dummy.txt -c -p
+
+StringFinder - Performance Report
+ └─ Total Time (real): 13.634603 s
+    └─ threads:  14.324115
+       ├─ Reading: 13.634293 s
+       │  ├─ reading: 13.634238 s
+       │  └─ waiting: 0.000055 s
+       └─ Searcher (1 thread): 13.634465 s
+          ├─ computing: 0.689512 s
+          └─ waiting: 12.784224 s
+             ├─ push: 0.000000 s
+             └─ pull: 12.784224 s
+
+3179
+
+real    0m13,645s
+user    0m2,011s
+sys     0m6,697s
+```
+#### grep
+```
+lfreist@think:~/CLionProjects/stringFinder/cmake-build-release$ time grep keyword ../files/5gb.dummy.txt -c
+3179
+
+real    0m10,249s
+user    0m2,398s
+sys     0m0,975s
+```
+#### latest commit before rewriting SF [b41502f](https://github.com/lfreist/stringFinder/commit/b41502fa74403a1630a004966c4ba6d16a776c94)
+```
+lfreist@think:/tmp/stringFinder/build$ time ./ExternStringFinderMain keyword ~/CLionProjects/stringFinder/files/5gb.dummy.txt -c -p
+ExternStringFinder::find() on keyword 'keyword' and inputfile '/home/lfreist/CLionProjects/stringFinder/files/5gb.dummy.txt'.
+
+
+Performance report of ExternStringFinder::find()
+ └─ 10.788247 s in total (processor time: 13.784090 s)
+    ├─ reading input (1 thread): 10.773537 s
+    │  ├─ computation: 10.773342 (78%)
+    │  └─ waiting    : 0.000195 (0%)
+    └─ searching: (1 threads): 10.786249 s
+       ├─ computation: 3.010747 (21%)
+       └─ waiting    : 7.775502 (99%)
+
+3179
+
+real	0m10,812s
+user	0m3,119s
+sys	0m4,602s
+```
