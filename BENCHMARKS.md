@@ -135,3 +135,8 @@ real	0m10,812s
 user	0m3,119s
 sys	0m4,602s
 ```
+
+## What changes could cause this performance lag?
+1. using task pipeline (should not really affect reading performance)
+2. read method is no longer part of FileChunk but is passed to ESF as reader function. However, its logic did not change!
+3. reader returns `std::optional(FileChunk)` -> `TSQueue::pop()` does no longer require a default return value but returns optional
