@@ -1,3 +1,5 @@
+add_subdirectory(readers)
+
 add_library(ZstdWrapper ZstdWrapper.h)
 target_link_libraries(ZstdWrapper zstd)
 set_target_properties(ZstdWrapper PROPERTIES LINKER_LANGUAGE CXX)

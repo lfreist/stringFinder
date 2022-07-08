@@ -14,6 +14,7 @@
 #include "./utils/FileChunk.h"
 #include "./utils/ThreadSafeQueue.h"
 #include "./utils/Task.h"
+#include "./utils/readers/BaseReader.h"
 
 #ifndef STRINGFINDER_SRC_STRINGFINDERBASE_H_
 #define STRINGFINDER_SRC_STRINGFINDERBASE_H_
@@ -29,11 +30,11 @@ struct TaskAndNumThreads {
 class StringFinder {
  public:
   StringFinder();
-  StringFinder(std::function<std::optional<utils::FileChunk>(void)> reader,
+  StringFinder(std::unique_ptr<utils::readers::BaseReader> reader,
                const std::vector<TaskAndNumThreads>& tasksAndNumThreadsVector,
                bool performanceMeasuring = false);
 
-  void setReader(std::function<std::optional<utils::FileChunk>(void)> reader);
+  void setReader(std::unique_ptr<utils::readers::BaseReader> reader);
 
   void setProcessingPipeline(const std::vector<TaskAndNumThreads>& tasksAndNumThreadsVector);
 
@@ -50,12 +51,11 @@ class StringFinder {
  protected:
   void readChunks();
 
-  std::function<std::optional<utils::FileChunk>(void)> _reader;
+  std::unique_ptr<utils::readers::BaseReader> _reader;
   utils::TaskPipeline<utils::FileChunk> _processingPipeline;
 
   // performance stuff:
   bool _performanceMeasuring = false;
-  ulong _totalNumberBytesRead = 0;
 
   double _totalTime = 0;
   double _readingTime = 0;

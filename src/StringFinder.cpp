@@ -5,12 +5,12 @@
 
 namespace sf {
 
-// ----- public stuff --------------------------------------------------------------------------------------------------
+// ----- public --------------------------------------------------------------------------------------------------------
 // _____________________________________________________________________________________________________________________
 StringFinder::StringFinder() = default;
 
 // _____________________________________________________________________________________________________________________
-StringFinder::StringFinder(std::function<std::optional<utils::FileChunk>(void)> reader,
+StringFinder::StringFinder(std::unique_ptr<utils::readers::BaseReader> reader,
                            const std::vector<TaskAndNumThreads> &tasksAndNumThreadsVector,
                            bool performanceMeasuring) {
   _reader = std::move(reader);
@@ -19,7 +19,7 @@ StringFinder::StringFinder(std::function<std::optional<utils::FileChunk>(void)> 
 }
 
 // _____________________________________________________________________________________________________________________
-void StringFinder::setReader(std::function<std::optional<utils::FileChunk>()> reader) {
+void StringFinder::setReader(std::unique_ptr<utils::readers::BaseReader> reader) {
   _reader = std::move(reader);
 }
 
@@ -121,7 +121,7 @@ void StringFinder::readChunks() {
   utils::Timer readingTimer, readWaitingTimer;
   while (true) {
     if (_performanceMeasuring) { readingTimer.start(false); }
-    std::optional<utils::FileChunk> chunk = _reader();
+    std::optional<utils::FileChunk> chunk = _reader->reader();
     if (_performanceMeasuring) { readingTimer.stop(); }
     if (!chunk.has_value()) {
       break;

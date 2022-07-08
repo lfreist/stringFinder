@@ -9,4 +9,4 @@ target_link_libraries(StringFinder PUBLIC pthread Timer FileChunk TSQueue Task E
 add_library(ESF
         ExternStringFinder.h ExternStringFinder.cpp
 )
-target_link_libraries(ESF PUBLIC StringFinder)
+target_link_libraries(ESF PUBLIC StringFinder externalPOSIXreader externalIFSTREAMreader)

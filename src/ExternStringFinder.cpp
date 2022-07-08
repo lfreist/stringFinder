@@ -3,15 +3,16 @@
 
 #include <fcntl.h>
 
-#include <iostream>
 #include <istream>
 #include <thread>
 #include <algorithm>
-#include <fstream>
+#include <memory>
 
-#include "ExternStringFinder.h"
-#include "utils/ESFMetaFile.h"
-#include "utils/ZstdWrapper.h"
+#include "./ExternStringFinder.h"
+#include "./utils/ESFMetaFile.h"
+#include "./utils/ZstdWrapper.h"
+#include "./utils/readers/externalPOSIXreader.h"
+#include "./utils/readers/externalIFSTREAMreader.h"
 
 namespace sf {
 
@@ -35,32 +36,14 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
     throw std::runtime_error("Transforming requires at least 1 thread.");
   }
 
-  std::ifstream file(filePath);
-  if (!file) {
-    throw std::runtime_error("file '" + filePath + "' not found");
-  }
-
-  // for use with POSIX ::read()
-  // TODO: evaluate! If multiple reader threads are implemented this might be better compared to std::ifstream
-  utils::strtype lastOverhead;
-  lastOverhead.reserve(1024);
-  int fd = ::open(filePath.c_str(), O_RDONLY);
-  if (fd == -1) {
-    throw std::runtime_error("file '" + filePath + "' not found");
-  }
-  // ---
-
   std::vector<TaskAndNumThreads> tasksVector;
 
-  std::shared_ptr<std::ifstream> filePtr = std::make_shared<std::ifstream>(std::move(file));
-
-  uint64_t offset = 0;
-
   // default reader for ESF
-  std::function<std::optional<utils::FileChunk>(void)> reader;
+  std::unique_ptr<utils::readers::BaseReader> reader;
 
   if (!metaFilePath.empty()) {  // we read an ESF metafile -> read compressed content
     std::shared_ptr<utils::ESFMetaFile> metaFilePtr = std::make_shared<utils::ESFMetaFile>(metaFilePath, std::ios::in);
+    /*
     reader = [offset, filePtr, metaFilePtr]() mutable -> std::optional<utils::FileChunk> {
       sf::utils::chunkSize chunkSize = metaFilePtr->nextChunkSize();
       utils::strtype data;
@@ -88,59 +71,13 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
     tnt.task = decompressor;
     tnt.numThreads = nDecompressionThreads;
     tasksVector.push_back(tnt);
+     */
   }
   else {  // no ESF meta file provided -> read plain text
-    /*
-    reader = [minNumBytes = 16777216, maxNumBytes = 16842752, offset, filePtr]() mutable -> std::optional<utils::FileChunk> {
-      std::optional<utils::FileChunk> chunkOpt {utils::FileChunk()};
-      auto& chunk = chunkOpt.value();
-      chunk.strPtr()->reserve(maxNumBytes);
-      chunk.strPtr()->resize(minNumBytes);
-      if (filePtr->peek() == EOF) {
-        return {};
-      }
-      filePtr->read(chunk.strPtr()->data(), minNumBytes);
-      if (!(*filePtr)) {
-        chunk.strPtr()->resize(filePtr->gcount());
-        chunk.strPtr()->pop_back();
-      }
-      else {
-        char nextByte = 0;
-        while (true) {
-          if (filePtr->eof()) { break; }
-          filePtr->get(nextByte);
-          if (nextByte == '\n') { break; }
-          chunk.strPtr()->push_back(nextByte);
-        }
-      }
-      chunk.setOffset(offset);
-      offset += chunk.strPtr()->size();
-      return chunkOpt;
-    };
-    */
-    reader = [maxNumBytes = 16777216, offset, fd, &lastOverhead]() mutable -> std::optional<utils::FileChunk> {
-      std::optional<utils::FileChunk> chunkOpt{utils::FileChunk(lastOverhead, offset)};
-      auto &chunk = chunkOpt.value();
-      chunk.strPtr()->resize(maxNumBytes);
-      auto bytes_read = ::read(fd, &chunk.strPtr()->at(lastOverhead.length()), maxNumBytes - (lastOverhead.length()));
-      if (bytes_read == 0) {
-        return {};
-      }
-      lastOverhead.resize(0);
-      for (unsigned index = maxNumBytes - 1; index > 0; --index) {
-        char current = chunk.strPtr()->at(index);
-        chunk.strPtr()->pop_back();
-        if (current == '\n') {
-          break;
-        }
-        lastOverhead.push_back(current);
-      }
-      if (chunk.strPtr()->empty()) {
-        throw std::runtime_error("Could not find new line.");
-      }
-      offset += chunk.strPtr()->size();
-      return chunkOpt;
-    };
+    utils::readers::externalPOSIXreader posixReader(filePath);
+    reader = std::make_unique<utils::readers::externalPOSIXreader>(std::move(posixReader));
+    //utils::readers::externalIFSTREAMreader ifReader(filePath);
+    //reader = std::make_unique<utils::readers::externalIFSTREAMreader>(std::move(ifReader));
   }
 
   if (ignoreCase) {  // use ::toLower to perform case-insensitive search
@@ -178,9 +115,6 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
   _sf = StringFinder(std::move(reader), tasksVector, performanceMeasuring);
 
   _sf.find();
-
-  filePtr->close();
-  ::close(fd);
 
   std::vector<ulong> ret;
   for (auto &pair: results) {
