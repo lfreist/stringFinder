@@ -25,74 +25,25 @@ docker run -it -v $(pwd)/files:/inputfiles/input:ro --name leon-freist-bachelorp
 ```
 
 ## 2. Usage
+### API
+#### StringFinder
+> `StringFinder` is
 
-### 2.1 StringFinderInteractiveMain (SFI)
-This will start an interactive console reading the provided `file` (where `file` is optional and either a relative or an absolute path to a file).
+#### TaskAndNumThreads
+> The `TaskAndNumThreads` struct is used for task initialization. Since all its attributes are copyable and movable,
+> tasks can simply be passed as a vector of `TaskAndNumThreads` to the StringFinder, while the `Task` is neither movable
+> nor copyable.
+```c++
+// src/StringFinder.h
 
-```
-./StringFinderInteractiveMain file
-Reading file file
-done
->
-```
-> Usage:
-> ```
-> Usage: [COMMAND] {OBJECT} {--ARGUMENT {INT}}s
-> Interactively search for substrings in a file
-> 
-> Commands:
->  exit                          -> exit interactive mode
->  find EXPRESSION {--ARGUMENT}s -> _find_ EXPRESSION in currentloaded file
->   --performance    display performance of a single search
->   --lines n        display first n lines
->  load FILE {--ARGUMENT}s       -> load FILE (delete old data)
->   --append         append the data of FILE to the old data
->  help                          -> display this guide
-> ```
-
-```
-> _find_ expression --performance
-Searching for 'expression'...
-Performance Report:
-InternStringFinder.measurePerformance(expression, 0):
- total lines:   6131837
- total matches: 2
- query time:    0.825045 s
- time / match:  0.412523 s
+struct TaskAndNumThreads {
+  std::string name;
+  std::function<void(sf::utils::FileChunk *)> task;
+  unsigned numThreads;
+}
 ```
 
-### 2.2 ExternStringFinder (ESF)
-
-ESF basically works as the (non regex) grep command:
-
-```
-InternStringFinder - ExternStringFinder - Leon Freist <freist@informatik.uni-freibur.de>
-Usage: ./ExternStringFinderMain [PATTERN] [FILE] [OPTION]...
- Search for a PATTERN in a FILE.
- Example: ./ExternStringFinderMain 'hello world' main.c
-If you provide a (zstd-)compressed file as input, also set a meta file using the --meta flag.
-
-  OPTIONS:
-  --help         -h  print this guide and exit.
-  --performance  -p  measure wall time on _find_ and print result.
-  --silent       -s  dont print matching lines.
-  --count        -c  print number of matching lines.
-  --meta [FILE]  -m  set meta file.
-
-When FILE is not provided read standard input
- Example: cat main.c | ./ExternStringFinderMain 'hello world'
-```
-
-#### 2.2.1Benchmarking ESF vs grep
-From within the `./scripts` directory run these tasks:
-```bash
-python3 benchmark.py [FILE] [KEYWORD] --programs [GREP] [ESF] [...] --iterations [X]
-# where [FILE]    is a zstd compressed file
-#       [KEYWORD] is a single word to be searched during the benchmarks,
-#       [GREP]    is the path to grep (e.g. /bin/grep)
-#       [ESF]     is the path to ESF (e.g. ../build/ExternStringFinderMain)
-#       [X]       is the number of runs per program
-```
+### 2.1 ExternStringFinder (ESF)
 
 #### 2.2.2 Increase ESF performance using ESFCompressorMain
 1. Compress the file using ESFCompressorMain

@@ -30,7 +30,10 @@ class StringFinder {
  public:
   StringFinder();
   StringFinder(std::function<std::optional<utils::FileChunk>(void)> reader,
-               const std::vector<TaskAndNumThreads>& tasksAndNumThreadsVector);
+               const std::vector<TaskAndNumThreads>& tasksAndNumThreadsVector,
+               bool performanceMeasuring = false);
+
+  void setReader(std::function<std::optional<utils::FileChunk>(void)> reader);
 
   void setProcessingPipeline(const std::vector<TaskAndNumThreads>& tasksAndNumThreadsVector);
 
@@ -38,7 +41,7 @@ class StringFinder {
 
   void find();
 
-  double getTotalRealTime() const;
+  [[nodiscard]] double getTotalRealTime() const;
   double getThreadsTime();
   std::vector<std::pair<std::string, double>> getPartialTimes();
 
@@ -46,12 +49,9 @@ class StringFinder {
 
  protected:
   void readChunks();
-  void collectPartialResults(std::vector<std::pair<ulong, std::vector<ulong>>> &matchPositions);
 
   std::function<std::optional<utils::FileChunk>(void)> _reader;
   utils::TaskPipeline<utils::FileChunk> _processingPipeline;
-
-  utils::TSQueue<std::pair<ulong, std::vector<ulong>>> _partialResultsQueue;
 
   // performance stuff:
   bool _performanceMeasuring = false;

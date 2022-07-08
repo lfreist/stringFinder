@@ -1,6 +1,8 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
+#include <fcntl.h>
+
 #include <iostream>
 #include <istream>
 #include <thread>
@@ -33,11 +35,20 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
     throw std::runtime_error("Transforming requires at least 1 thread.");
   }
 
-  _performanceMeasuring = performanceMeasuring;
   std::ifstream file(filePath);
   if (!file) {
-    throw std::runtime_error("file not found");
+    throw std::runtime_error("file '" + filePath + "' not found");
   }
+
+  // for use with POSIX ::read()
+  // TODO: evaluate! If multiple reader threads are implemented this might be better compared to std::ifstream
+  utils::strtype lastOverhead;
+  lastOverhead.reserve(1024);
+  int fd = ::open(filePath.c_str(), O_RDONLY);
+  if (fd == -1) {
+    throw std::runtime_error("file '" + filePath + "' not found");
+  }
+  // ---
 
   std::vector<TaskAndNumThreads> tasksVector;
 
@@ -46,11 +57,13 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
   uint64_t offset = 0;
 
   // default reader for ESF
-  if (!metaFilePath.empty()) {
+  std::function<std::optional<utils::FileChunk>(void)> reader;
+
+  if (!metaFilePath.empty()) {  // we read an ESF metafile -> read compressed content
     std::shared_ptr<utils::ESFMetaFile> metaFilePtr = std::make_shared<utils::ESFMetaFile>(metaFilePath, std::ios::in);
-    _reader = [offset, filePtr, metaFilePtr]() mutable -> std::optional<utils::FileChunk> {
+    reader = [offset, filePtr, metaFilePtr]() mutable -> std::optional<utils::FileChunk> {
       sf::utils::chunkSize chunkSize = metaFilePtr->nextChunkSize();
-      std::string data;
+      utils::strtype data;
       data.resize(chunkSize.compressedSize);
       if (filePtr->peek() == EOF) {
         return {};
@@ -62,7 +75,7 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
       return chunk;
     };
     std::function<void(utils::FileChunk *)> decompressor = [](utils::FileChunk *chunk) -> void {
-      std::string data;
+      utils::strtype data;
       data.resize(chunk->getOriginalSize());
       ZstdWrapper::decompressToBuffer(chunk->str().data(),
                                       chunk->str().length(),
@@ -75,11 +88,14 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
     tnt.task = decompressor;
     tnt.numThreads = nDecompressionThreads;
     tasksVector.push_back(tnt);
-  } else {
-    // minNumBytes = 0.5 GiB, maxNumBytes = 0.5 GiB + 1 KiB
-    _reader = [minNumBytes = 536870912, maxNumBytes = 536871936, offset, filePtr]() mutable -> std::optional<utils::FileChunk> {
-      utils::FileChunk chunk;
-      chunk.strPtr()->resize(maxNumBytes);
+  }
+  else {  // no ESF meta file provided -> read plain text
+    /*
+    reader = [minNumBytes = 16777216, maxNumBytes = 16842752, offset, filePtr]() mutable -> std::optional<utils::FileChunk> {
+      std::optional<utils::FileChunk> chunkOpt {utils::FileChunk()};
+      auto& chunk = chunkOpt.value();
+      chunk.strPtr()->reserve(maxNumBytes);
+      chunk.strPtr()->resize(minNumBytes);
       if (filePtr->peek() == EOF) {
         return {};
       }
@@ -87,27 +103,53 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
       if (!(*filePtr)) {
         chunk.strPtr()->resize(filePtr->gcount());
         chunk.strPtr()->pop_back();
-      } else {
+      }
+      else {
         char nextByte = 0;
         while (true) {
           if (filePtr->eof()) { break; }
           filePtr->get(nextByte);
           if (nextByte == '\n') { break; }
-          chunk.strPtr()->operator+=(nextByte);
+          chunk.strPtr()->push_back(nextByte);
         }
       }
+      chunk.setOffset(offset);
       offset += chunk.strPtr()->size();
-      return chunk;
+      return chunkOpt;
+    };
+    */
+    reader = [maxNumBytes = 16777216, offset, fd, &lastOverhead]() mutable -> std::optional<utils::FileChunk> {
+      std::optional<utils::FileChunk> chunkOpt{utils::FileChunk(lastOverhead, offset)};
+      auto &chunk = chunkOpt.value();
+      chunk.strPtr()->resize(maxNumBytes);
+      auto bytes_read = ::read(fd, &chunk.strPtr()->at(lastOverhead.length()), maxNumBytes - (lastOverhead.length()));
+      if (bytes_read == 0) {
+        return {};
+      }
+      lastOverhead.resize(0);
+      for (unsigned index = maxNumBytes - 1; index > 0; --index) {
+        char current = chunk.strPtr()->at(index);
+        chunk.strPtr()->pop_back();
+        if (current == '\n') {
+          break;
+        }
+        lastOverhead.push_back(current);
+      }
+      if (chunk.strPtr()->empty()) {
+        throw std::runtime_error("Could not find new line.");
+      }
+      offset += chunk.strPtr()->size();
+      return chunkOpt;
     };
   }
 
-  if (ignoreCase) {
+  if (ignoreCase) {  // use ::toLower to perform case-insensitive search
     // default ignoreCase task for ESF
     std::function<void(utils::FileChunk *)> transformer = [](utils::FileChunk *chunk) -> void {
-      std::string data;
+      utils::strtype data;
       data.resize(chunk->str().size());
       std::transform(chunk->str().begin(), chunk->str().end(), data.begin(), ::tolower);
-      chunk->setContent(data);
+      chunk->setContent(std::move(data));
     };
     TaskAndNumThreads tntTransform;
     tntTransform.name = "::tolower";
@@ -133,9 +175,13 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
   tntSearch.numThreads = nSearchThreads;
   tasksVector.push_back(tntSearch);
 
-  setProcessingPipeline(tasksVector);
+  _sf = StringFinder(std::move(reader), tasksVector, performanceMeasuring);
 
-  StringFinder::find();
+  _sf.find();
+
+  filePtr->close();
+  ::close(fd);
+
   std::vector<ulong> ret;
   for (auto &pair: results) {
     std::transform(pair.second.begin(), pair.second.end(),
@@ -146,6 +192,11 @@ std::vector<ulong> ExternStringFinder::find(const std::string &pattern,
   }
   std::sort(ret.begin(), ret.end());
   return ret;
+}
+
+// _____________________________________________________________________________________________________________________
+std::string ExternStringFinder::toString() {
+  return _sf.toString();
 }
 
 }  // namespace sf

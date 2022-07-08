@@ -13,20 +13,20 @@ namespace sf::utils {
 FileChunk::FileChunk() = default;
 
 // _____________________________________________________________________________________________________________________
-FileChunk::FileChunk(std::string data, ulong offset) {
+FileChunk::FileChunk(strtype data, ulong offset) {
   _content = std::move(data);
   _offset = offset;
 }
 
 // _____________________________________________________________________________________________________________________
-FileChunk::FileChunk(std::string data, ulong originalSize, ulong offset) {
+FileChunk::FileChunk(strtype data, ulong originalSize, ulong offset) {
   _content = std::move(data);
   _originalSize = originalSize;
   _offset = offset;
 }
 
 // _____________________________________________________________________________________________________________________
-void FileChunk::setContent(std::string data) {
+void FileChunk::setContent(strtype data) {
   _content = std::move(data);
 }
 
@@ -36,7 +36,7 @@ bool FileChunk::isCompressed() const {
 }
 
 // _____________________________________________________________________________________________________________________
-const std::string &FileChunk::str() const {
+const strtype &FileChunk::str() const {
   return _content;
 }
 
@@ -56,7 +56,7 @@ void FileChunk::setOffset(uint64_t offset) {
 }
 
 // _____________________________________________________________________________________________________________________
-std::string *FileChunk::strPtr() {
+strtype *FileChunk::strPtr() {
   return &_content;
 }
 
