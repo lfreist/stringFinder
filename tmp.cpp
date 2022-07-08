@@ -1,20 +1,23 @@
-//
-// Created by lfreist on 05.06.22.
-//
-
+#include <fcntl.h>
+#include <unistd.h>
+#include <string>
 #include <iostream>
 
-#include "src/utils/output/tree.h"
+#include "src/utils/UninitializedAllocator.h"
 
-int main (int argc, char** argv) {
-  sf_utils::output::Node root("root");
-  sf_utils::output::Tree tree(root);
-  tree.setTitle("Test tree");
-  for (int i = 0; i < 4; ++i) {
-    tree.getRoot().addChild(sf_utils::output::Node("child_" + std::to_string(i)));
+using strtype = std::basic_string<char, std::char_traits<char>, ad_utility::default_init_allocator<char>>;
+
+int main(int argc, char** argv) {
+  int fd = open(argv[1], O_RDONLY);
+  strtype content = "dies das ananas";
+  std::cout << content << std::endl;
+  content.resize(40);
+  std::cout << content << std::endl;
+  ssize_t len = 1;
+  while (len > 0) {
+    len = read(fd, &content[15], 40 - 15);
+    std::cout << len << std::endl;
   }
-  for (int i = 0; i < 2; ++i) {
-    tree.getRoot().getChild(2).addChild(sf_utils::output::Node("child_" + std::to_string(i)));
-  }
-  std::cout << tree.parse() << std::endl;
+  std::cout << len << std::endl;
+  close(fd);
 }

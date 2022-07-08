@@ -16,7 +16,7 @@
 
 namespace sf {
 
-class ExternStringFinder : public StringFinder {
+class ExternStringFinder {
  public:
   ExternStringFinder();
 
@@ -28,6 +28,11 @@ class ExternStringFinder : public StringFinder {
                           unsigned nDecompressionThreads = 1,
                           unsigned nTransformThreads = 1,
                           unsigned nSearchThreads = 1);
+
+  std::string toString();
+
+ private:
+  StringFinder _sf;
 };
 
 std::ostream &operator<<(std::ostream &os, const ExternStringFinder &esf);

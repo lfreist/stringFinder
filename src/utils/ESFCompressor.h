@@ -27,13 +27,13 @@ class ESFCompress {
       std::cerr << "Could not write out file '" << outFile << "'..." << std::endl;
       return false;
     }
-    ESFMetaFile meta((metaFile.empty() ? (outFile + std::string(".meta")) : metaFile), std::ios::out);
+    sf::utils::ESFMetaFile meta((metaFile.empty() ? (outFile + std::string(".meta")) : metaFile), std::ios::out);
 
     // write the max uncompressed buffer size to the top of the meta file
     meta.writeMaxOriginalSize(static_cast<size_t>(minChunkSize + chunkOverflowSize));
     // read whole file and compress chunks
     for (int counter = 1; ; counter++) {
-      FileChunk chunk;
+      sf::utils::FileChunk chunk;
       size_t uncompressed_bytes_read = chunk.setContentFromFile(_srcFile, minChunkSize, true);
       if (uncompressed_bytes_read == 0) { break; }
       // actual compression

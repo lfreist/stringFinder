@@ -11,9 +11,16 @@ StringFinder::StringFinder() = default;
 
 // _____________________________________________________________________________________________________________________
 StringFinder::StringFinder(std::function<std::optional<utils::FileChunk>(void)> reader,
-                           const std::vector<TaskAndNumThreads> &tasksAndNumThreadsVector) {
+                           const std::vector<TaskAndNumThreads> &tasksAndNumThreadsVector,
+                           bool performanceMeasuring) {
   _reader = std::move(reader);
   setProcessingPipeline(tasksAndNumThreadsVector);
+  _performanceMeasuring = performanceMeasuring;
+}
+
+// _____________________________________________________________________________________________________________________
+void StringFinder::setReader(std::function<std::optional<utils::FileChunk>()> reader) {
+  _reader = std::move(reader);
 }
 
 // _____________________________________________________________________________________________________________________
@@ -126,15 +133,6 @@ void StringFinder::readChunks() {
   _processingPipeline.getFirstTask()->close();
   _readingTime += readingTimer.elapsedSeconds();
   _readWaitingTime += readWaitingTimer.elapsedSeconds();
-}
-
-// _____________________________________________________________________________________________________________________
-void StringFinder::collectPartialResults(std::vector<std::pair<ulong, std::vector<ulong>>> &matchPositions) {
-  while (true) {
-    auto partRes = _partialResultsQueue.pop();
-    if (!partRes.has_value()) { break; }
-    matchPositions.push_back(std::move(partRes.value()));
-  }
 }
 
 // ----- private stuff -------------------------------------------------------------------------------------------------

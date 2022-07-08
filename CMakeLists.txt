@@ -32,29 +32,28 @@ include_directories(third_party/googletest/googletest/include)
 add_subdirectory(src)
 
 # ___ Executables ______________________________________________________________________________________________________
-add_executable(ESFCompressorMain ESFCompressorMain.cpp)
-target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor ESFMetaFile boost_program_options)
+#add_executable(ESFCompressorMain ESFCompressorMain.cpp)
+#target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor ESFMetaFile boost_program_options)
 
 add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
-target_link_libraries(ExternStringFinderMain PUBLIC StringFinder Timer boost_program_options)
+target_link_libraries(ExternStringFinderMain PUBLIC ESF Timer boost_program_options)
 
-add_executable(ESFTmp StringFinderTmp.cpp)
-target_link_libraries(ESFTmp StringFinder)
+add_executable(tmp tmp.cpp)
 
 # ______________________________________________________________________________________________________________________
 
 # ___ Tests ____________________________________________________________________________________________________________
-add_subdirectory(test)
-add_subdirectory(src/string_search_algorithms/test)
-add_subdirectory(src/utils/test)
+#add_subdirectory(test)
+#add_subdirectory(src/string_search_algorithms/test)
+#add_subdirectory(src/utils/test)
 
-include(CTest)
-add_test(StringFinderTest test/StringFinderTest)
-add_test(WallTimerTest test/WallTimerTest)
-add_test(TSQTest test/TSQTest)
-add_test(InputParserTest test/InputParserTest)
+#include(CTest)
+#add_test(StringFinderTest test/StringFinderTest)
+#add_test(WallTimerTest test/WallTimerTest)
+#add_test(TSQTest test/TSQTest)
+#add_test(InputParserTest test/InputParserTest)
 
-add_test(strstrSearchTest src/string_search_algorithms/test/strstrSearchTest)
+#add_test(strstrSearchTest src/string_search_algorithms/test/strstrSearchTest)
 
-add_test(FileChunkTest src/utils/test/FileChunkTest)
+#add_test(FileChunkTest src/utils/test/FileChunkTest)
 # ______________________________________________________________________________________________________________________
