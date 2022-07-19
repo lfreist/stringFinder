@@ -6,37 +6,34 @@
 
 #include <string>
 #include <fstream>
+#include <optional>
 
 #include <gtest/gtest.h>
 
 namespace sf::utils {
 
 struct chunkSize {
-  size_t originalSize;
-  size_t compressedSize;
+  uint32_t originalSize;
+  uint32_t compressedSize;
 
   bool operator==(const chunkSize &other) const {
     return (originalSize == other.originalSize) && (compressedSize == other.compressedSize);
   }
 };
 
-class ESFMetaFile {
+class SFMetaFile {
  public:
-  explicit ESFMetaFile(const std::string &filePath, std::ios::openmode mode);
-  ~ESFMetaFile();
+  explicit SFMetaFile(const std::string &filePath, std::ios::openmode mode);
+  ~SFMetaFile();
 
-  chunkSize nextChunkSize();
-  size_t getMaxOriginalSize() const;
+  std::optional<chunkSize> nextChunkSize();
 
-  void writeMaxOriginalSize(size_t maxOriginalSize);
   void writeChunkSize(chunkSize chunk);
 
  private:
-  size_t _maxOriginalSize;
-  chunkSize _chunkSize;
-  const chunkSize _endOfFileChunkSize{0, 0};
-  std::fstream _metaFile;
-  std::ios::openmode _mode;
+  chunkSize _chunkSize {};
+  std::fstream _metaFileStream;
+  std::ios::openmode _openMode;
 
   FRIEND_TEST(ESFMetaFileTest, constructor);
   FRIEND_TEST(ESFMetaFileTest, writeAndRead);

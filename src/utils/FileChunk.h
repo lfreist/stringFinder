@@ -30,6 +30,7 @@ class FileChunk {
   [[nodiscard]] uint64_t getOriginalSize() const;
 
   void setOffset(uint64_t offset);
+  void setOriginalSize(uint64_t originalSize);
 
   strtype* strPtr();
 

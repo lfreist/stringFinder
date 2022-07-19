@@ -7,9 +7,8 @@
 
 #include <optional>
 #include <string>
-#include <memory>
 
-#include "./BaseReader.h"
+#include "./ESFReader.h"
 #include "../FileChunk.h"
 
 #ifndef STRINGFINDER_SRC_UTILS_READERS_EXTERNALPOSIXREADER_H_
@@ -17,17 +16,19 @@
 
 namespace sf::utils::readers {
 
-class externalPOSIXreader : public BaseReader {
+class ESFPOSIXReader : public ESFReader {
  public:
-  explicit externalPOSIXreader(const std::string& filePath, uint32_t maxChunkSize = 16777216);
+  explicit ESFPOSIXReader(const std::string& filePath, uint32_t maxChunkSize = 16777216);
+  // copy constructor
+  ESFPOSIXReader(const ESFPOSIXReader &reader);
   // move constructor
-  externalPOSIXreader(externalPOSIXreader&& reader) noexcept ;
-  ~externalPOSIXreader() override;
+  ESFPOSIXReader(ESFPOSIXReader&& reader) noexcept ;
+  ~ESFPOSIXReader() override;
 
-  std::optional<FileChunk> reader() override;
+  std::optional<FileChunk> chunkProvider() override;
 
- private:
-  std::unique_ptr<int> _fdPtr = std::make_unique<int>(-1);
+ protected:
+  int _fd = -1;
   strtype _prevOverhead;
 };
 

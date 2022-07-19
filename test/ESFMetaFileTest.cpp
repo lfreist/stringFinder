@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include "../src/utils/ESFMetaFile.h"
+#include "../src/utils/SFMetaFile.h"
 
 TEST(ESFMetaFileTest, constructor) {
   {  // open metafile for read

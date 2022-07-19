@@ -32,11 +32,14 @@ include_directories(third_party/googletest/googletest/include)
 add_subdirectory(src)
 
 # ___ Executables ______________________________________________________________________________________________________
-#add_executable(ESFCompressorMain ESFCompressorMain.cpp)
-#target_link_libraries(ESFCompressorMain PUBLIC ESFCompressor ESFMetaFile boost_program_options)
+add_executable(ESFCompressorMain ESFCompressorMain.cpp)
+target_link_libraries(ESFCompressorMain PUBLIC SFReaders ESFCompressor SFMetaFile boost_program_options)
 
 add_executable(ExternStringFinderMain ExternStringFinderMain.cpp)
 target_link_libraries(ExternStringFinderMain PUBLIC ESF Timer boost_program_options)
+
+add_executable(InternStringFinderMain InternStringFinderMain.cpp)
+target_link_libraries(InternStringFinderMain PUBLIC ISF Timer boost_program_options)
 
 add_executable(tmp tmp.cpp)
 

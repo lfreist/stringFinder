@@ -18,16 +18,18 @@ namespace sf {
 
 class ExternStringFinder {
  public:
-  ExternStringFinder();
+  ExternStringFinder() = default;
 
-  std::vector<ulong> find(const std::string &pattern,
-                          const std::string &filePath,
-                          const std::string &metaFilePath = "",
-                          bool ignoreCase = false,
-                          bool performanceMeasuring = false,
-                          unsigned nDecompressionThreads = 1,
-                          unsigned nTransformThreads = 1,
-                          unsigned nSearchThreads = 1);
+  std::vector<uint64_t> find(
+    const std::string &pattern,
+    const std::string &filePath,
+    const std::string &metaFilePath = "",
+    bool ignoreCase = false,
+    bool performanceMeasuring = false,
+    unsigned nDecompressionThreads = 1,
+    unsigned nTransformThreads = 1,
+    unsigned nSearchThreads = 1
+  );
 
   std::string toString();
 

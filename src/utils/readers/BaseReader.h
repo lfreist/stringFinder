@@ -15,7 +15,7 @@ namespace sf::utils::readers {
 class BaseReader {
  public:
   virtual ~BaseReader() = default;
-  virtual std::optional<FileChunk> reader() = 0;
+  virtual std::optional<FileChunk> chunkProvider() {};
 
  protected:
   // max 16 MiB per chunk by default

@@ -56,6 +56,11 @@ void FileChunk::setOffset(uint64_t offset) {
 }
 
 // _____________________________________________________________________________________________________________________
+void FileChunk::setOriginalSize(uint64_t originalSize) {
+  _originalSize = originalSize;
+}
+
+// _____________________________________________________________________________________________________________________
 strtype *FileChunk::strPtr() {
   return &_content;
 }

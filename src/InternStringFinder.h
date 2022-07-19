@@ -1,34 +1,37 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#ifndef SRC_STRINGFINDER_H_
-#define SRC_STRINGFINDER_H_
-
-#include <gtest/gtest.h>
+#pragma once
 
 #include <vector>
 #include <string>
-#include <map>
 
-#include "StringFinder.h"
+#include "./StringFinder.h"
+#include "./utils/readers/ISFBaseReader.h"
 
-using std::vector;
-using std::string;
-using std::map;
+#ifndef SRC_STRINGFINDER_H_
+#define SRC_STRINGFINDER_H_
 
 namespace sf {
 
-// Class StringData
-class InternStringFinder : public StringFinder {
+class InternStringFinder {
  public:
-  InternStringFinder();
-  ~InternStringFinder();
+  InternStringFinder() = default;
 
-  void buildThreads(vector<string::size_type> &matchPositions, string &pattern);
-  void buildThreads(vector<string::size_type> &matchPositions, string &pattern, const std::function<int(int)>& transformer);
-  void buildThreads(vector<string::size_type> &matchPositions, string &pattern, const std::function<string(string)>& transformer);
-  void readChunks(std::istream &input, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
-  void readChunks(std::string_view &input, utils::TSQueue<utils::FileChunk*> &popFromQueue, utils::TSQueue<utils::FileChunk*> &pushToQueue);
+  std::vector<uint64_t> find(
+    const std::string &pattern,
+    std::unique_ptr<utils::readers::BaseReader> reader,
+    bool ignoreCase = false,
+    bool performanceMeasuring = false,
+    unsigned nDecompressionThreads = 0,
+    unsigned nTransformThreads = 1,
+    unsigned nSearchThreads = 1
+  );
+
+  std::string toString();
+
+ private:
+  StringFinder _sf;
 };
 
 }  // namespace sf

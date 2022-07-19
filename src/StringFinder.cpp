@@ -73,7 +73,7 @@ double StringFinder::getThreadsTime() {
 std::vector<std::pair<std::string, double>> StringFinder::getPartialTimes() {
   std::vector<std::pair<std::string, double>> times;
   // TODO: total reader time is not 100% correct since everything besides reading and waiting is ignored...
-  times.emplace_back(std::make_pair("reader", _readingTime + _readWaitingTime));
+  times.emplace_back(std::make_pair("chunkProvider", _readingTime + _readWaitingTime));
   auto* task = _processingPipeline.getFirstTask();
   while (true) {
     times.emplace_back(std::make_pair(task->getName(), task->getTotalTime()));
@@ -121,7 +121,7 @@ void StringFinder::readChunks() {
   utils::Timer readingTimer, readWaitingTimer;
   while (true) {
     if (_performanceMeasuring) { readingTimer.start(false); }
-    std::optional<utils::FileChunk> chunk = _reader->reader();
+    std::optional<utils::FileChunk> chunk = _reader->chunkProvider();
     if (_performanceMeasuring) { readingTimer.stop(); }
     if (!chunk.has_value()) {
       break;

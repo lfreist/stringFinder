@@ -1,21 +1,19 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#include "src/utils/ESFCompressor.h"
-
 #include <string>
 #include <ostream>
 #include <boost/program_options.hpp>
 
-namespace po = boost::program_options;
+#include "src/utils/ESFCompressor.h"
 
-using std::string;
+namespace po = boost::program_options;
 
 
 int main(int argc, char **argv) {
-  string sourceFile;
-  string outputFile;
-  string metaFile;
+  std::string sourceFile;
+  std::string outputFile;
+  std::string metaFile;
   int compressionLevel;
   int blockSize;
 
@@ -31,9 +29,9 @@ int main(int argc, char **argv) {
   add_positional("input-file", 1);
   add_positional("output-file", 1);
   add("help,h", "Produces this help message.");
-  add("input-file", po::value<string>(&sourceFile), "input-file.");
-  add("output-file,o", po::value<string>(&outputFile)->default_value("<input-file>.esf.zst"), "output-file.");
-  add("meta-file,m", po::value<string>(&metaFile)->default_value("<output-file>.meta"), "meta-file.");
+  add("input-file", po::value<std::string>(&sourceFile), "input-file.");
+  add("output-file,o", po::value<std::string>(&outputFile)->default_value("<input-file>.esf.zst"), "output-file.");
+  add("meta-file,m", po::value<std::string>(&metaFile)->default_value("<output-file>.meta"), "meta-file.");
   add("compression-level,l", po::value<int>(&compressionLevel)->default_value(3), "zstd compression level.");
   add("block-size", po::value<int>(&blockSize)->default_value(2 << 23), "size of one block.");
 
@@ -55,17 +53,12 @@ int main(int argc, char **argv) {
     std::cerr << options << std::endl;
     return 1;
   }
-  outputFile = outputFile == "<input-file>.esf.zst" ? sourceFile + string(".esf.zst") : outputFile;
-  metaFile = metaFile == "<input-file>.esf.zst.meta" ? metaFile = outputFile + string(".meta") : metaFile;
+  outputFile = outputFile == "<input-file>.esf.zst" ? sourceFile + ".esf.zst" : outputFile;
+  metaFile = metaFile == "<output-file>.meta" ? outputFile + ".meta" : metaFile;
   compressionLevel = compressionLevel > 19 ? 19 : compressionLevel;
   compressionLevel = compressionLevel < 1 ? 1 : compressionLevel;
 
-  std::cout << "Compressing (level " << compressionLevel << ") '" << sourceFile << "' to '" << outputFile << "' in "
-  << blockSize << " blocks." << std::endl;
-  bool result = ESFCompress::compress(sourceFile, outputFile, metaFile, compressionLevel, blockSize);
-  if (result) {
-    return 0;
-  }
-  std::cerr << "Error compressing '" << sourceFile << "." << std::endl;
-  return 1;
+  std::cout << "Compressing (level " << compressionLevel << ") '" << sourceFile << "' to '" << outputFile << std::endl;
+  sf::utils::ESFCompress::compress(sourceFile, outputFile, metaFile, compressionLevel, blockSize);
+  return 0;
 }

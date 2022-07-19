@@ -1,9 +1,9 @@
-add_library(externalPOSIXreader
-        BaseReader.h
-        externalPOSIXreader.h externalPOSIXreader.cpp
+add_library(SFReaders
+        ESFPOSIXReader.h ESFPOSIXReader.cpp
+        ESFIFSTREAMReader.h ESFIFSTREAMReader.cpp
+        ESFCompressedPOSIXReader.h ESFCompressedPOSIXReader.cpp
+        ESFCompressedIFSTREAMReader.h ESFCompressedIFSTREAMReader.cpp
+        ISFReader.h ISFReader.cpp
+        ISFCompressedReader.h ISFCompressedReader.cpp
         )
-
-add_library(externalIFSTREAMreader
-        BaseReader.h
-        externalIFSTREAMreader.h externalIFSTREAMreader.cpp
-        )
+target_link_libraries(SFReaders PUBLIC SFMetaFile)

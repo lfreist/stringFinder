@@ -61,7 +61,9 @@ template<class T>
 void Task<T>::close() {
   _dataQueue.close();
   for (auto& t: _threads) {
-    t.join();
+    if (t.joinable()) {
+      t.join();
+    }
   }
   if (_performanceMeasuring) {
     _totalTimer.stop();
